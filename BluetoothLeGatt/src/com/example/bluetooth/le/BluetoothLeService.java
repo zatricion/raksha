@@ -63,7 +63,7 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
     public final static UUID UUID_BUTTON =
-            UUID.fromString(SampleGattAttributes.BUTTON);
+            UUID.fromString(SampleGattAttributes.BUTTON_CHAR);
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.

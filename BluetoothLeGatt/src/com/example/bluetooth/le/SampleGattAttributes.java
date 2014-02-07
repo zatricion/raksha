@@ -24,12 +24,13 @@ import java.util.HashMap;
 public class SampleGattAttributes {
     private static HashMap<String, String> attributes = new HashMap<String, String>();
     public static String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
-    public static String BUTTON = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    public static String BUTTON_CHAR = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    public static String BUTTON_SERV = "0000ffe0-0000-1000-8000-00805f9b34fb";
 
     static {
     	// key press
-    	attributes.put("0000ffe0-0000-1000-8000-00805f9b34fb", "Button Service");
-    	attributes.put(BUTTON, "Button Characteristic");
+    	attributes.put(BUTTON_SERV, "Button Service");
+    	attributes.put(BUTTON_CHAR, "Button Characteristic");
     }
 
     public static String lookup(String uuid, String defaultName) {
