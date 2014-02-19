@@ -62,8 +62,10 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
-    public final static UUID UUID_BUTTON =
+    public final static UUID UUID_BUTTON_CHAR =
             UUID.fromString(SampleGattAttributes.BUTTON_CHAR);
+    public final static UUID UUID_BUTTON_SERV =
+            UUID.fromString(SampleGattAttributes.BUTTON_SERV);
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -123,7 +125,7 @@ public class BluetoothLeService extends Service {
         final Intent intent = new Intent(action);
 
         // This is special handling for the button push
-        if (UUID_BUTTON.equals(characteristic.getUuid())) {
+        if (UUID_BUTTON_CHAR.equals(characteristic.getUuid())) {
             Log.d(TAG, String.format("Button!!!"));
             intent.putExtra(EXTRA_DATA, "Button");
         } 
@@ -284,8 +286,8 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
-        // This is specific to Heart Rate Measurement.
-        if (UUID_BUTTON.equals(characteristic.getUuid())) {
+        // Enable notifications from the button characteristic
+        if (UUID_BUTTON_CHAR.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
@@ -294,14 +296,15 @@ public class BluetoothLeService extends Service {
     }
 
     /**
-     * Retrieves a list of supported GATT services on the connected device. This should be
+     * Retrieves the GATT service for the button on the connected device. This should be
      * invoked only after {@code BluetoothGatt#discoverServices()} completes successfully.
      *
-     * @return A {@code List} of supported services.
+     * @param uuid UUID of requested service.
+     * @return A service corresponding to the UUID_BUTTON_SERV.
      */
-    public List<BluetoothGattService> getSupportedGattServices() {
+    public BluetoothGattService getButtonService() {
         if (mBluetoothGatt == null) return null;
 
-        return mBluetoothGatt.getServices();
+        return mBluetoothGatt.getService(UUID_BUTTON_SERV);
     }
 }
