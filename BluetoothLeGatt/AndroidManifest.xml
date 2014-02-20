@@ -42,6 +42,7 @@ limitations under the License.
         </activity>
         <activity android:name=".DeviceControlActivity"/>
         <service android:name=".BluetoothLeService" android:enabled="true"/>
+        <service android:name=".BackgroundService" android:process=":remote"/>
         <meta-data android:name="com.google.android.gms.version"
                      android:value="@integer/google_play_services_version" />
     </application>

@@ -35,6 +35,8 @@ import android.util.Log;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.android.gms.location.LocationClient;
+
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
@@ -66,6 +68,12 @@ public class BluetoothLeService extends Service {
             UUID.fromString(SampleGattAttributes.BUTTON_CHAR);
     public final static UUID UUID_BUTTON_SERV =
             UUID.fromString(SampleGattAttributes.BUTTON_SERV);
+    
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		// Continue running until explicitly stopped
+		return START_STICKY;
+	}
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
@@ -128,16 +136,6 @@ public class BluetoothLeService extends Service {
         if (UUID_BUTTON_CHAR.equals(characteristic.getUuid())) {
             Log.d(TAG, String.format("Button!!!"));
             intent.putExtra(EXTRA_DATA, "Button");
-        } 
-        else {
-            // For all other profiles, writes the data formatted in HEX.
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-            }
         }
         sendBroadcast(intent);
     }

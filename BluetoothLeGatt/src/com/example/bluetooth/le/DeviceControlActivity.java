@@ -56,6 +56,8 @@ public class DeviceControlActivity extends Activity {
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
     private TextView mConnectionState;
     private TextView mDataField;
@@ -63,8 +65,7 @@ public class DeviceControlActivity extends Activity {
     private String mDeviceAddress;
     private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
-    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
-            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
+    private BackgroundService mBackgroundService;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
@@ -88,7 +89,7 @@ public class DeviceControlActivity extends Activity {
         }
     };
 
-    // Handles various events fired by the Service.
+    // Handles various events fired by the BluetoothLeService.
     // ACTION_GATT_CONNECTED: connected to a GATT server.
     // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
     // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
@@ -165,6 +166,8 @@ public class DeviceControlActivity extends Activity {
         
         if (checkGooglePlayApk()) {
         	// Enable location tracking
+        	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+        	startService(bgServiceIntent);    
         }
     }
     
@@ -176,12 +179,11 @@ public class DeviceControlActivity extends Activity {
             return true;
         } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
             Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
-                    this, 1);
+                    this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
             dialog.show();
         } else {
             Toast.makeText(this, "Connect Connect to Maps", Toast.LENGTH_SHORT)
                     .show();
-
         }
         return false;
     }
