@@ -18,6 +18,7 @@ package com.example.bluetooth.le;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -35,10 +36,14 @@ import android.view.View;
 import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 /**
  * For a given BLE device, this Activity provides the user interface to connect, display data,
@@ -151,10 +156,34 @@ public class DeviceControlActivity extends Activity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        
+        // Check for bluetooth
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
+        
+        if (checkGooglePlayApk()) {
+        	// Enable location tracking
+        }
+    }
+    
+    // Check for Google Play (location service)	
+    private boolean checkGooglePlayApk() {
+        int isAvailable = GooglePlayServicesUtil
+                .isGooglePlayServicesAvailable(this);
+        if (isAvailable == ConnectionResult.SUCCESS) {
+            return true;
+        } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
+                    this, 1);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "Connect Connect to Maps", Toast.LENGTH_SHORT)
+                    .show();
+
+        }
+        return false;
     }
 
     @Override
