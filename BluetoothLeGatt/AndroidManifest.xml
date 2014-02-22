@@ -40,7 +40,7 @@ limitations under the License.
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <receiver android:name=".MyBroadcastReceiver">
+        <receiver android:name=".MyBroadcastReceiver" android:process=":receive">
           <intent-filter>
             <action android:name="com.example.bluetooth.le.ACTION_DATA_AVAILABLE"/>
           </intent-filter>

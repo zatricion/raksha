@@ -16,6 +16,7 @@
 
 package com.example.bluetooth.le;
 
+import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -31,6 +32,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.List;
 import java.util.UUID;
@@ -72,6 +74,15 @@ public class BluetoothLeService extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		// Continue running until explicitly stopped
+
+		
+		// TODO: better notification
+        Notification note = new Notification.Builder(this)
+							        .setContentTitle("SensorTag")
+							        .build();
+        // Keep this service in the foreground
+        startForeground( 42, note );
+        
 		return START_STICKY;
 	}
 
@@ -119,7 +130,7 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+        	broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
     };
 
@@ -134,7 +145,6 @@ public class BluetoothLeService extends Service {
 
         // This is special handling for the button push
         if (UUID_BUTTON_CHAR.equals(characteristic.getUuid())) {
-            Log.d(TAG, String.format("Button!!!"));
             intent.putExtra(EXTRA_DATA, "Button");
         }
         sendBroadcast(intent);
@@ -156,7 +166,9 @@ public class BluetoothLeService extends Service {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
-        close();
+    	
+    	// Don't close because we want this service to keep the connection going.
+        //close();
         return super.onUnbind(intent);
     }
 

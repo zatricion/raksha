@@ -3,6 +3,7 @@ package com.example.bluetooth.le;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Toast;
 
 // Handles various events fired by the BluetoothLeService.
@@ -13,8 +14,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
         if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-            //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-            Toast.makeText(context, "NEW DATA", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
         }
     }
 };

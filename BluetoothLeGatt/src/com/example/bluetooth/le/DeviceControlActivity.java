@@ -19,6 +19,7 @@ package com.example.bluetooth.le;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -111,21 +112,9 @@ public class DeviceControlActivity extends Activity {
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Enable button notifications
                 enableNotifications(mBluetoothLeService.getButtonService());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                displayAlert(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-            }
+            } 
         }
     };
-    
-    // Quick alert
-    private void displayAlert(String data) {
-    	AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-    	alertDialog.setTitle("Title");
-    	alertDialog.setMessage(data);
- 
-    	alertDialog.show();
-    }
 
     private void clearUI() {
         mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
@@ -150,7 +139,9 @@ public class DeviceControlActivity extends Activity {
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        
+        startService(gattServiceIntent);
+        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
     }
 
     @Override
@@ -166,8 +157,8 @@ public class DeviceControlActivity extends Activity {
         
         if (checkGooglePlayApk()) {
         	// Enable location tracking
-        	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
-        	startService(bgServiceIntent);    
+        	//Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+        	//startService(bgServiceIntent);    
         }
     }
     
@@ -259,7 +250,6 @@ public class DeviceControlActivity extends Activity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         return intentFilter;
     }
 }
