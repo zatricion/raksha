@@ -18,7 +18,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
             Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
         	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
         	bgServiceIntent.setAction("ACTION_EMERGENCY_ALERT");
-        	context.startService(bgServiceIntent);
+        	//context.startService(bgServiceIntent);
         }
     }
 };
