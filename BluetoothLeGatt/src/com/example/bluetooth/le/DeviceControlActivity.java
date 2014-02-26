@@ -76,6 +76,7 @@ public class DeviceControlActivity extends Activity {
         @Override
         public void onServiceConnected(ComponentName componentName, IBinder service) {
             mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
+            // This call to initialize sets the Bluetooth Adapter
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
@@ -157,7 +158,7 @@ public class DeviceControlActivity extends Activity {
         
         if (checkGooglePlayApk()) {
         	// Enable location tracking
-        	//Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+        	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
         	//startService(bgServiceIntent);    
         }
     }

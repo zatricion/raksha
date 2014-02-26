@@ -17,9 +17,13 @@ public class BackgroundService extends Service implements
 		GooglePlayServicesClient.ConnectionCallbacks,
 		GooglePlayServicesClient.OnConnectionFailedListener,
 		LocationListener {
+	
     // Global variables
     LocationClient mLocationClient;
     boolean mUpdatesRequested;
+    
+    public final static String ACTION_EMERGENCY_ALERT =
+            "ACTION_EMERGENCY_ALERT";
     
     // Define an object that holds accuracy and frequency parameters
     LocationRequest mLocationRequest;
@@ -48,21 +52,34 @@ public class BackgroundService extends Service implements
         mLocationRequest.setInterval(UPDATE_INTERVAL);
         // Set the fastest update interval to 1 second
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-    }
-	
-	@Override
-	public int onStartCommand(Intent intent, int flags, int startId) {
+        
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
          */
         mLocationClient = new LocationClient(this, this, this);
         
-        // Start with updates turned on
-        mUpdatesRequested = true;
+        // Start with updates turned off
+        mUpdatesRequested = false;
         
         mLocationClient.connect();
-        
+    }
+	
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+        // If the intent is from the button, send out an alert
+		final String action = intent.getAction();
+		if (ACTION_EMERGENCY_ALERT.equals(action)) {
+			Location cached = mLocationClient.getLastLocation();
+			String msg = locationToString(cached);
+			
+			// Start getting updates
+			mLocationClient.requestLocationUpdates(mLocationRequest, this);
+			
+			// Debug
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+		}
+		
 		// Continue running until explicitly stopped
 		return START_STICKY;
 	}
@@ -75,10 +92,11 @@ public class BackgroundService extends Service implements
 	@Override
 	public void onLocationChanged(Location location) {
         // Report to the UI that the location was updated
-        String msg = "Updated Location: " +
-                Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+//        String msg = "Updated Location: " +
+//                Double.toString(location.getLatitude()) + "," +
+//                Double.toString(location.getLongitude());
+//        Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_SHORT).show();
+		// TODO: Start sending location updates to other devices nearby
 	}
 
 	@Override
@@ -107,5 +125,10 @@ public class BackgroundService extends Service implements
 	public void onDisconnected() {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public String locationToString(Location location) {
+	    return Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
 	}
 }

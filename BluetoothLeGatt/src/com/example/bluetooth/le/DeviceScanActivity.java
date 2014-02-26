@@ -37,6 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -125,6 +126,13 @@ public class DeviceScanActivity extends ListActivity {
         // Initializes list view adapter.
         mLeDeviceListAdapter = new LeDeviceListAdapter();
         setListAdapter(mLeDeviceListAdapter);
+        
+        // Show already bonded devices
+        Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
+
+		for (BluetoothDevice device : devices) {
+	        mLeDeviceListAdapter.addDevice(device);
+		}
         scanLeDevice(true);
     }
 

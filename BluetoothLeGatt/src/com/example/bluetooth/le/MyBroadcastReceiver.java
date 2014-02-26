@@ -14,7 +14,11 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
         if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+        	// intent.getStringExtra(BluetoothLeService.EXTRA_DATA)
             Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
+        	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
+        	bgServiceIntent.setAction("ACTION_EMERGENCY_ALERT");
+        	context.startService(bgServiceIntent);
         }
     }
 };
