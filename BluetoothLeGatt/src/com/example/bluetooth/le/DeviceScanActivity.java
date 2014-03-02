@@ -133,7 +133,8 @@ public class DeviceScanActivity extends ListActivity {
 		for (BluetoothDevice device : devices) {
 	        mLeDeviceListAdapter.addDevice(device);
 		}
-        scanLeDevice(true);
+        // Don't scan for devices unless asked to
+		// scanLeDevice(true);
     }
 
     @Override

@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -114,6 +115,16 @@ public class DeviceControlActivity extends Activity {
                 // Enable button notifications
                 enableNotifications(mBluetoothLeService.getButtonService());
             } 
+            else if (BluetoothLeService.ACTION_BOND_STATE_CHANGED.equals(action)) {
+                // Let the user know that the device is bonded
+                Toast.makeText(context, "Device Paired", Toast.LENGTH_SHORT).show();
+            } 
+            else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
+                // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
+            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+            	String pin = "";
+            	device.setPin(pin.getBytes());
+            } 
         }
     };
 
@@ -159,7 +170,7 @@ public class DeviceControlActivity extends Activity {
         if (checkGooglePlayApk()) {
         	// Enable location tracking
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
-        	//startService(bgServiceIntent);    
+        	startService(bgServiceIntent);    
         }
     }
     
@@ -210,10 +221,14 @@ public class DeviceControlActivity extends Activity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_connect:
-                mBluetoothLeService.connect(mDeviceAddress);
+            	if (mBluetoothLeService != null) {
+            		mBluetoothLeService.connect(mDeviceAddress);
+            	}
                 return true;
             case R.id.menu_disconnect:
-                mBluetoothLeService.disconnect();
+            	if (mBluetoothLeService != null) {
+            		mBluetoothLeService.disconnect();
+            	}
                 return true;
             case android.R.id.home:
                 onBackPressed();
@@ -251,6 +266,8 @@ public class DeviceControlActivity extends Activity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(BluetoothLeService.ACTION_BOND_STATE_CHANGED);
+        intentFilter.addAction(BluetoothLeService.PAIRING_REQUEST);
         return intentFilter;
     }
 }

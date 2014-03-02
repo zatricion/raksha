@@ -16,6 +16,7 @@
 
 package com.example.bluetooth.le;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -30,6 +31,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
@@ -66,10 +68,18 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String PAIRING_REQUEST =
+    		"android.bluetooth.device.action.PAIRING_REQUEST";
+    public final static String ACTION_BOND_STATE_CHANGED =
+    		"android.bluetooth.device.action.ACTION_BOND_STATE_CHANGED";
+    public final static String ACTION_ACL_DISCONNECTED =
+    		"android.bluetooth.device.action.ACL_DISCONNECTED";
+    
     public final static UUID UUID_BUTTON_CHAR =
             UUID.fromString(SampleGattAttributes.BUTTON_CHAR);
     public final static UUID UUID_BUTTON_SERV =
             UUID.fromString(SampleGattAttributes.BUTTON_SERV);
+
     
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
@@ -171,6 +181,12 @@ public class BluetoothLeService extends Service {
         //close();
         return super.onUnbind(intent);
     }
+    
+	@Override
+	public void onDestroy() {
+		close();
+		super.onDestroy();
+	}
 
     private final IBinder mBinder = new LocalBinder();
 
@@ -209,7 +225,7 @@ public class BluetoothLeService extends Service {
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
-    public boolean connect(final String address) {
+	public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
@@ -238,6 +254,10 @@ public class BluetoothLeService extends Service {
         Log.d(TAG, "Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
         mConnectionState = STATE_CONNECTING;
+        
+        // Add device to list of previously paired devices   
+        // device.createBond();
+        
         return true;
     }
 

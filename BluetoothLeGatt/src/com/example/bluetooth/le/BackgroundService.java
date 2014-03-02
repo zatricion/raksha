@@ -78,6 +78,7 @@ public class BackgroundService extends Service implements
 			
 			// Debug
             Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+            // TODO: send to other people
 		}
 		
 		// Continue running until explicitly stopped
@@ -86,7 +87,7 @@ public class BackgroundService extends Service implements
 	
 	@Override
 	public void onDestroy() {
-		
+		super.onDestroy();
 	}
 	
 	@Override

@@ -43,6 +43,7 @@ limitations under the License.
         <receiver android:name=".MyBroadcastReceiver" android:process=":receive">
           <intent-filter>
             <action android:name="com.example.bluetooth.le.ACTION_DATA_AVAILABLE"/>
+            <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED"/>
           </intent-filter>
         </receiver>
         <activity android:name=".DeviceControlActivity"/>
