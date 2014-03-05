@@ -55,7 +55,9 @@ public class BackgroundService extends Service implements
     private String mAccount;
     private CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
-
+    
+	// TODO: get radius from preferences
+    private Double TEMP_RADIUS = 50.0; // meters
     
     public final static String ACTION_EMERGENCY_ALERT =
             "com.bloc.bluetooth.le.ACTION_EMERGENCY_ALERT";
@@ -118,7 +120,11 @@ public class BackgroundService extends Service implements
 	public int onStartCommand(Intent intent, int flags, int startId) {
         // If the intent is from the button, send out an alert
 		final String action = intent.getAction();
-		if (ACTION_EMERGENCY_ALERT.equals(action)) {			
+		if (ACTION_EMERGENCY_ALERT.equals(action)) {		
+			// Send out the alert!
+			setAlert();
+		
+			// Get more accurate and more frequent location fixes
 	        // Use high accuracy
 	        mLocationRequest.setPriority(
 	                LocationRequest.PRIORITY_HIGH_ACCURACY);  
@@ -144,6 +150,8 @@ public class BackgroundService extends Service implements
 	
 	@Override
 	public void onLocationChanged(Location location) {
+		// Test
+        Toast.makeText(this, "Location Changed", Toast.LENGTH_SHORT).show();
         // Report the new location to the backend
 		sendMyLocation(location);
 	}
@@ -206,10 +214,14 @@ public class BackgroundService extends Service implements
 	                                                        mBackend.update(mSelf.asEntity(),
 	                                                                        updateHandler);
 	                                                } else {
+	                                                	// TODO: get radius from preferences
 	                                                        final Person newGeek = new Person(
 	                                                        								mAccount,
 	                                                                                        mPhone,
-	                                                                                        gh.encode(loc));
+	                                                                                        gh.encode(loc),
+	                                                                                        false, // no alert yet
+	                                                                                        TEMP_RADIUS
+	                                                                                        );
 	                                                        mBackend.insert(newGeek.asEntity(),
 	                                                                        updateHandler);
 	                                                }
@@ -226,6 +238,13 @@ public class BackgroundService extends Service implements
 		mPhone = number;
 		if (mSelf != null) {
 			mSelf.setPhone(mPhone);
+			mBackend.update(mSelf.asEntity(), updateHandler);
+		}
+	}
+	
+	public void setAlert() {
+		if (mSelf != null) {
+			mSelf.setAlert(true);
 			mBackend.update(mSelf.asEntity(), updateHandler);
 		}
 	}

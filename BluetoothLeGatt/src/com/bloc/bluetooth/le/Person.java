@@ -18,12 +18,16 @@ public class Person {
 	public static final String KEY_NAME = "name";
 	public static final String KEY_PHONE = "telephone";
 	public static final String KEY_GEOHASH = "location";
+	public static final String KEY_ALERT = "alert";
+	public static final String KEY_RADIUS = "radius";
 
-	public Person(String name, String number, String geohash) {
+	public Person(String name, String number, String geohash, boolean alert, Double radius) {
 		this.cloudEntity = new CloudEntity("Person");
 		this.setName(name);
 		this.setPhone(number);
 		this.setGeohash(geohash);
+		this.setAlert(alert);
+		this.setRadius(radius);
 	}
 
 	public Person(CloudEntity e) {
@@ -64,6 +68,23 @@ public class Person {
 
 	public void setGeohash(String geohash) {
 		cloudEntity.put(KEY_GEOHASH, geohash);
+	}
+	
+	public String getAlert() {
+		return (String) cloudEntity.get(KEY_ALERT);
+	}
+
+	public void setAlert(boolean alert) {
+		String str = String.valueOf(alert);
+		cloudEntity.put(KEY_ALERT, str);
+	}
+	
+	public Double getRadius() {
+		return (Double) cloudEntity.get(KEY_RADIUS);
+	}
+
+	public void setRadius(Double radius) {
+		cloudEntity.put(KEY_RADIUS, radius);
 	}
 
 	public Date getUpdatedAt() {
