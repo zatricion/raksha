@@ -1,4 +1,4 @@
-package com.example.bluetooth.le;
+package com.bloc.bluetooth.le;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +12,7 @@ import android.widget.Toast;
 public class MyBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
+    	Log.e("Called", "Hello");
         final String action = intent.getAction();
         if (BluetoothLeService.ACTION_ACL_DISCONNECTED.equals(action)) {
             Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
@@ -21,7 +22,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
             Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
         	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
-        	bgServiceIntent.setAction("ACTION_EMERGENCY_ALERT");
+        	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
         	context.startService(bgServiceIntent);
         }
     }

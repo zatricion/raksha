@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.bluetooth.le;
+package com.bloc.bluetooth.le;
 
 import android.app.Activity;
 import android.app.ListActivity;
@@ -26,6 +26,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -40,6 +41,8 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
+import com.bloc.bluetooth.le.R;
+
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
  */
@@ -48,6 +51,8 @@ public class DeviceScanActivity extends ListActivity {
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
+    
+    public final static String MY_DEVICE = "SensorTag";
 
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
@@ -131,7 +136,9 @@ public class DeviceScanActivity extends ListActivity {
         Set<BluetoothDevice> devices = mBluetoothAdapter.getBondedDevices();
 
 		for (BluetoothDevice device : devices) {
-	        mLeDeviceListAdapter.addDevice(device);
+			if (device.getName().equals(MY_DEVICE)) {
+				mLeDeviceListAdapter.addDevice(device);
+			}
 		}
         // Don't scan for devices unless asked to
 		// scanLeDevice(true);

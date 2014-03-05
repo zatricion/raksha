@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.bluetooth.le;
+package com.bloc.bluetooth.le;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -31,6 +31,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,6 +45,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import com.google.cloud.backend.android.CloudBackendActivity;
+import com.google.cloud.backend.android.CloudBackendMessaging;
+import com.google.cloud.backend.android.CloudCallbackHandler;
+import com.google.cloud.backend.android.CloudEntity;
+import com.google.cloud.backend.android.CloudQuery;
+import com.google.cloud.backend.android.CloudQuery.Order;
+import com.google.cloud.backend.android.CloudQuery.Scope;
+import com.bloc.bluetooth.le.R;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
@@ -53,7 +62,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
  * communicates with {@code BluetoothLeService}, which in turn interacts with the
  * Bluetooth LE API.
  */
-public class DeviceControlActivity extends Activity {
+public class DeviceControlActivity extends CloudBackendActivity {
     private final static String TAG = DeviceControlActivity.class.getSimpleName();
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
@@ -170,6 +179,12 @@ public class DeviceControlActivity extends Activity {
         if (checkGooglePlayApk()) {
         	// Enable location tracking
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+            CloudBackendMessaging backend = getCloudBackend();
+            String account = getAccountName();
+            
+            bgServiceIntent.setAction(Intent.ACTION_SEND);
+        	bgServiceIntent.putExtra("backend", backend);
+        	bgServiceIntent.putExtra("account", account);
         	startService(bgServiceIntent);    
         }
     }
