@@ -39,9 +39,9 @@ public class CloudBackendActivity extends FragmentActivity {
 
   private static final String PREF_KEY_ACCOUNT_NAME = "PREF_KEY_ACCOUNT_NAME";
 
-  private GoogleAccountCredential credential;
+  private static GoogleAccountCredential credential;
 
-  private CloudBackendMessaging cloudBackend;
+  private static CloudBackendMessaging cloudBackend;
 
   // is this app subscribed to the Cloud Message?
   private static boolean isSubscribedToBroadcastMessage = false;
@@ -51,7 +51,7 @@ public class CloudBackendActivity extends FragmentActivity {
    *
    * @return {@link CloudBackendMessaging}
    */
-  protected CloudBackendMessaging getCloudBackend() {
+  public static CloudBackendMessaging getCloudBackend() {
     return cloudBackend;
   }
 
@@ -163,7 +163,7 @@ public class CloudBackendActivity extends FragmentActivity {
   /**
    * Returns account name selected by user, or null if any account is selected.
    */
-  protected String getAccountName() {
+  public static String getAccountName() {
     return credential == null ? null : credential.getSelectedAccountName();
   }
 }

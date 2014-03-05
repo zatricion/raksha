@@ -30,7 +30,6 @@ import com.google.cloud.backend.android.mobilebackend.model.EntityListDto;
 import com.google.cloud.backend.android.mobilebackend.model.QueryDto;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -42,16 +41,10 @@ import java.util.List;
  * {@link CloudBackendTest} for detailed usage.
  *
  * @author kazsato
- * @author zatricion
  */
-public class CloudBackend implements Serializable {
+public class CloudBackend {
 
-  /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-static {
+  static {
     // to prevent EOFException after idle
     // http://code.google.com/p/google-http-java-client/issues/detail?id=116
     System.setProperty("http.keepAlive", "false");

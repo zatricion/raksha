@@ -22,6 +22,7 @@ import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,7 +35,7 @@ import java.util.Map;
  * 
  * @author kazsato
  */
-public class CloudBackendMessaging extends CloudBackendAsync {
+public class CloudBackendMessaging extends CloudBackendAsync implements Serializable {
 
   /**
    * Creates an instance of {@link CloudBackendAsync}. Caller need to pass a

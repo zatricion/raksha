@@ -41,6 +41,7 @@ import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -159,10 +160,20 @@ public class DeviceControlActivity extends CloudBackendActivity {
 
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
+    }
+    
+    @Override
+    public void onPostCreate() {
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         
         startService(gattServiceIntent);
         bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
+        
+        if (checkGooglePlayApk()) {
+        	// Enable location tracking
+        	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+        	startService(bgServiceIntent);    
+        }
     }
 
     @Override
@@ -174,18 +185,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
         if (mBluetoothLeService != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
-        }
-        
-        if (checkGooglePlayApk()) {
-        	// Enable location tracking
-        	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
-            CloudBackendMessaging backend = getCloudBackend();
-            String account = getAccountName();
-            
-            bgServiceIntent.setAction(Intent.ACTION_SEND);
-        	bgServiceIntent.putExtra("backend", backend);
-        	bgServiceIntent.putExtra("account", account);
-        	startService(bgServiceIntent);    
         }
     }
     

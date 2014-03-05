@@ -70,7 +70,9 @@ public class BackgroundService extends Service implements
 			mSelf = new Person(result);
 		}
 	};
-	    
+	
+	private static final String KEY_PHONE = "telephone";
+    
     // Milliseconds per second
     private static final int MILLISECONDS_PER_SECOND = 1000;
     // Update frequency in seconds
@@ -107,6 +109,9 @@ public class BackgroundService extends Service implements
         
         mLocationClient.connect();
         
+        mAccount = DeviceControlActivity.getAccountName();
+        mBackend = DeviceControlActivity.getCloudBackend();
+        
     }
 	
 	@Override
@@ -126,14 +131,6 @@ public class BackgroundService extends Service implements
 			
 			// Start getting updates
 			mLocationClient.requestLocationUpdates(mLocationRequest, this);			
-		} 
-		else if (Intent.ACTION_SEND.equals(action)) {
-			if (mAccount == null) {
-				mAccount = intent.getStringExtra("account");
-			}
-			if (mBackend == null) {
-				mBackend = (CloudBackendMessaging) intent.getSerializableExtra("backend");	
-			}
 		}
 		
 		// Continue running until explicitly stopped
@@ -149,7 +146,6 @@ public class BackgroundService extends Service implements
 	public void onLocationChanged(Location location) {
         // Report the new location to the backend
 		sendMyLocation(location);
-
 	}
 
 	@Override
@@ -198,8 +194,8 @@ public class BackgroundService extends Service implements
 	        // execute the insertion with the handler
 	        // query for existing username before inserting
 	        if (mSelf == null || mSelf.asEntity().getId() == null) {
-	        	mBackend.listByProperty("Person", "name", Op.EQ,
-	                                	mAccount, null, 1, Scope.PAST,
+	                mBackend.listByProperty("Person", "name", Op.EQ,
+	                                mAccount, null, 1, Scope.PAST,
 	                                new CloudCallbackHandler<List<CloudEntity>>() {
 	                                        @Override
 	                                        public void onComplete(List<CloudEntity> results) {
@@ -210,7 +206,8 @@ public class BackgroundService extends Service implements
 	                                                        mBackend.update(mSelf.asEntity(),
 	                                                                        updateHandler);
 	                                                } else {
-	                                                        final Person newGeek = new Person(mAccount,
+	                                                        final Person newGeek = new Person(
+	                                                        								mAccount,
 	                                                                                        mPhone,
 	                                                                                        gh.encode(loc));
 	                                                        mBackend.insert(newGeek.asEntity(),
