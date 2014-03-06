@@ -7,47 +7,50 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
 
-public class MainActivity extends Activity {
+public class ContactPickerDialog extends DialogFragment {
 	private ListView contactListView;
 	private ContactListAdapter contactListAdapter;
 	private AsyncGetContacts asyncGetContacts;
 	private Button doneButton;
 	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-		
-		doneButton = (Button) findViewById(R.id.done);
-		contactListView = (ListView) findViewById(R.id.contact_list_view);
-		asyncGetContacts = new AsyncGetContacts(this, contactListView);
+	public ContactPickerDialog() {
+		// No-arg constructor required for DialogFragment
+	}
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_main, container);
+        
+		doneButton = (Button) view.findViewById(R.id.done);
+		contactListView = (ListView) view.findViewById(R.id.contact_list_view);
+		asyncGetContacts = new AsyncGetContacts(getActivity(), contactListView);
 		asyncGetContacts.execute();
 		
 		doneButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent(getApplicationContext(), FewContactsActivity.class);
+				Intent intent = new Intent(getActivity(), FewContactsActivity.class);
 				intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getSelectedContacts());
 				startActivity(intent);
 			}
 		});
-	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
-	}
+        return view;
+    }
 }

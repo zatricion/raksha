@@ -35,7 +35,7 @@ import java.util.Map;
  * 
  * @author kazsato
  */
-public class CloudBackendMessaging extends CloudBackendAsync implements Serializable {
+public class CloudBackendMessaging extends CloudBackendAsync {
 
   /**
    * Creates an instance of {@link CloudBackendAsync}. Caller need to pass a

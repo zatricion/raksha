@@ -54,6 +54,7 @@ import com.google.cloud.backend.android.CloudQuery;
 import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.bloc.bluetooth.le.R;
+import com.bloc.settings.contacts.ContactPickerDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
@@ -174,7 +175,15 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
         	startService(bgServiceIntent);    
         }
+        
+        // TODO: move this to a button
+        showContactPickerDialog();
     }
+    
+    private void showContactPickerDialog() {
+		ContactPickerDialog dlg = new ContactPickerDialog();
+		dlg.show(getFragmentManager(), "contacts");
+	}
 
     @Override
     protected void onResume() {

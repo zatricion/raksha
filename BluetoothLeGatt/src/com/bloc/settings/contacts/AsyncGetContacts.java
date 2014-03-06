@@ -23,6 +23,7 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
 		this.contactListView = contactListView;
 	}
 	
+	@Override
 	protected Void doInBackground(Void... args) {
 		ContentResolver cr = context.getContentResolver();
         Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, Phone.DISPLAY_NAME + " ASC");
