@@ -28,11 +28,11 @@ limitations under the License.
  
     <permission
         android:name=".permission.C2D_MESSAGE"
-        android:protectionLevel="dangerous" />
+        android:protectionLevel="signature" />
 
     <permission
         android:name=".permission.MAPS_RECEIVE"
-        android:protectionLevel="dangerous" />
+        android:protectionLevel="signature" />
 
 
     <uses-permission android:name="android.permission.BLUETOOTH"/>
