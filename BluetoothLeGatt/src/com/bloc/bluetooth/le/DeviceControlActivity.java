@@ -53,7 +53,7 @@ import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery;
 import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
-import com.bloc.bluetooth.le.R;
+import com.bloc.R;
 import com.bloc.settings.contacts.ContactPickerDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -177,7 +177,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
         
         // TODO: move this to a button
-        showContactPickerDialog();
+        // showContactPickerDialog();
     }
     
     private void showContactPickerDialog() {

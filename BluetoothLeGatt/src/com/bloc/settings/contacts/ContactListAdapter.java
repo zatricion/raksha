@@ -3,6 +3,8 @@ package com.bloc.settings.contacts;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bloc.R;
+
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;

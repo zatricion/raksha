@@ -43,7 +43,11 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
                          String phone = pCur.getString(
                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
 //                         System.out.println("phone" + phone);
-                         contactList.add(new Contact(name, Long.valueOf(phone.replaceAll("[^\\d.]", ""))));
+                         try {
+                        	 contactList.add(new Contact(name, Long.valueOf(phone.replaceAll("[^\\d.]", ""))));
+                         } catch (NumberFormatException e) {
+                        	 continue;
+                         }
                    }
                    pCur.close();
                }

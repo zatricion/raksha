@@ -3,6 +3,7 @@ package com.bloc.settings.contacts;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bloc.R;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -45,7 +46,7 @@ public class ContactPickerDialog extends DialogFragment {
 			
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent(getActivity(), FewContactsActivity.class);
+				Intent intent = new Intent(getActivity(), ContactListActivity.class);
 				intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getSelectedContacts());
 				startActivity(intent);
 			}

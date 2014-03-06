@@ -21,7 +21,7 @@ public class Person {
 	public static final String KEY_ALERT = "alert";
 	public static final String KEY_RADIUS = "radius";
 
-	public Person(String name, String number, String geohash, boolean alert, Double radius) {
+	public Person(String name, String number, String geohash, Boolean alert, Double radius) {
 		this.cloudEntity = new CloudEntity("Person");
 		this.setName(name);
 		this.setPhone(number);
@@ -74,9 +74,8 @@ public class Person {
 		return (String) cloudEntity.get(KEY_ALERT);
 	}
 
-	public void setAlert(boolean alert) {
-		String str = String.valueOf(alert);
-		cloudEntity.put(KEY_ALERT, str);
+	public void setAlert(Boolean alert) {
+		cloudEntity.put(KEY_ALERT, alert);
 	}
 	
 	public Double getRadius() {

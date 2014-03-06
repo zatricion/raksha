@@ -2,15 +2,17 @@ package com.bloc.settings.contacts;
 
 import java.util.ArrayList;
 
+import com.bloc.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
 import android.widget.ListView;
 
-public class FewContactsActivity extends Activity {
+public class ContactListActivity extends Activity {
 	private ArrayList<Contact> contactList;
 	private ContactListAdapterNoCheckBox adapter;
 	private ListView contactListView;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -18,8 +20,7 @@ public class FewContactsActivity extends Activity {
 		contactList = getIntent().getExtras().getParcelableArrayList("contacts");
 		contactListView = (ListView) findViewById(R.id.few_contact_list_view);
 		adapter = new ContactListAdapterNoCheckBox(this, contactList);
-		contactListView.setAdapter(adapter);
-		
+		contactListView.setAdapter(adapter);		
 	}
 
 	@Override

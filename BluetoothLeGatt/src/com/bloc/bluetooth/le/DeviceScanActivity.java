@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.UUID;
 
-import com.bloc.bluetooth.le.R;
+import com.bloc.R;
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
