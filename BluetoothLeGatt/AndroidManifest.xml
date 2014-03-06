@@ -14,10 +14,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.bloc"
+<manifest package="com.bloc"
           android:versionCode="1"
-          android:versionName="1.0">
+          android:versionName="1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-sdk android:minSdkVersion="19"
               android:targetSdkVersion="19"/>
     <!-- Declare this required feature if you want to make the app available to BLE-capable
@@ -60,37 +59,37 @@ limitations under the License.
     <application android:label="@string/app_name"
                  android:icon="@drawable/ic_launcher"
                  android:theme="@android:style/Theme.Holo.Light">
-        <activity android:name=".bluetooth.le.DeviceScanActivity"
+        <activity android:name="com.bloc.bluetooth.le.DeviceScanActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <receiver android:name=".bluetooth.le.MyBroadcastReceiver" android:process=":receive">
+        <receiver android:name="com.bloc.bluetooth.le.MyBroadcastReceiver" android:process=":receive">
           <intent-filter>
             <action android:name="com.bloc.bluetooth.le.ACTION_DATA_AVAILABLE"/>
             <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED"/>
           </intent-filter>
         </receiver>
-        <activity android:name=".bluetooth.le.DeviceControlActivity"/>
-        <service android:name=".bluetooth.le.BluetoothLeService" android:enabled="true"/>
-        <service android:name=".bluetooth.le.BackgroundService"/>
+        <activity android:name="com.bloc.bluetooth.le.DeviceControlActivity"/>
+        <service android:name="com.bloc.bluetooth.le.BluetoothLeService" android:enabled="true"/>
+        <service android:name="com.bloc.bluetooth.le.BackgroundService"/>
 
-        <service android:name=".bluetooth.le.GCMIntentService" />
+        <service android:name="com.bloc.bluetooth.le.GCMIntentService" />
 
         <receiver
-            android:name="com.google.android.gcm.GCMBroadcastReceiver"
+            android:name=".bluetooth.le.MyGCMBoadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 
-                <category android:name="com.google.cloud.backend.android" />
+                <category android:name="com.bloc.bluetooth.le" />
             </intent-filter>
         </receiver>
         
-        <activity android:name=".settings.contacts.ContactListActivity"/>
+        <activity android:name="com.bloc.settings.contacts.ContactListActivity"/>
         
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"

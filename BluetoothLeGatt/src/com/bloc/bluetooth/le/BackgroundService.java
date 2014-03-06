@@ -208,17 +208,12 @@ public class BackgroundService extends Service implements
 	        // execute the insertion with the handler
 	        // query for existing username before inserting
 	        if (mSelf == null || mSelf.asEntity().getId() == null) {
-	        	    Log.e("Backend", "Finding new");
-	        	    Log.e("Backend", String.valueOf(mBackend));
-	        	    Log.e("Backend", String.valueOf(mAccount));
 	                mBackend.listByProperty("Person", "name", Op.EQ,
 	                                mAccount, Order.ASC, 1, Scope.PAST,
 	                                new CloudCallbackHandler<List<CloudEntity>>() {
 	                                        @Override
 	                                        public void onComplete(List<CloudEntity> results) {
-                                        		Log.e("PERSON", "ASLDKJFASLKDFJALSDKF");
 	                                                if (results.size() > 0) {
-	                                                		Log.e("PERSON", "Finding new");
 	                                                        mSelf = new Person(results.get(0));
 	                                                        mSelf.setGeohash(gh.encode(loc));
 	                                                        mSelf.setPhone(mPhone);
@@ -226,10 +221,8 @@ public class BackgroundService extends Service implements
 	                                                        mSelf.setRadius(TEMP_RADIUS);
 	                                                        mBackend.update(mSelf.asEntity(),
 	                                                                        updateHandler);
-	                                                        Log.e("PERSON", "Found new");
 	                                                } else {
 	                                                	// TODO: get radius from preferences
-	                                                	Log.e("PERSON", "Creating new");
 	                                                        final Person newGeek = new Person(
 	                                                        								mAccount,
 	                                                                                        mPhone,
@@ -237,14 +230,11 @@ public class BackgroundService extends Service implements
 	                                                                                        mAlert,
 	                                                                                        TEMP_RADIUS
 	                                                                                        );
-	                                                        Log.e("PERSON", "Created new");
 	                                                        mBackend.insert(newGeek.asEntity(),
 	                                                                        updateHandler);
-	                                                        Log.e("PERSON", "Inserted new");
 	                                                }
 	                                        }
 	                                });
-	                Log.e("LISTED", "FINISH");
 	        } else {
 	                mSelf.setGeohash(gh.encode(loc));
 	                mSelf.setPhone(mPhone);
