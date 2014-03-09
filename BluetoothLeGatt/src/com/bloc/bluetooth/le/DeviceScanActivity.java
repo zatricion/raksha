@@ -17,6 +17,8 @@
 package com.bloc.bluetooth.le;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -38,6 +40,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -61,6 +64,12 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        if (BluetoothLeService.mRunning) {
+        	final Intent intent = new Intent(this, DeviceControlActivity.class);
+        	startActivity(intent);
+        	finish();
+        }
         getActionBar().setTitle(R.string.title_devices);
         mHandler = new Handler();
 
@@ -85,7 +94,7 @@ public class DeviceScanActivity extends ListActivity {
         }
     }
 
-    @Override
+	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
         if (!mScanning) {

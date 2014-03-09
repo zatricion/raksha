@@ -52,6 +52,8 @@ public class BluetoothLeService extends Service {
     private BluetoothAdapter mBluetoothAdapter;
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
+    
+    static boolean mRunning;
     private int mConnectionState = STATE_DISCONNECTED;
 
     private static final int STATE_DISCONNECTED = 0;
@@ -92,6 +94,7 @@ public class BluetoothLeService extends Service {
 							        .build();
         // Keep this service in the foreground
         startForeground(42, note);
+        mRunning = true;
         
 		return START_STICKY;
 	}
