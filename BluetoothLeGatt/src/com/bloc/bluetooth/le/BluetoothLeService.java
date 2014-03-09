@@ -91,7 +91,7 @@ public class BluetoothLeService extends Service {
 							        .setContentTitle("SensorTag")
 							        .build();
         // Keep this service in the foreground
-        startForeground( 42, note );
+        startForeground(42, note);
         
 		return START_STICKY;
 	}

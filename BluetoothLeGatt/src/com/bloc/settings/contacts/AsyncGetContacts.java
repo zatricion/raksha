@@ -13,7 +13,7 @@ import android.util.Log;
 import android.widget.ListView;
 
 public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
-	private List<Contact> contactList = new ArrayList<Contact>();
+	private ArrayList<Contact> contactList = new ArrayList<Contact>();
 	private Context context;
 	private ContactListAdapter contactListAdapter;
 	private ListView contactListView;
@@ -32,9 +32,7 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
            while (cur.moveToNext()) {
                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-               if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-//                    System.out.println("name : " + name + ", ID : " + id);
- 
+               if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) { 
                     // get the phone number
                    Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,
                                           ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
@@ -42,7 +40,6 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
                    while (pCur.moveToNext()) {
                          String phone = pCur.getString(
                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-//                         System.out.println("phone" + phone);
                          try {
                         	 contactList.add(new Contact(name, Long.valueOf(phone.replaceAll("[^\\d.]", ""))));
                          } catch (NumberFormatException e) {
@@ -54,7 +51,6 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
            }
         }
         cur.close();
-//        contactListAdapter.addAll(contactList);
         return null;
      }
 	protected void onPostExecute(Void result){

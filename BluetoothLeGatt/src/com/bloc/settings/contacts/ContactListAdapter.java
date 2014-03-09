@@ -19,13 +19,11 @@ import android.widget.TextView;
 public class ContactListAdapter extends ArrayAdapter<Contact>{
 	private final Context context;
 	private final List<Contact> contactList;
-	private Boolean[] contactSelectedList;
 
 	public ContactListAdapter(Context context, List<Contact> list) {
 		super(context, R.layout.contact_list_row, list);
 	    this.context = context;
 	    this.contactList = list;
-	    this.contactSelectedList = new Boolean[list.size()];
 	}
 
 	@Override
@@ -50,8 +48,6 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 	OnCheckedChangeListener mListener = new OnCheckedChangeListener() {
 		 @Override
 	     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			 contactSelectedList[(Integer) buttonView.getTag()] = isChecked;
-			 CheckBox checkBox = (CheckBox) buttonView;
 			 contactList.get((Integer) buttonView.getTag()).selected = isChecked;
 	     }
 	};
@@ -60,9 +56,7 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 		ArrayList<Contact> retList = new ArrayList<Contact>();
 		int i;
 		for(i=0;i<contactList.size();i++){
-			if (contactSelectedList[i] == Boolean.valueOf("true")){
-				retList.add(contactList.get(i));
-			}
+			retList.add(contactList.get(i));
 		}
 		return retList;
 	}

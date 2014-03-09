@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -42,6 +43,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +55,10 @@ import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery;
 import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.bloc.R;
+import com.bloc.settings.contacts.Contact;
 import com.bloc.settings.contacts.ContactPickerDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -70,8 +75,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     
+    public static final String KEY_CONTACTS = "contacts";
+    
+    public static ArrayList<Contact> mContactList;
+    
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-
+    
     private TextView mConnectionState;
     private TextView mDataField;
     private String mDeviceName;
@@ -176,8 +185,17 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	startService(bgServiceIntent);    
         }
         
-        // TODO: move this to a button
-        // showContactPickerDialog();
+        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+        String contacts = prefs.getString(KEY_CONTACTS, null);
+        if (contacts == null) {
+        	showContactPickerDialog();
+        }
+        else {
+        	Gson gson = new Gson();
+            Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
+            ArrayList<Contact> contact_list = gson.fromJson(contacts, collectionType);
+        	mContactList = contact_list;
+        }
     }
     
     private void showContactPickerDialog() {
@@ -256,6 +274,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
             case android.R.id.home:
                 onBackPressed();
                 return true;
+            case R.id.action_contacts:
+            	showContactPickerDialog();
+            	return true;        	
         }
         return super.onOptionsItemSelected(item);
     }
