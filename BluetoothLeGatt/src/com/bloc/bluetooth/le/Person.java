@@ -1,5 +1,6 @@
 package com.bloc.bluetooth.le;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -7,9 +8,10 @@ import java.util.List;
 import com.google.cloud.backend.android.CloudEntity;
 
 /**
- * Model object describing a geek user of this app
+ * Model object describing a user of this app
  *
  * @author David M. Chandler
+ * @author zatricion
  */
 public class Person {
 
@@ -78,8 +80,8 @@ public class Person {
 		cloudEntity.put(KEY_ALERT, alert);
 	}
 	
-	public Double getRadius() {
-		return (Double) cloudEntity.get(KEY_RADIUS);
+	public BigDecimal getRadius() {
+		return (BigDecimal) cloudEntity.get(KEY_RADIUS);
 	}
 
 	public void setRadius(Double radius) {

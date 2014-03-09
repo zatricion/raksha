@@ -1,6 +1,7 @@
 package com.bloc.bluetooth.le;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.List;
 
 import com.google.android.gms.auth.GoogleAuthException;
@@ -13,6 +14,7 @@ import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.cloud.backend.android.CloudCallbackHandler;
 import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery.Scope;
@@ -38,6 +40,7 @@ import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery;
 import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
+import com.google.cloud.backend.android.F;
 
 public class BackgroundService extends Service implements
 		GooglePlayServicesClient.ConnectionCallbacks,
@@ -55,6 +58,7 @@ public class BackgroundService extends Service implements
     private String mAccount;
     private CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
+    private Location mCurrLocation;
     
 	// TODO: get radius from preferences
     private Double TEMP_RADIUS = 50.0; // meters
@@ -73,7 +77,7 @@ public class BackgroundService extends Service implements
 		}
 	};
 	
-	private static final String KEY_PHONE = "telephone";
+	private static final int WEEK_IN_SECONDS = 604800;
     
     // Milliseconds per second
     private static final int MILLISECONDS_PER_SECOND = 1000;
@@ -111,11 +115,12 @@ public class BackgroundService extends Service implements
         
         // Start with alert turned off
         mAlert = Boolean.FALSE;
-        
-        mLocationClient.connect();
-        
+                
         mAccount = DeviceControlActivity.getAccountName();
         mBackend = DeviceControlActivity.getCloudBackend();
+        
+        // Connect to location client
+        mLocationClient.connect();
         
     }
 	
@@ -126,7 +131,6 @@ public class BackgroundService extends Service implements
 		if (ACTION_EMERGENCY_ALERT.equals(action)) {		
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
-			setAlert(mAlert);
 		
 			// Get more accurate and more frequent location fixes
 	        // Use high accuracy
@@ -140,7 +144,7 @@ public class BackgroundService extends Service implements
 	        mLocationRequest.setFastestInterval(FASTEST_INTERVAL / 10);
 			
 			// Start getting updates
-			mLocationClient.requestLocationUpdates(mLocationRequest, this);			
+			mLocationClient.requestLocationUpdates(mLocationRequest, this);		
 		}
 		
 		// Continue running until explicitly stopped
@@ -156,7 +160,7 @@ public class BackgroundService extends Service implements
 	public void onLocationChanged(Location location) {
 		// Test
         Toast.makeText(this, "Location Changed", Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, locationToString(location), Toast.LENGTH_SHORT).show();
+        mCurrLocation = location;
         // Report the new location to the backend
 		sendMyLocation(location);
 	}
@@ -180,10 +184,9 @@ public class BackgroundService extends Service implements
         
         // Get phone number
 		if (mPhone == null) {
-			// TODO: change context from MapActivity to BackgroundService
 	        TelephonyManager tMgr = (TelephonyManager)BackgroundService.this.getSystemService(Context.TELEPHONY_SERVICE);
 	        String phone_number = tMgr.getLine1Number();
-			setPhoneNumber(phone_number);
+			mPhone = phone_number;
 		}
 		
         // If already requested, start periodic updates
@@ -191,17 +194,48 @@ public class BackgroundService extends Service implements
             mLocationClient.requestLocationUpdates(mLocationRequest, this);
         }	
         
+        // Get notified of alerts
+        listenForAlerts();      
 	}
 
 	@Override
 	public void onDisconnected() {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	public String locationToString(Location location) {
 	    return Double.toString(location.getLatitude()) + "," +
                 Double.toString(location.getLongitude());
+	}
+	
+	void listenForAlerts() {
+        CloudCallbackHandler<List<CloudEntity>> alertHandler =
+        		new CloudCallbackHandler<List<CloudEntity>>() {
+            @Override
+            public void onComplete(List<CloudEntity> results) {
+					for (Person victim : Person.fromEntities(results)) {
+						// Don't want alerts from yourself
+						if (!victim.getPhone().equals(mPhone)) {
+		                    LatLng where = gh.decode(victim.getGeohash());
+		                    Location help = new Location("Help");
+		                    help.setLatitude(where.latitude);
+		                    help.setLongitude(where.longitude);
+		                    BigDecimal radius = victim.getRadius();
+		                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
+		                    	// TODO: Create map activity asking for help and updating location
+		                        Toast.makeText(getApplicationContext(), "Alert Received", Toast.LENGTH_SHORT).show();
+		                        break;
+		                    }
+						}
+                    }                   
+            }
+        };
+        
+		CloudQuery cq = new CloudQuery("Person");
+		cq.setFilter(F.eq("alert", Boolean.TRUE));
+		cq.setScope(Scope.FUTURE);
+		cq.setSubscriptionDurationSec(WEEK_IN_SECONDS);
+		mBackend.list(cq, alertHandler);
 	}
 
 	void sendMyLocation(final Location loc) {
@@ -243,27 +277,4 @@ public class BackgroundService extends Service implements
 	                mBackend.update(mSelf.asEntity(), updateHandler);
 	        }
 	}
-
-	public void setPhoneNumber(String number) {
-		mPhone = number;
-		if (mSelf != null) {
-			mSelf.setPhone(mPhone);
-			mBackend.update(mSelf.asEntity(), updateHandler);
-		}
-	}
-	
-	public void setRadius(Double radius) {
-		if (mSelf != null) {
-			mSelf.setRadius(radius);
-			mBackend.update(mSelf.asEntity(), updateHandler);
-		}
-	}
-	
-	public void setAlert(boolean alert) {
-		if (mSelf != null) {
-			mSelf.setAlert(alert);
-			mBackend.update(mSelf.asEntity(), updateHandler);
-		}
-	}
-	
 }
