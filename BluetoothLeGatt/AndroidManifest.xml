@@ -90,6 +90,7 @@ limitations under the License.
         </receiver>
         
         <activity android:name="com.bloc.settings.contacts.ContactListActivity"/>
+        <activity android:name=".samaritan.map.MapActivity"></activity>
         
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"

@@ -174,6 +174,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     @Override
     public void onPostCreate() {
+    	super.onPostCreate();
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         
         startService(gattServiceIntent);

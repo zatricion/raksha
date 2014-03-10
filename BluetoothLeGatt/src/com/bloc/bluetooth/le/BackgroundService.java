@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.bloc.samaritan.map.MapActivity;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.GooglePlayServicesAvailabilityException;
@@ -50,6 +51,7 @@ public class BackgroundService extends Service implements
     // Global variables
     LocationClient mLocationClient;
     boolean mUpdatesRequested;
+    boolean isHelping;
     
     private final static String TAG = BackgroundService.class.getSimpleName();
     
@@ -122,6 +124,8 @@ public class BackgroundService extends Service implements
         // Connect to location client
         mLocationClient.connect();
         
+        // Not yet helping anyone
+        isHelping = false;
     }
 	
 	@Override
@@ -213,6 +217,10 @@ public class BackgroundService extends Service implements
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
             public void onComplete(List<CloudEntity> results) {
+            	if (isHelping) {
+            		return;
+            	}
+            	else {
 					for (Person victim : Person.fromEntities(results)) {
 						// Don't want alerts from yourself
 						if (!victim.getPhone().equals(mPhone)) {
@@ -222,12 +230,17 @@ public class BackgroundService extends Service implements
 		                    help.setLongitude(where.longitude);
 		                    BigDecimal radius = victim.getRadius();
 		                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
+		                    	isHelping = true;
 		                    	// TODO: Create map activity asking for help and updating location
-		                        Toast.makeText(getApplicationContext(), "Alert Received", Toast.LENGTH_SHORT).show();
+		                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
+		                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
+		                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		                    	startActivity(intent);
 		                        break;
 		                    }
 						}
-                    }                   
+                    }
+            	}
             }
         };
         
