@@ -135,6 +135,10 @@ public class BackgroundService extends Service implements
 		if (ACTION_EMERGENCY_ALERT.equals(action)) {		
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
+			if (mCurrLocation == null) {
+				mCurrLocation = mLocationClient.getLastLocation();
+			}
+			sendMyLocation(mCurrLocation);
 		
 			// Get more accurate and more frequent location fixes
 	        // Use high accuracy
