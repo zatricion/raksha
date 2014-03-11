@@ -43,14 +43,15 @@ public class ContactListActivity extends Activity {
 		confirmButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
-			public void onClick(View arg0) {
-                SharedPreferences.Editor ed = getSharedPreferences("myPrefs", MODE_PRIVATE).edit();
+			public void onClick(View arg0) {               
                 if (contactList != null) {
+                	SharedPreferences.Editor ed = getSharedPreferences("myPrefs", MODE_PRIVATE).edit();
                 	Gson gson = new Gson();
                 	String contacts = gson.toJson(contactList);
                 	ed.putString(DeviceControlActivity.KEY_CONTACTS, contacts);
+                	DeviceControlActivity.mContactList = contactList;
+                    ed.commit();
                 }
-                ed.commit();
                 finish();
 			}
 		});
