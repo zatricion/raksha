@@ -26,10 +26,13 @@ import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcelable;
@@ -77,12 +80,16 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     public static final String KEY_CONTACTS = "contacts";
     
-    public static boolean userDisconnect = false;
+    public static boolean userDisconnect;
     
     public static ArrayList<Contact> mContactList;
     
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     
+    private boolean noDevice;
+    
+    private LocationManager manager;
+
     private TextView mConnectionState;
     private TextView mDataField;
     private String mDeviceName;
@@ -170,6 +177,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
 
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+        noDevice = intent.getBooleanExtra("moveOn", false);
 
         if (mDeviceAddress != null) {
 	        // Sets up UI references.
@@ -181,6 +189,8 @@ public class DeviceControlActivity extends CloudBackendActivity {
         
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
+        
+        userDisconnect = false;
     }
     
     @Override
@@ -196,6 +206,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
 	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
 	        startService(gattServiceIntent);
     	}
+    	
+        // Make sure location is enabled
+    	checkLocationEnabled();
         
     	// Start background service
         if (checkGooglePlayApk() && !BackgroundService.isRunning) {
@@ -217,6 +230,41 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
     }
     
+    private void checkLocationEnabled() {
+        if (manager == null) {
+            manager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        }
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) { 
+            //GPS Provider disabled
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            
+            dialog.setTitle("You must enable Location Services to use this application.");  
+            
+            // Allow enable
+            dialog.setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                	startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                }
+            });
+
+            dialog.setNegativeButton("No thanks", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    Toast.makeText(DeviceControlActivity.this, "Location not enabled", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
+            
+            dialog.setOnCancelListener(new OnCancelListener() {
+                public void onCancel(final DialogInterface arg0) {
+                    Toast.makeText(DeviceControlActivity.this, "Location not enabled", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            });
+            
+            dialog.show();
+        }
+    }
+    
     private void showContactPickerDialog() {
 		ContactPickerDialog dlg = new ContactPickerDialog();
 		dlg.show(getFragmentManager(), "contacts");
@@ -226,6 +274,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        
+        // Check for GPS
+        checkLocationEnabled();
         
         // Check for bluetooth
         if (mBluetoothLeService != null && mDeviceAddress != null) {
@@ -272,7 +323,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
         if (mConnected) {
             menu.findItem(R.id.menu_connect).setVisible(false);
             menu.findItem(R.id.menu_disconnect).setVisible(true);
-        } else {
+        } 
+        else if (noDevice) {
+        	 menu.findItem(R.id.menu_connect).setVisible(false);
+             menu.findItem(R.id.menu_disconnect).setVisible(false);
+        }
+        else {
             menu.findItem(R.id.menu_connect).setVisible(true);
             menu.findItem(R.id.menu_disconnect).setVisible(false);
         }
@@ -285,6 +341,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
             case R.id.menu_connect:
             	if (mBluetoothLeService != null && mDeviceAddress != null) {
             		mBluetoothLeService.connect(mDeviceAddress);
+            		userDisconnect = false;
             	}
             	else if (mDeviceAddress != null) {
         	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        

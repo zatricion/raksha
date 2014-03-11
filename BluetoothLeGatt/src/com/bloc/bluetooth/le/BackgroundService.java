@@ -21,14 +21,17 @@ import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.cloud.backend.android.F.Op;
 
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
@@ -298,7 +301,6 @@ public class BackgroundService extends Service implements
             	}
             }
         };
-        Log.e("CHEK", "DSLKFJSLKFJ");
 
 		CloudQuery cq = new CloudQuery("Person");
 		cq.setFilter(F.eq("alert", Boolean.TRUE));
