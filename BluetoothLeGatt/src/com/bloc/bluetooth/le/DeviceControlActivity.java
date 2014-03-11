@@ -77,11 +77,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
+    public static final String ACTION_USER_DISCONNECT = "com.bloc.bluetooth.le.ACTION_USER_DISCONNECT";
     
     public static final String KEY_CONTACTS = "contacts";
-    
-    public static boolean userDisconnect;
-    
+       
     public static ArrayList<Contact> mContactList;
     
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -161,6 +160,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
         mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
         mDataField.setText(R.string.no_data);
     }
+    
+    private void setUserDisconnect(boolean bool) {
+    	 final Intent intent = new Intent(ACTION_USER_DISCONNECT);
+    	 intent.putExtra("value", bool);
+    	 sendBroadcast(intent);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -190,7 +195,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         
-        userDisconnect = false;
+        setUserDisconnect(false);
     }
     
     @Override
@@ -340,18 +345,20 @@ public class DeviceControlActivity extends CloudBackendActivity {
         switch(item.getItemId()) {
             case R.id.menu_connect:
             	if (mBluetoothLeService != null && mDeviceAddress != null) {
+                    Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show();
             		mBluetoothLeService.connect(mDeviceAddress);
-            		userDisconnect = false;
+            		setUserDisconnect(false);
             	}
             	else if (mDeviceAddress != null) {
+                    Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show();
         	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-        	        startService(gattServiceIntent);
         	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
+        	        startService(gattServiceIntent);
             	}
                 return true;
             case R.id.menu_disconnect:
             	if (mBluetoothLeService != null) {
-            		userDisconnect = true;
+            		setUserDisconnect(true);
             		mBluetoothLeService.disconnect();
             	}
                 return true;

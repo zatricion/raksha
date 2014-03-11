@@ -162,6 +162,7 @@ public class BackgroundService extends Service implements
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
 			if (mCurrLocation != null) {
+		        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
 				sendMyLocation(mCurrLocation);
 			}
 		
@@ -218,15 +219,11 @@ public class BackgroundService extends Service implements
 
 	@Override
 	public void onConnectionFailed(ConnectionResult arg0) {
-        Toast.makeText(this, "Connection Failed", Toast.LENGTH_SHORT).show();
-		
+        Toast.makeText(this, "Connection Failed", Toast.LENGTH_SHORT).show();	
 	}
 
 	@Override
 	public void onConnected(Bundle dataBundle) {
-        // Display the connection status
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-        
         // Get phone number
 		if (mPhone == null) {
 	        TelephonyManager tMgr = (TelephonyManager)BackgroundService.this.getSystemService(Context.TELEPHONY_SERVICE);
@@ -239,6 +236,7 @@ public class BackgroundService extends Service implements
 		
 		// If alert registered, send it out
 		if (mAlert) {
+	        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
 			sendMyLocation(mCurrLocation);
 		}
 		

@@ -7,22 +7,27 @@ import android.util.Log;
 import android.widget.Toast;
 
 // Handles various events fired by the BluetoothLeService.
-// ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
-//                        or notification operations.
-public class MyBroadcastReceiver extends BroadcastReceiver {
+public class MyBroadcastReceiver extends BroadcastReceiver {	
+    public static boolean userDisconnect = false;
+    
     @Override
     public void onReceive(Context context, Intent intent) {
-    	Log.e("Called", "Hello");
         final String action = intent.getAction();
-        if (BluetoothLeService.ACTION_ACL_DISCONNECTED.equals(action)) {
+        if (DeviceControlActivity.ACTION_USER_DISCONNECT.equals(action)) {      	
+        	userDisconnect = intent.getBooleanExtra("value", false);
+        }
+        else if (BluetoothLeService.ACTION_ACL_DISCONNECTED.equals(action)) {
             Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
-            if (!DeviceControlActivity.userDisconnect) {
+            if (!userDisconnect) {
             	sendAlert(context);
             }
         }
         else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-            Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
-        	sendAlert(context);
+        	String extra = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+            // Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
+        	if (extra.equals("Button")) {
+        		sendAlert(context);
+        	}
         }
     }
     

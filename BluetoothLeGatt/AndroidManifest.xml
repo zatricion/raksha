@@ -71,6 +71,7 @@ limitations under the License.
         </activity>
         <receiver android:name="com.bloc.bluetooth.le.MyBroadcastReceiver" android:process=":receive">
           <intent-filter>
+            <action android:name="com.bloc.bluetooth.le.ACTION_USER_DISCONNECT"/>
             <action android:name="com.bloc.bluetooth.le.ACTION_DATA_AVAILABLE"/>
             <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED"/>
           </intent-filter>
