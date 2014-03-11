@@ -65,10 +65,8 @@ public class DeviceScanActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        if (BluetoothLeService.mRunning) {
-        	final Intent intent = new Intent(this, DeviceControlActivity.class);
-        	startActivity(intent);
-        	finish();
+        if (BluetoothLeService.isRunning) {
+        	moveOn();
         }
         getActionBar().setTitle(R.string.title_devices);
         mHandler = new Handler();
@@ -92,6 +90,12 @@ public class DeviceScanActivity extends ListActivity {
             finish();
             return;
         }
+    }
+    
+    private void moveOn() {
+		final Intent intent = new Intent(this, DeviceControlActivity.class);
+		startActivity(intent);
+		finish();
     }
 
 	@Override
@@ -120,6 +124,9 @@ public class DeviceScanActivity extends ListActivity {
             case R.id.menu_stop:
                 scanLeDevice(false);
                 break;
+            case R.id.go_on:
+            	moveOn();
+            	break;
         }
         return true;
     }

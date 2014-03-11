@@ -22,6 +22,7 @@ import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.cloud.backend.android.F.Op;
 
 import android.app.Dialog;
+import android.app.Notification;
 import android.app.Service;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -51,14 +52,15 @@ public class BackgroundService extends Service implements
     // Global variables
     LocationClient mLocationClient;
     boolean mUpdatesRequested;
-    boolean isHelping;
+    boolean isHelping = false;
+    static boolean isRunning = false;
     
     private final static String TAG = BackgroundService.class.getSimpleName();
     
     private Person mSelf;
     private String mPhone;
     private String mAccount;
-    private CloudBackendMessaging mBackend;
+    private static CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
     private Location mCurrLocation;
     
@@ -69,6 +71,9 @@ public class BackgroundService extends Service implements
     
     public final static String ACTION_EMERGENCY_ALERT =
             "com.bloc.bluetooth.le.ACTION_EMERGENCY_ALERT";
+    
+    public final static String ACTION_BACKEND =
+            "com.bloc.bluetooth.le.ACTION_BACKEND";
     
     // Define an object that holds accuracy and frequency parameters
     LocationRequest mLocationRequest;
@@ -94,8 +99,8 @@ public class BackgroundService extends Service implements
     private static final long FASTEST_INTERVAL =
             MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
     
-    @Override
-	public void onCreate() {
+   
+	private void initialize() {
         // Create the LocationRequest object
         mLocationRequest = LocationRequest.create();
         // Use low power
@@ -106,39 +111,56 @@ public class BackgroundService extends Service implements
         // Set the fastest update interval
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         
-        /*
-         * Create a new location client, using the enclosing class to
-         * handle callbacks.
-         */
-        mLocationClient = new LocationClient(this, this, this);
-        
         // Start with updates turned off
         mUpdatesRequested = true;
         
         // Start with alert turned off
         mAlert = Boolean.FALSE;
-                
-        mAccount = DeviceControlActivity.getAccountName();
-        mBackend = DeviceControlActivity.getCloudBackend();
         
+        if (mAccount == null) {
+        	mAccount = ((BlocApplication) this.getApplication()).getAccountName();
+        }
+        
+        if (mBackend == null) {
+        	mBackend = ((BlocApplication) this.getApplication()).getBackend();
+        }
+        
+        /*
+         * Create a new location client, using the enclosing class to
+         * handle callbacks.
+         */        
+		if (mLocationClient == null) {
+            mLocationClient = new LocationClient(this, this, this);
+		}
+		
         // Connect to location client
-        mLocationClient.connect();
+        if (!mLocationClient.isConnected() && !mLocationClient.isConnecting())
+        {
+        	mLocationClient.connect();
+        }
         
         // Not yet helping anyone
         isHelping = false;
+        
+        // The Service is running
+        isRunning = true;
     }
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		super.onStartCommand(intent, flags, startId);
+		
+		// Set up the service
+		initialize();
+		
         // If the intent is from the button, send out an alert
 		final String action = intent.getAction();
 		if (ACTION_EMERGENCY_ALERT.equals(action)) {		
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
-			if (mCurrLocation == null) {
-				mCurrLocation = mLocationClient.getLastLocation();
+			if (mCurrLocation != null) {
+				sendMyLocation(mCurrLocation);
 			}
-			sendMyLocation(mCurrLocation);
 		
 			// Get more accurate and more frequent location fixes
 	        // Use high accuracy
@@ -152,9 +174,19 @@ public class BackgroundService extends Service implements
 	        mLocationRequest.setFastestInterval(FASTEST_INTERVAL / 10);
 			
 			// Start getting updates
-			mLocationClient.requestLocationUpdates(mLocationRequest, this);		
+	        if (mLocationClient.isConnected()) {
+	        	mLocationClient.requestLocationUpdates(mLocationRequest, this);	
+	        }
 		}
 		
+		
+		// TODO: better notification
+        Notification note = new Notification.Builder(this)
+							        .setContentTitle("SensorTag")
+							        .build();
+        // Keep this service in the foreground
+        startForeground(42, note);
+        
 		// Continue running until explicitly stopped
 		return START_STICKY;
 	}
@@ -162,6 +194,8 @@ public class BackgroundService extends Service implements
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
+		isRunning = false;
+		mLocationClient.disconnect();		
 	}
 	
 	@Override
@@ -197,6 +231,14 @@ public class BackgroundService extends Service implements
 			mPhone = phone_number;
 		}
 		
+		// Start with last known location
+		mCurrLocation = mLocationClient.getLastLocation();
+		
+		// If alert registered, send it out
+		if (mAlert) {
+			sendMyLocation(mCurrLocation);
+		}
+		
         // If already requested, start periodic updates
         if (mUpdatesRequested) {
             mLocationClient.requestLocationUpdates(mLocationRequest, this);
@@ -210,6 +252,15 @@ public class BackgroundService extends Service implements
 	public void onDisconnected() {
 		// TODO Auto-generated method stub
 	}
+	
+	@Override
+	public void onTaskRemoved(Intent intent) {
+    	Intent getBackendIntent = new Intent(this, DeviceControlActivity.class);
+    	getBackendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    	getBackendIntent.setAction(ACTION_BACKEND);
+    	startActivity(getBackendIntent);
+	}
+
 	
 	public String locationToString(Location location) {
 	    return Double.toString(location.getLatitude()) + "," +
@@ -247,7 +298,8 @@ public class BackgroundService extends Service implements
             	}
             }
         };
-        
+        Log.e("CHEK", "DSLKFJSLKFJ");
+
 		CloudQuery cq = new CloudQuery("Person");
 		cq.setFilter(F.eq("alert", Boolean.TRUE));
 		cq.setScope(Scope.FUTURE);

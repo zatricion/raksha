@@ -16,14 +16,19 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         final String action = intent.getAction();
         if (BluetoothLeService.ACTION_ACL_DISCONNECTED.equals(action)) {
             Toast.makeText(context, "DISCONNECTED", Toast.LENGTH_SHORT).show();
-        	Intent killIntent = new Intent(context, BluetoothLeService.class);
-        	context.stopService(killIntent);
+            if (!DeviceControlActivity.userDisconnect) {
+            	sendAlert(context);
+            }
         }
         else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
             Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
-        	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
-        	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
-        	context.startService(bgServiceIntent);
+        	sendAlert(context);
         }
+    }
+    
+    private void sendAlert(Context context) {
+    	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
+    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
+    	context.startService(bgServiceIntent);
     }
 };

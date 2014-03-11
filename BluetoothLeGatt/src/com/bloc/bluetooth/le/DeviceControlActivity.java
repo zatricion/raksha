@@ -77,6 +77,8 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     public static final String KEY_CONTACTS = "contacts";
     
+    public static boolean userDisconnect = false;
+    
     public static ArrayList<Contact> mContactList;
     
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
@@ -143,7 +145,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
                 // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
             	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
             	String pin = "";
-            	device.setPin(pin.getBytes());
+            	//device.setPin(pin.getBytes());
             } 
         }
     };
@@ -155,19 +157,28 @@ public class DeviceControlActivity extends CloudBackendActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        final Intent intent = getIntent();
+        final String action = intent.getAction();
+        if (action != null && action.equals(BackgroundService.ACTION_BACKEND)) {
+        	((BlocApplication) this.getApplication()).setAccountName(getAccountName());
+        	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
+        	finish();
+        }
+        
         super.onCreate(savedInstanceState);
         setContentView(R.layout.gatt_services_characteristics);
 
-        final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
         mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
 
-        // Sets up UI references.
-        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+        if (mDeviceAddress != null) {
+	        // Sets up UI references.
+	        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+        }
         mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
         mDataField = (TextView) findViewById(R.id.data_value);
-
+        
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -175,12 +186,19 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     public void onPostCreate() {
     	super.onPostCreate();
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+    	
+    	((BlocApplication) this.getApplication()).setAccountName(getAccountName());
+    	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
+    	
+    	// Start bluetooth service
+    	if (mDeviceAddress != null) {
+	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
+	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
+	        startService(gattServiceIntent);
+    	}
         
-        startService(gattServiceIntent);
-        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
-        
-        if (checkGooglePlayApk()) {
+    	// Start background service
+        if (checkGooglePlayApk() && !BackgroundService.isRunning) {
         	// Enable location tracking
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
         	startService(bgServiceIntent);    
@@ -210,7 +228,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         
         // Check for bluetooth
-        if (mBluetoothLeService != null) {
+        if (mBluetoothLeService != null && mDeviceAddress != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
@@ -242,7 +260,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
+        if (mBluetoothLeService != null) {
+        	unbindService(mServiceConnection);
+        }
         mBluetoothLeService = null;
     }
 
@@ -263,12 +283,18 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
             case R.id.menu_connect:
-            	if (mBluetoothLeService != null) {
+            	if (mBluetoothLeService != null && mDeviceAddress != null) {
             		mBluetoothLeService.connect(mDeviceAddress);
+            	}
+            	else if (mDeviceAddress != null) {
+        	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
+        	        startService(gattServiceIntent);
+        	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
             	}
                 return true;
             case R.id.menu_disconnect:
             	if (mBluetoothLeService != null) {
+            		userDisconnect = true;
             		mBluetoothLeService.disconnect();
             	}
                 return true;

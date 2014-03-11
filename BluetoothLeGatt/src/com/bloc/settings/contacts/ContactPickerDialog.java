@@ -41,9 +41,11 @@ public class ContactPickerDialog extends DialogFragment {
 			
 			@Override
 			public void onClick(View arg0) {
-				Intent intent = new Intent(getActivity(), ContactListActivity.class);
-				intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getSelectedContacts());
-				startActivity(intent);
+				if (contactListView.getAdapter() != null) {
+					Intent intent = new Intent(getActivity(), ContactListActivity.class);
+					intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getSelectedContacts());
+					startActivity(intent);
+				}
 				dismiss();
 			}
 		});

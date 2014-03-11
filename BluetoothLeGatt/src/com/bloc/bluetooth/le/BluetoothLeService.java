@@ -53,7 +53,7 @@ public class BluetoothLeService extends Service {
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     
-    static boolean mRunning;
+    static boolean isRunning;
     private int mConnectionState = STATE_DISCONNECTED;
 
     private static final int STATE_DISCONNECTED = 0;
@@ -85,8 +85,7 @@ public class BluetoothLeService extends Service {
     
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
-		// Continue running until explicitly stopped
-
+		super.onStartCommand(intent, flags, startId);
 		
 		// TODO: better notification
         Notification note = new Notification.Builder(this)
@@ -94,7 +93,7 @@ public class BluetoothLeService extends Service {
 							        .build();
         // Keep this service in the foreground
         startForeground(42, note);
-        mRunning = true;
+        isRunning = true;
         
 		return START_STICKY;
 	}

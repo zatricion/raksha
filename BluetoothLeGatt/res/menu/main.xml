@@ -21,9 +21,10 @@
     <item android:id="@+id/menu_scan"
           android:title="@string/menu_scan"
           android:orderInCategory="100"
-          android:showAsAction="ifRoom|withText"/>
+          android:showAsAction="always|withText"/>
     <item android:id="@+id/menu_stop"
           android:title="@string/menu_stop"
           android:orderInCategory="101"
           android:showAsAction="ifRoom|withText"/>
+    <item android:id="@+id/go_on" android:showAsAction="always|withText" android:title="@string/go_on"></item>
 </menu>
