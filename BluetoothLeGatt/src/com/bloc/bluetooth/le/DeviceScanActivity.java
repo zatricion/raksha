@@ -68,7 +68,7 @@ public class DeviceScanActivity extends ListActivity {
         if (BluetoothLeService.isRunning) {
         	moveOn();
         }
-        getActionBar().setTitle(R.string.title_devices);
+        getActionBar().setTitle(R.string.app_name);
         mHandler = new Handler();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
@@ -96,7 +96,6 @@ public class DeviceScanActivity extends ListActivity {
 		final Intent intent = new Intent(this, DeviceControlActivity.class);
 		intent.putExtra("moveOn", true);
 		startActivity(intent);
-		finish();
     }
 
 	@Override
@@ -105,12 +104,9 @@ public class DeviceScanActivity extends ListActivity {
         if (!mScanning) {
             menu.findItem(R.id.menu_stop).setVisible(false);
             menu.findItem(R.id.menu_scan).setVisible(true);
-            menu.findItem(R.id.menu_refresh).setActionView(null);
         } else {
             menu.findItem(R.id.menu_stop).setVisible(true);
             menu.findItem(R.id.menu_scan).setVisible(false);
-            menu.findItem(R.id.menu_refresh).setActionView(
-                    R.layout.actionbar_indeterminate_progress);
         }
         return true;
     }

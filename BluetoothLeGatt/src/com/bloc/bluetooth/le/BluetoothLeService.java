@@ -16,7 +16,6 @@
 
 package com.bloc.bluetooth.le;
 
-import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -31,15 +30,11 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.util.List;
 import java.util.UUID;
 
-import com.google.android.gms.location.LocationClient;
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
@@ -54,7 +49,9 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mBluetoothGatt;
     
     static boolean isRunning;
-    private int mConnectionState = STATE_DISCONNECTED;
+    
+    @SuppressWarnings("unused")
+	private int mConnectionState = STATE_DISCONNECTED;
 
     private static final int STATE_DISCONNECTED = 0;
     private static final int STATE_CONNECTING = 1;
