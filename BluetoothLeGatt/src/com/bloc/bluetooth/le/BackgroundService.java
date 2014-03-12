@@ -78,6 +78,9 @@ public class BackgroundService extends Service implements
     public final static String ACTION_BACKEND =
             "com.bloc.bluetooth.le.ACTION_BACKEND";
     
+    public final static String ACTION_UPDATE_MAP =
+            "com.bloc.bluetooth.le.ACTION_UPDATE_MAP";
+    
     // Define an object that holds accuracy and frequency parameters
     LocationRequest mLocationRequest;
 	final CloudCallbackHandler<CloudEntity> updateHandler = new CloudCallbackHandler<CloudEntity>() {
@@ -88,6 +91,7 @@ public class BackgroundService extends Service implements
 	};
 	
 	private static final int WEEK_IN_SECONDS = 604800;
+	private static final int HOUR_IN_SECONDS = 3600;
     
     // Milliseconds per second
     private static final int MILLISECONDS_PER_SECOND = 1000;
@@ -279,7 +283,8 @@ public class BackgroundService extends Service implements
             	else {
 					for (Person victim : Person.fromEntities(results)) {
 						// Don't want alerts from yourself
-						if (!victim.getPhone().equals(mPhone)) {
+						String phone = victim.getPhone();
+						if (!phone.equals(mPhone)) {
 		                    LatLng where = gh.decode(victim.getGeohash());
 		                    Location help = new Location("Help");
 		                    help.setLatitude(where.latitude);
@@ -287,11 +292,11 @@ public class BackgroundService extends Service implements
 		                    BigDecimal radius = victim.getRadius();
 		                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
 		                    	isHelping = true;
-		                    	// TODO: Create map activity asking for help and updating location
 		                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
 		                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 		                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		                    	startActivity(intent);
+		                    	updateVictimLocation(phone);
 		                        break;
 		                    }
 						}
@@ -305,6 +310,28 @@ public class BackgroundService extends Service implements
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(WEEK_IN_SECONDS);
 		mBackend.list(cq, alertHandler);
+	}
+	
+	void updateVictimLocation(String phoneNum) {
+        CloudCallbackHandler<List<CloudEntity>> updateLocationHandler =
+        		new CloudCallbackHandler<List<CloudEntity>>() {
+            @Override
+            public void onComplete(List<CloudEntity> results) {
+				for (Person victim : Person.fromEntities(results)) {
+                	Intent intent = new Intent(ACTION_UPDATE_MAP);
+                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
+                	sendBroadcast(intent);
+                    break;
+            	}
+            }
+        };
+
+		CloudQuery cq = new CloudQuery("Person");
+		cq.setFilter(F.eq("alert", Boolean.TRUE));
+		cq.setFilter(F.eq("phone", phoneNum));
+		cq.setScope(Scope.FUTURE);
+		cq.setSubscriptionDurationSec(HOUR_IN_SECONDS);
+		mBackend.list(cq, updateLocationHandler);
 	}
 
 	void sendMyLocation(final Location loc) {

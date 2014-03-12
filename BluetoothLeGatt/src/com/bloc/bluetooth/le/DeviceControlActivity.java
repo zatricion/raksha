@@ -93,7 +93,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
     private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
-    private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
     private BackgroundService mBackgroundService;
     private boolean mConnected = false;
@@ -157,7 +156,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
     };
 
     private void clearUI() {
-        mGattServicesList.setAdapter((SimpleExpandableListAdapter) null);
         mDataField.setText(R.string.no_data);
     }
     
@@ -196,7 +194,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
 	        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         }
         
-        mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
         mDataField = (TextView) findViewById(R.id.data_value);
         

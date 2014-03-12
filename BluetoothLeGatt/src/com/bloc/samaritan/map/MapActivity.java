@@ -1,12 +1,19 @@
 package com.bloc.samaritan.map;
 
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.widget.Toast;
 
 import com.bloc.R;
+import com.bloc.bluetooth.le.BackgroundService;
+import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.Geohasher;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -32,19 +39,30 @@ public class MapActivity extends FragmentActivity implements
 
     private static final Geohasher gh = new Geohasher();
     
+    private final BroadcastReceiver mapUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (BackgroundService.ACTION_UPDATE_MAP.equals(action)) {
+            	victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
+            } 
+        }
+    };
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             setContentView(R.layout.activity_map);
             
             Intent intent = getIntent();
-            String victim_hash = intent.getStringExtra(VICTIM_LOC);
-            victim_loc = gh.decode(victim_hash);
+            victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
     }
     
     @Override
     protected void onPause() {
             super.onPause();
+            unregisterReceiver(mapUpdateReceiver);
+            
             // save current location
             SharedPreferences.Editor ed = getPreferences(MODE_PRIVATE).edit();
             if (mMap != null) {
@@ -58,6 +76,8 @@ public class MapActivity extends FragmentActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
+        registerReceiver(mapUpdateReceiver, makeMapIntentFilter());
+        
 		setUpMapIfNeeded();
 		SharedPreferences prefs = getPreferences(MODE_PRIVATE);
 		String locHash = prefs.getString(KEY_CURRENT_LOC, "9q8yy");
@@ -119,8 +139,7 @@ public class MapActivity extends FragmentActivity implements
 
 	@Override
 	public void onCameraChange(CameraPosition arg0) {
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub	
 	}
 	
 	private void drawMarkers(LatLng myPos, LatLng victimPos) {
@@ -138,4 +157,10 @@ public class MapActivity extends FragmentActivity implements
 			.title("HELP")
 			.icon(BitmapDescriptorFactory.defaultMarker(victimMarkerColor)));
 	}
+	
+    private static IntentFilter makeMapIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(BackgroundService.ACTION_UPDATE_MAP);
+        return intentFilter;
+    }
 }
