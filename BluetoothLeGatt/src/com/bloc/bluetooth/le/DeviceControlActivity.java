@@ -171,23 +171,31 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public void onCreate(Bundle savedInstanceState) {
         final Intent intent = getIntent();
         final String action = intent.getAction();
+        
+        // If user closes the app task, this is called in order to set the global backend up again
         if (action != null && action.equals(BackgroundService.ACTION_BACKEND)) {
         	((BlocApplication) this.getApplication()).setAccountName(getAccountName());
         	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
         	finish();
         }
         
-        super.onCreate(savedInstanceState);
         setContentView(R.layout.gatt_services_characteristics);
 
-        mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
-        mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+        if (mDeviceName == null) {
+        	mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
+        }
+        
+        if (mDeviceAddress == null) {
+        	mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+        }
+        
         noDevice = intent.getBooleanExtra("moveOn", false);
 
         if (mDeviceAddress != null) {
 	        // Sets up UI references.
 	        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         }
+        
         mGattServicesList = (ExpandableListView) findViewById(R.id.gatt_services_list);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
         mDataField = (TextView) findViewById(R.id.data_value);
@@ -196,6 +204,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
         getActionBar().setDisplayHomeAsUpEnabled(true);
         
         setUserDisconnect(false);
+        
+        // Call this last so that onPostCreate is called after device address obtained
+        super.onCreate(savedInstanceState);
     }
     
     @Override
@@ -224,6 +235,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         
         SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
         String contacts = prefs.getString(KEY_CONTACTS, null);
+        
         if (contacts == null) {
         	showContactPickerDialog();
         }
@@ -345,7 +357,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         switch(item.getItemId()) {
             case R.id.menu_connect:
             	if (mBluetoothLeService != null && mDeviceAddress != null) {
-                    Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Connecting...", Toast.LENGTH_LONG).show();
             		mBluetoothLeService.connect(mDeviceAddress);
             		setUserDisconnect(false);
             	}
