@@ -227,6 +227,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         if (checkGooglePlayApk() && !BackgroundService.isRunning) {
         	// Enable location tracking
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+        	bgServiceIntent.setAction(BackgroundService.ACTION_INIT);
         	startService(bgServiceIntent);    
         }
         

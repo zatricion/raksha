@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.bloc.R;
 import com.bloc.samaritan.map.MapActivity;
 import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -26,6 +27,8 @@ import com.google.cloud.backend.android.F.Op;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -37,6 +40,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -79,7 +84,14 @@ public class BackgroundService extends Service implements
     
     // If we are already helping someone
     private boolean isHelping;
-
+    
+    public final static int ALERT_NOTIFY_ID = 100;
+    
+    public final static String ACTION_INIT =
+            "com.bloc.bluetooth.le.ACTION_INIT";
+    
+    public final static String ACTION_STOP_ALERT =
+            "com.bloc.bluetooth.le.ACTION_STOP_ALERT";
     
     public final static String ACTION_EMERGENCY_ALERT =
             "com.bloc.bluetooth.le.ACTION_EMERGENCY_ALERT";
@@ -182,13 +194,35 @@ public class BackgroundService extends Service implements
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
-		
-		// Set up the service
-		initialize();
-		
-        // If the intent is from the button, send out an alert
 		final String action = intent.getAction();
-		if (ACTION_EMERGENCY_ALERT.equals(action)) {		
+		
+		if (ACTION_STOP_ALERT.equals(action)) {
+			mAlert = Boolean.FALSE;
+			if (mCurrLocation != null) {
+				sendMyLocation(mCurrLocation);
+			}
+			// Stop getting fast updates
+	        if (mLocationClient.isConnected()) {
+	        	mLocationClient.removeLocationUpdates(this);
+	        	mLocationClient.requestLocationUpdates(slowLocationRequest, this);	
+	        }
+		}
+		else if (ACTION_INIT.equals(action)) {
+			// Set up the service
+			initialize();
+			
+			// TODO: better notification
+	        Notification note = new Notification.Builder(this)
+								        .setContentTitle("SensorTag")
+								        .build();
+	        // Keep this service in the foreground
+	        startForeground(42, note);
+		}
+        // If the intent is from the button, send out an alert
+		else if (ACTION_EMERGENCY_ALERT.equals(action)) {
+			// Notify the user about the alert
+			createAlertNotification();
+			
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
 			if (mCurrLocation != null) {
@@ -202,18 +236,41 @@ public class BackgroundService extends Service implements
 	        	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
 	        }
 		}
-		
-		// TODO: better notification
-        Notification note = new Notification.Builder(this)
-							        .setContentTitle("SensorTag")
-							        .build();
-        // Keep this service in the foreground
-        startForeground(42, note);
         
 		// Continue running until explicitly stopped
 		return START_STICKY;
 	}
 	
+	private void createAlertNotification() {
+		NotificationCompat.Builder mBuilder =
+		        new NotificationCompat.Builder(this)
+		        .setSmallIcon(R.drawable.ic_launcher)
+		        .setContentTitle("Emergency!")
+		        .setContentText("Was this emergency alert an accident?");
+		// Creates an explicit intent for an Activity in your app
+		Intent resultIntent = new Intent(this, AlertNotificationActivity.class);
+
+		// The stack builder object will contain an artificial back stack for the
+		// started Activity.
+		// This ensures that navigating backward from the Activity leads out of
+		// your application to the Home screen.
+		TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+		// Adds the back stack for the Intent (but not the Intent itself)
+		stackBuilder.addParentStack(AlertNotificationActivity.class);
+		// Adds the Intent that starts the Activity to the top of the stack
+		stackBuilder.addNextIntent(resultIntent);
+		PendingIntent resultPendingIntent =
+		        stackBuilder.getPendingIntent(
+		            0,
+		            PendingIntent.FLAG_UPDATE_CURRENT
+		        );
+		mBuilder.setContentIntent(resultPendingIntent);
+		NotificationManager mNotificationManager =
+		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// mId allows you to update the notification later on.
+		mNotificationManager.notify(ALERT_NOTIFY_ID, mBuilder.build());
+	}
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -314,8 +371,8 @@ public class BackgroundService extends Service implements
             	else {
 					for (Person victim : Person.fromEntities(results)) {
 						// Don't want alerts from yourself
-						String phone = victim.getPhone();
-						if (!phone.equals(mPhone)) {
+						String name = victim.getName();
+						if (!name.equals(mAccount)) {
 		                    LatLng where = gh.decode(victim.getGeohash());
 		                    BigDecimal radius = victim.getRadius();
 		                    if (where == null || radius == null || mCurrLocation == null) {
@@ -330,7 +387,7 @@ public class BackgroundService extends Service implements
 		                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 		                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		                    	startActivity(intent);
-		                    	updateVictimLocation(phone);
+		                    	updateVictimLocation(name);
 		                        break;
 		                    }
 						}
@@ -347,7 +404,7 @@ public class BackgroundService extends Service implements
 		mBackend.list(cq, alertHandler);
 	}
 	
-	void updateVictimLocation(String phoneNum) {
+	void updateVictimLocation(String name) {
         CloudCallbackHandler<List<CloudEntity>> updateLocationHandler =
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
@@ -373,7 +430,7 @@ public class BackgroundService extends Service implements
 		CloudQuery cq = new CloudQuery("Person");
 		cq.setQueryId("VictimUpdater");
 		cq.setFilter(F.eq(Person.KEY_ALERT, Boolean.TRUE));
-		cq.setFilter(F.eq(Person.KEY_PHONE, phoneNum));
+		cq.setFilter(F.eq(Person.KEY_NAME, name));
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(HOUR_IN_SECONDS);
 		mBackend.list(cq, updateLocationHandler);
