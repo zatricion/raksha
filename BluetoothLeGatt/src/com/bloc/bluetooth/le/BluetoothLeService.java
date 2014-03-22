@@ -45,10 +45,10 @@ public class BluetoothLeService extends Service {
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
-    private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
     
     static boolean isRunning;
+    public static String mBluetoothDeviceAddress;
     
     @SuppressWarnings("unused")
 	private int mConnectionState = STATE_DISCONNECTED;

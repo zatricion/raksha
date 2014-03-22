@@ -66,7 +66,7 @@ public class DeviceScanActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         
         if (BluetoothLeService.isRunning) {
-        	moveOn();
+        	moveOn(false);
         }
         getActionBar().setTitle(R.string.app_name);
         mHandler = new Handler();
@@ -92,9 +92,9 @@ public class DeviceScanActivity extends ListActivity {
         }
     }
     
-    private void moveOn() {
+    private void moveOn(boolean noDevice) {
 		final Intent intent = new Intent(this, DeviceControlActivity.class);
-		intent.putExtra("moveOn", true);
+		intent.putExtra("noDevice", noDevice);
 		startActivity(intent);
     }
 
@@ -122,7 +122,7 @@ public class DeviceScanActivity extends ListActivity {
                 scanLeDevice(false);
                 break;
             case R.id.go_on:
-            	moveOn();
+            	moveOn(true);
             	break;
         }
         return true;

@@ -90,7 +90,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
     private LocationManager manager;
 
     private TextView mConnectionState;
-    private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
@@ -137,7 +136,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
                 mConnected = false;
                 updateConnectionState(R.string.disconnected);
                 invalidateOptionsMenu();
-                clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Enable button notifications
                 enableNotifications(mBluetoothLeService.getButtonService());
@@ -154,10 +152,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
             } 
         }
     };
-
-    private void clearUI() {
-        mDataField.setText(R.string.no_data);
-    }
     
     private void setUserDisconnect(boolean bool) {
     	 final Intent intent = new Intent(ACTION_USER_DISCONNECT);
@@ -176,32 +170,38 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
         	finish();
         }
-        
-        setContentView(R.layout.gatt_services_characteristics);
+        else {
+	        setContentView(R.layout.gatt_services_characteristics);
+	
+	        if (mDeviceName == null) {
+	        	mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
+	        }
+	        
+	        if (mDeviceAddress == null) {
+	        	mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+	        }
+	        	        
+	        mConnectionState = (TextView) findViewById(R.id.connection_state);
 
-        if (mDeviceName == null) {
-        	mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
-        }
-        
-        if (mDeviceAddress == null) {
-        	mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-        }
-        
-        noDevice = intent.getBooleanExtra("moveOn", false);
+	        noDevice = intent.getBooleanExtra("noDevice", false);
 
-        if (mDeviceAddress != null) {
-	        // Sets up UI references.
-	        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+	        // Device already connected
+	        if (BluetoothLeService.isRunning && !noDevice) {
+	        	mDeviceAddress = BluetoothLeService.mBluetoothDeviceAddress;
+	        	updateConnectionState(R.string.connected);
+	        	mConnected = true;
+	        }
+	
+	        if (mDeviceAddress != null) {
+		        // Sets up UI references.
+		        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
+	        }
+	        	        
+	        getActionBar().setTitle(mDeviceName);
+	        getActionBar().setDisplayHomeAsUpEnabled(true);
+	        
+	        setUserDisconnect(false);
         }
-        
-        mConnectionState = (TextView) findViewById(R.id.connection_state);
-        mDataField = (TextView) findViewById(R.id.data_value);
-        
-        getActionBar().setTitle(mDeviceName);
-        getActionBar().setDisplayHomeAsUpEnabled(true);
-        
-        setUserDisconnect(false);
-        
         // Call this last so that onPostCreate is called after device address obtained
         super.onCreate(savedInstanceState);
     }
