@@ -262,7 +262,7 @@ public class BackgroundService extends Service implements
 		PendingIntent resultPendingIntent =
 		        stackBuilder.getPendingIntent(
 		            0,
-		            PendingIntent.FLAG_UPDATE_CURRENT
+		            PendingIntent.FLAG_CANCEL_CURRENT
 		        );
 		mBuilder.setContentIntent(resultPendingIntent);
 		NotificationManager mNotificationManager =

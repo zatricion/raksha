@@ -9,27 +9,31 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 public class AlertNotificationActivity extends Activity {
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Log.e("ASDLKJF", "CREATE");
+		
+
 		new AlertDialog.Builder(this)
-	    			   .setTitle("Cancel Emergency Alert")
-	    			   .setMessage("Are you sure you want to cancel your emergency?")
-	    			   .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
-	    				   public void onClick(DialogInterface dialog, int which) { 
-	    				   		requestPassword();
-	    				   }
-	    			   })
-	    			   .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
-	    				   public void onClick(DialogInterface dialog, int which) { 
-	    					   finish();
-	    				   }
-	    			   })
-	    			   .setIcon(R.drawable.ic_launcher)
-	    			   .show();
+		   .setTitle("Cancel Emergency Alert")
+		   .setMessage("Are you sure you want to cancel your emergency?")
+		   .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+			   public void onClick(DialogInterface dialog, int which) { 
+			   		requestPassword();
+			   }
+		   })
+		   .setNegativeButton(R.string.no, new DialogInterface.OnClickListener() {
+			   public void onClick(DialogInterface dialog, int which) { 
+				   finish();
+			   }
+		   })
+		   .setIcon(R.drawable.ic_launcher)
+		   .show();
 	}
 	
 	private void requestPassword() {
