@@ -418,14 +418,14 @@ public class BackgroundService extends Service implements
 	                	sendBroadcast(intent);
 					}
 					else {
+	                	// End the alert
+	                	Intent intent = new Intent(ACTION_END_ALERT);
+	                	sendBroadcast(intent);
+	                	
 						Log.e(TAG, "END ALERT");
 	                	// This alert is done, start listening for alerts again
 	                	mBackend.unsubscribeFromQuery("VictimUpdater");
 	                	listenForAlerts();
-	                	
-	                	// End the alert
-	                	Intent intent = new Intent(ACTION_END_ALERT);
-	                	sendBroadcast(intent);
 					}
                     break;
             	}
