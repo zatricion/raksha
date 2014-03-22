@@ -168,21 +168,12 @@ public class MapActivity extends FragmentActivity implements
 			.title("HELP")
 			.icon(BitmapDescriptorFactory.defaultMarker(victimMarkerColor)));
 		
-		// TODO: do this better
-        double minLat = Integer.MAX_VALUE;
-        double maxLat = Integer.MIN_VALUE;
-        double minLon = Integer.MAX_VALUE;
-        double maxLon = Integer.MIN_VALUE;
-        List<LatLng> listPoints = new ArrayList<LatLng>();
-        listPoints.add(myPos);
-        listPoints.add(victimPos);
-        for (LatLng point : listPoints) {
-	        maxLat = Math.max(point.latitude, maxLat);
-	        minLat = Math.min(point.latitude, minLat);
-	        maxLon = Math.max(point.longitude, maxLon);
-	        minLon = Math.min(point.longitude, minLon);
-	    }
-		
+		// Update camera area
+        double maxLat = Math.max(myPos.latitude, victimPos.latitude);
+        double minLat = Math.min(myPos.latitude, victimPos.latitude);
+        double maxLon = Math.max(myPos.longitude, victimPos.longitude);
+        double minLon = Math.min(myPos.longitude, victimPos.longitude);
+
         final LatLngBounds bounds = new LatLngBounds.Builder().include(new LatLng(maxLat, maxLon)).include(new LatLng(minLat, minLon)).build();
 	    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 50);
         mMap.animateCamera(cameraUpdate);
