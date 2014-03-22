@@ -151,10 +151,10 @@ public class BackgroundService extends Service implements
                 LocationRequest.PRIORITY_HIGH_ACCURACY);  
         
         // Set the update interval to be faster
-        fastLocationRequest.setInterval(UPDATE_INTERVAL / 100);
+        fastLocationRequest.setInterval(UPDATE_INTERVAL / 50);
         
         // Set the fastest update interval
-        fastLocationRequest.setFastestInterval(FASTEST_INTERVAL / 10);
+        fastLocationRequest.setFastestInterval(FASTEST_INTERVAL / 5);
         
         // Start with alert turned off
         mAlert = Boolean.FALSE;
