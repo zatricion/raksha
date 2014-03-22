@@ -80,10 +80,7 @@ public class BackgroundService extends Service implements
     private boolean mAlert;
     
     // If we are using fastLocationRequest without having received an alert
-    private boolean fastWithoutAlert = false;
-    
-    // If we are already helping someone
-    private boolean isHelping;
+    private boolean fastWithoutAlert = false; 
     
     public final static int ALERT_NOTIFY_ID = 100;
     
@@ -183,9 +180,6 @@ public class BackgroundService extends Service implements
         {
         	mLocationClient.connect();
         }
-        
-        // Not yet helping anyone
-        isHelping = false;
         
         // The Service is running
         isRunning = true;
@@ -376,32 +370,28 @@ public class BackgroundService extends Service implements
             @Override
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Received", "ALERT");
-            	if (isHelping) {
-            		return;
-            	}
-            	else {
-					for (Person victim : Person.fromEntities(results)) {
-						// Don't want alerts from yourself
-						String name = victim.getName();
-						if (!name.equals(mAccount)) {
-		                    LatLng where = gh.decode(victim.getGeohash());
-		                    BigDecimal radius = victim.getRadius();
-		                    if (where == null || radius == null || mCurrLocation == null) {
-		                    	break;
-		                    }
-		                    Location help = new Location("Help");
-		                    help.setLatitude(where.latitude);
-		                    help.setLongitude(where.longitude);
-		                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
-		                    	isHelping = true;
-		                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
-		                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
-		                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		                    	startActivity(intent);
-		                    	updateVictimLocation(name);
-		                        break;
-		                    }
-						}
+				for (Person victim : Person.fromEntities(results)) {
+					String name = victim.getName();
+					// Don't want alerts from yourself
+					if (!name.equals(mAccount)) {
+	                    LatLng where = gh.decode(victim.getGeohash());
+	                    BigDecimal radius = victim.getRadius();
+	                    if (where == null || radius == null || mCurrLocation == null) {
+	                    	break;
+	                    }
+	                    Location help = new Location("Help");
+	                    help.setLatitude(where.latitude);
+	                    help.setLongitude(where.longitude);
+	                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
+	                    	// Stop listening for alerts
+	                    	mBackend.unsubscribeFromQuery("AlertListener");
+	                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
+	                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
+	                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	                    	startActivity(intent);
+	                    	updateVictimLocation(name);
+	                        break;
+	                    }
                     }
             	}
             }
@@ -429,9 +419,12 @@ public class BackgroundService extends Service implements
 					}
 					else {
 						Log.e(TAG, "END ALERT");
-	                	Intent intent = new Intent(ACTION_END_ALERT);
-	                	isHelping = false;
+	                	// This alert is done, start listening for alerts again
 	                	mBackend.unsubscribeFromQuery("VictimUpdater");
+	                	listenForAlerts();
+	                	
+	                	// End the alert
+	                	Intent intent = new Intent(ACTION_END_ALERT);
 	                	sendBroadcast(intent);
 					}
                     break;
