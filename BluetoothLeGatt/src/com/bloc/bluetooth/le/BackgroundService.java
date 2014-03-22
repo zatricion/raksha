@@ -424,11 +424,17 @@ public class BackgroundService extends Service implements
 	                	sendBroadcast(intent);
 	                	
 						Log.e(TAG, "END ALERT");
-	                	// This alert is done, start listening for alerts again
 	                	mBackend.unsubscribeFromQuery("VictimUpdater");
-	                	listenForAlerts();
+	                	
+	                	// This alert is done, start listening for alerts again in 5 seconds
+						new Handler().postDelayed(new Runnable() {
+							@Override
+							public void run() {
+								listenForAlerts();
+							}
+						}, 5000);
+	                    break;
 					}
-                    break;
             	}
             }
         };
@@ -461,7 +467,6 @@ public class BackgroundService extends Service implements
 	                        public void onComplete(List<CloudEntity> results) {
 	                                if (results.size() > 0) {
 	                                        mSelf = new Person(results.get(0));
-	                                        mSelf.setGeohash("none");
 	                                        mSelf.setPhone(mPhone);
 	                                        mSelf.setAlert(mAlert);
 	                                        mSelf.setRadius(TEMP_RADIUS);
