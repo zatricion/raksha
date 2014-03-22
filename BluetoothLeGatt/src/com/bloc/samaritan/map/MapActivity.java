@@ -10,8 +10,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
 import android.widget.Toast;
 
 import com.bloc.R;
@@ -184,6 +186,12 @@ public class MapActivity extends FragmentActivity implements
         final LatLngBounds bounds = new LatLngBounds.Builder().include(new LatLng(maxLat, maxLon)).include(new LatLng(minLat, minLon)).build();
 	    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 50);
         mMap.animateCamera(cameraUpdate);
+	}
+	
+	public void getDirections(View view) {
+		Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + victim_loc.latitude + "," + victim_loc.longitude));
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(intent);
 	}
 	
     private static IntentFilter makeMapIntentFilter() {

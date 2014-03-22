@@ -45,5 +45,6 @@
     <!-- Misc items -->
     <string name="yes">Yes</string>
     <string name="no">No</string>
+    <string name="navigate">Get Directions</string>
     
 </resources>

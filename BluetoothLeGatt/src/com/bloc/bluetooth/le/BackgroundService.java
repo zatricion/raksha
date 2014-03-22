@@ -201,6 +201,11 @@ public class BackgroundService extends Service implements
 			if (mCurrLocation != null) {
 				sendMyLocation(mCurrLocation);
 			}
+			else if (mSelf != null) {
+				mSelf.setAlert(mAlert);
+                mBackend.update(mSelf.asEntity(),
+                        updateHandler);
+			}
 			// Stop getting fast updates
 	        if (mLocationClient.isConnected()) {
 	        	mLocationClient.removeLocationUpdates(this);
@@ -228,6 +233,12 @@ public class BackgroundService extends Service implements
 			if (mCurrLocation != null) {
 		        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
 				sendMyLocation(mCurrLocation);
+			}
+			else if (mSelf != null) {
+		        Toast.makeText(this, "Sending Alert without updated Location", Toast.LENGTH_SHORT).show();
+				mSelf.setAlert(mAlert);
+                mBackend.update(mSelf.asEntity(),
+                        updateHandler);
 			}
 	
 			// Start getting fast updates
@@ -417,6 +428,7 @@ public class BackgroundService extends Service implements
 	                	sendBroadcast(intent);
 					}
 					else {
+						Log.e(TAG, "END ALERT");
 	                	Intent intent = new Intent(ACTION_END_ALERT);
 	                	isHelping = false;
 	                	mBackend.unsubscribeFromQuery("VictimUpdater");
@@ -429,7 +441,6 @@ public class BackgroundService extends Service implements
 
 		CloudQuery cq = new CloudQuery("Person");
 		cq.setQueryId("VictimUpdater");
-		cq.setFilter(F.eq(Person.KEY_ALERT, Boolean.TRUE));
 		cq.setFilter(F.eq(Person.KEY_NAME, name));
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(HOUR_IN_SECONDS);
