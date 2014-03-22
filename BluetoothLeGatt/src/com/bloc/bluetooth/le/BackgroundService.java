@@ -3,6 +3,7 @@ package com.bloc.bluetooth.le;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import com.bloc.samaritan.map.MapActivity;
 import com.google.android.gms.auth.GoogleAuthException;
@@ -12,6 +13,7 @@ import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.internal.cq;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
@@ -33,6 +35,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -54,10 +57,9 @@ public class BackgroundService extends Service implements
 	
     // Global variables
     LocationClient mLocationClient;
-    boolean mUpdatesRequested;
-    boolean isHelping = false;
     static boolean isRunning = false;
     
+    // Local variables
     private final static String TAG = BackgroundService.class.getSimpleName();
     
     private Person mSelf;
@@ -72,6 +74,13 @@ public class BackgroundService extends Service implements
     
     private boolean mAlert;
     
+    // If we are using fastLocationRequest without having received an alert
+    private boolean fastWithoutAlert = false;
+    
+    // If we are already helping someone
+    private boolean isHelping;
+
+    
     public final static String ACTION_EMERGENCY_ALERT =
             "com.bloc.bluetooth.le.ACTION_EMERGENCY_ALERT";
     
@@ -81,8 +90,15 @@ public class BackgroundService extends Service implements
     public final static String ACTION_UPDATE_MAP =
             "com.bloc.bluetooth.le.ACTION_UPDATE_MAP";
     
-    // Define an object that holds accuracy and frequency parameters
-    LocationRequest mLocationRequest;
+    public final static String ACTION_END_ALERT =
+            "com.bloc.bluetooth.le.ACTION_END_ALERT";
+    
+    // Location request for slow, battery saving updates
+    LocationRequest slowLocationRequest;
+    
+    // Location request for fast, accurate updates
+    LocationRequest fastLocationRequest;
+    
 	final CloudCallbackHandler<CloudEntity> updateHandler = new CloudCallbackHandler<CloudEntity>() {
 		@Override
 		public void onComplete(final CloudEntity result) {
@@ -108,18 +124,28 @@ public class BackgroundService extends Service implements
     
    
 	private void initialize() {
-        // Create the LocationRequest object
-        mLocationRequest = LocationRequest.create();
+        // Set up slowLocationRequest
+        slowLocationRequest = LocationRequest.create();
         // Use low power
-        mLocationRequest.setPriority(
+        slowLocationRequest.setPriority(
                 LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         // Set the update interval
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        slowLocationRequest.setInterval(UPDATE_INTERVAL);
         // Set the fastest update interval
-        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+        slowLocationRequest.setFastestInterval(FASTEST_INTERVAL);
         
-        // Start with updates turned off
-        mUpdatesRequested = true;
+        // Set up fastLocationRequest
+        fastLocationRequest = LocationRequest.create();
+		// Get more accurate and more frequent location fixes
+        // Use high accuracy
+        fastLocationRequest.setPriority(
+                LocationRequest.PRIORITY_HIGH_ACCURACY);  
+        
+        // Set the update interval to be faster
+        fastLocationRequest.setInterval(UPDATE_INTERVAL / 100);
+        
+        // Set the fastest update interval
+        fastLocationRequest.setFastestInterval(FASTEST_INTERVAL / 10);
         
         // Start with alert turned off
         mAlert = Boolean.FALSE;
@@ -169,24 +195,13 @@ public class BackgroundService extends Service implements
 		        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
 				sendMyLocation(mCurrLocation);
 			}
-		
-			// Get more accurate and more frequent location fixes
-	        // Use high accuracy
-	        mLocationRequest.setPriority(
-	                LocationRequest.PRIORITY_HIGH_ACCURACY);  
-	        
-	        // Set the update interval to be faster
-	        mLocationRequest.setInterval(UPDATE_INTERVAL / 100);
-	        
-	        // Set the fastest update interval
-	        mLocationRequest.setFastestInterval(FASTEST_INTERVAL / 10);
-			
-			// Start getting updates
+	
+			// Start getting fast updates
 	        if (mLocationClient.isConnected()) {
-	        	mLocationClient.requestLocationUpdates(mLocationRequest, this);	
+	        	mLocationClient.removeLocationUpdates(this);
+	        	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
 	        }
 		}
-		
 		
 		// TODO: better notification
         Notification note = new Notification.Builder(this)
@@ -203,16 +218,20 @@ public class BackgroundService extends Service implements
 	public void onDestroy() {
 		super.onDestroy();
 		isRunning = false;
-		mLocationClient.disconnect();		
+		mLocationClient.disconnect();	
+		mBackend.clearAllSubscription();
 	}
 	
 	@Override
 	public void onLocationChanged(Location location) {
-		// Test
         Toast.makeText(this, "Location Changed", Toast.LENGTH_SHORT).show();
+		if (fastWithoutAlert) {
+        	mLocationClient.removeLocationUpdates(this);
+        	mLocationClient.requestLocationUpdates(slowLocationRequest, this);	
+        	fastWithoutAlert = false;
+        }
         mCurrLocation = location;
-        // Report the new location to the backend
-		sendMyLocation(location);
+        sendMyLocation(mCurrLocation);	
 	}
 
 	@Override
@@ -232,23 +251,34 @@ public class BackgroundService extends Service implements
 		if (mPhone == null) {
 	        TelephonyManager tMgr = (TelephonyManager)BackgroundService.this.getSystemService(Context.TELEPHONY_SERVICE);
 	        String phone_number = tMgr.getLine1Number();
-			mPhone = phone_number;
+	        if (phone_number != null) {
+	        	mPhone = phone_number;
+	        }
+	        else {
+	        	mPhone =  UUID.randomUUID().toString();
+	        }
 		}
 		
 		// Start with last known location
 		mCurrLocation = mLocationClient.getLastLocation();
 		
+		// Get new location quickly if there is no saved location
+		if (mCurrLocation == null) {
+	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
+	        fastWithoutAlert = true;
+		}
+		else {
+	        // Start periodic updates
+	        mLocationClient.requestLocationUpdates(slowLocationRequest, this);
+		}
+		
 		// If alert registered, send it out
 		if (mAlert) {
 	        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
-			sendMyLocation(mCurrLocation);
 		}
-		
-        // If already requested, start periodic updates
-        if (mUpdatesRequested) {
-            mLocationClient.requestLocationUpdates(mLocationRequest, this);
-        }	
-        
+        // Report the new location to the backend
+		sendMyLocation(mCurrLocation);
+		     
         // Get notified of alerts
         listenForAlerts();      
 	}
@@ -277,6 +307,7 @@ public class BackgroundService extends Service implements
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
             public void onComplete(List<CloudEntity> results) {
+            	Log.e("Received", "ALERT");
             	if (isHelping) {
             		return;
             	}
@@ -286,10 +317,13 @@ public class BackgroundService extends Service implements
 						String phone = victim.getPhone();
 						if (!phone.equals(mPhone)) {
 		                    LatLng where = gh.decode(victim.getGeohash());
+		                    BigDecimal radius = victim.getRadius();
+		                    if (where == null || radius == null || mCurrLocation == null) {
+		                    	break;
+		                    }
 		                    Location help = new Location("Help");
 		                    help.setLatitude(where.latitude);
 		                    help.setLongitude(where.longitude);
-		                    BigDecimal radius = victim.getRadius();
 		                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
 		                    	isHelping = true;
 		                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
@@ -306,7 +340,8 @@ public class BackgroundService extends Service implements
         };
 
 		CloudQuery cq = new CloudQuery("Person");
-		cq.setFilter(F.eq("alert", Boolean.TRUE));
+		cq.setQueryId("AlertListener");
+		cq.setFilter(F.eq(Person.KEY_ALERT, Boolean.TRUE));
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(WEEK_IN_SECONDS);
 		mBackend.list(cq, alertHandler);
@@ -317,18 +352,28 @@ public class BackgroundService extends Service implements
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
             public void onComplete(List<CloudEntity> results) {
+            	Log.e("Victim", "Update");
 				for (Person victim : Person.fromEntities(results)) {
-                	Intent intent = new Intent(ACTION_UPDATE_MAP);
-                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
-                	sendBroadcast(intent);
+					if (victim.getAlert()) {
+	                	Intent intent = new Intent(ACTION_UPDATE_MAP);
+	                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
+	                	sendBroadcast(intent);
+					}
+					else {
+	                	Intent intent = new Intent(ACTION_END_ALERT);
+	                	isHelping = false;
+	                	mBackend.unsubscribeFromQuery("VictimUpdater");
+	                	sendBroadcast(intent);
+					}
                     break;
             	}
             }
         };
 
 		CloudQuery cq = new CloudQuery("Person");
-		cq.setFilter(F.eq("alert", Boolean.TRUE));
-		cq.setFilter(F.eq("phone", phoneNum));
+		cq.setQueryId("VictimUpdater");
+		cq.setFilter(F.eq(Person.KEY_ALERT, Boolean.TRUE));
+		cq.setFilter(F.eq(Person.KEY_PHONE, phoneNum));
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(HOUR_IN_SECONDS);
 		mBackend.list(cq, updateLocationHandler);
@@ -353,14 +398,10 @@ public class BackgroundService extends Service implements
 	                                                                        updateHandler);
 	                                                } else {
 	                                                	// TODO: get radius from preferences
-	                                                        final Person newGeek = new Person(
-	                                                        								mAccount,
-	                                                                                        mPhone,
-	                                                                                        gh.encode(loc),
-	                                                                                        mAlert,
-	                                                                                        TEMP_RADIUS
-	                                                                                        );
-	                                                        mBackend.insert(newGeek.asEntity(),
+	                                                        mSelf = new Person(mAccount, mPhone, 
+	                                                        				   gh.encode(loc), 
+	                                                        				   mAlert, TEMP_RADIUS);
+	                                                        mBackend.insert(mSelf.asEntity(),
 	                                                                        updateHandler);
 	                                                }
 	                                        }

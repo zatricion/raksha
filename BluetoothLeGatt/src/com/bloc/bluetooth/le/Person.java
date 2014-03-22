@@ -72,8 +72,8 @@ public class Person {
 		cloudEntity.put(KEY_GEOHASH, geohash);
 	}
 	
-	public String getAlert() {
-		return (String) cloudEntity.get(KEY_ALERT);
+	public Boolean getAlert() {
+		return (Boolean) cloudEntity.get(KEY_ALERT);
 	}
 
 	public void setAlert(Boolean alert) {

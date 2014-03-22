@@ -1,5 +1,8 @@
 package com.bloc.samaritan.map;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -15,6 +18,7 @@ import com.bloc.R;
 import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.Geohasher;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnCameraChangeListener;
@@ -23,6 +27,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapActivity extends FragmentActivity implements 
@@ -45,6 +50,10 @@ public class MapActivity extends FragmentActivity implements
             final String action = intent.getAction();
             if (BackgroundService.ACTION_UPDATE_MAP.equals(action)) {
             	victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
+            } 
+            else if (BackgroundService.ACTION_END_ALERT.equals(action)) {
+		        Toast.makeText(MapActivity.this, "Bloc Member no longer in danger!", Toast.LENGTH_LONG).show();
+		        finish();
             } 
         }
     };
@@ -156,11 +165,31 @@ public class MapActivity extends FragmentActivity implements
 			.position(victimPos)
 			.title("HELP")
 			.icon(BitmapDescriptorFactory.defaultMarker(victimMarkerColor)));
+		
+		// TODO: do this better
+        double minLat = Integer.MAX_VALUE;
+        double maxLat = Integer.MIN_VALUE;
+        double minLon = Integer.MAX_VALUE;
+        double maxLon = Integer.MIN_VALUE;
+        List<LatLng> listPoints = new ArrayList<LatLng>();
+        listPoints.add(myPos);
+        listPoints.add(victimPos);
+        for (LatLng point : listPoints) {
+	        maxLat = Math.max(point.latitude, maxLat);
+	        minLat = Math.min(point.latitude, minLat);
+	        maxLon = Math.max(point.longitude, maxLon);
+	        minLon = Math.min(point.longitude, minLon);
+	    }
+		
+        final LatLngBounds bounds = new LatLngBounds.Builder().include(new LatLng(maxLat, maxLon)).include(new LatLng(minLat, minLon)).build();
+	    CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 50);
+        mMap.animateCamera(cameraUpdate);
 	}
 	
     private static IntentFilter makeMapIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BackgroundService.ACTION_UPDATE_MAP);
+        intentFilter.addAction(BackgroundService.ACTION_END_ALERT);
         return intentFilter;
     }
 }
