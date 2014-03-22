@@ -159,14 +159,6 @@ public class BackgroundService extends Service implements
         // Start with alert turned off
         mAlert = Boolean.FALSE;
         
-        if (mAccount == null) {
-        	mAccount = ((BlocApplication) this.getApplication()).getAccountName();
-        }
-        
-        if (mBackend == null) {
-        	mBackend = ((BlocApplication) this.getApplication()).getBackend();
-        }
-        
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
@@ -188,6 +180,18 @@ public class BackgroundService extends Service implements
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
+		
+        if (mAccount == null) {
+        	mAccount = ((BlocApplication) this.getApplication()).getAccountName();
+        }
+        
+        if (mBackend == null) {
+        	mBackend = ((BlocApplication) this.getApplication()).getBackend();
+        }
+        
+        // Set up mSelf
+        addPersonIfNecessary();
+        
 		final String action = intent.getAction();
 		
 		if (ACTION_STOP_ALERT.equals(action)) {
@@ -338,8 +342,11 @@ public class BackgroundService extends Service implements
 		if (mAlert) {
 	        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
 		}
+		
         // Report the new location to the backend
-		sendMyLocation(mCurrLocation);
+		if (mCurrLocation != null) {
+			sendMyLocation(mCurrLocation);
+		}
 		     
         // Get notified of alerts
         listenForAlerts();      
@@ -356,12 +363,6 @@ public class BackgroundService extends Service implements
     	getBackendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     	getBackendIntent.setAction(ACTION_BACKEND);
     	startActivity(getBackendIntent);
-	}
-
-	
-	public String locationToString(Location location) {
-	    return Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
 	}
 	
 	void listenForAlerts() {
@@ -441,38 +442,40 @@ public class BackgroundService extends Service implements
 	}
 
 	void sendMyLocation(final Location loc) {
-	        // execute the insertion with the handler
-	        // query for existing username before inserting
-	        if (mSelf == null || mSelf.asEntity().getId() == null) {
-	                mBackend.listByProperty("Person", "name", Op.EQ,
-	                                mAccount, Order.ASC, 1, Scope.PAST,
-	                                new CloudCallbackHandler<List<CloudEntity>>() {
-	                                        @Override
-	                                        public void onComplete(List<CloudEntity> results) {
-	                                                if (results.size() > 0) {
-	                                                        mSelf = new Person(results.get(0));
-	                                                        mSelf.setGeohash(gh.encode(loc));
-	                                                        mSelf.setPhone(mPhone);
-	                                                        mSelf.setAlert(mAlert);
-	                                                        mSelf.setRadius(TEMP_RADIUS);
-	                                                        mBackend.update(mSelf.asEntity(),
-	                                                                        updateHandler);
-	                                                } else {
-	                                                	// TODO: get radius from preferences
-	                                                        mSelf = new Person(mAccount, mPhone, 
-	                                                        				   gh.encode(loc), 
-	                                                        				   mAlert, TEMP_RADIUS);
-	                                                        mBackend.insert(mSelf.asEntity(),
-	                                                                        updateHandler);
-	                                                }
-	                                        }
-	                                });
-	        } else {
-	                mSelf.setGeohash(gh.encode(loc));
-	                mSelf.setPhone(mPhone);
-	                mSelf.setAlert(mAlert);
-	                mSelf.setRadius(TEMP_RADIUS);
-	                mBackend.update(mSelf.asEntity(), updateHandler);
-	        }
+            if (mSelf != null) {
+				mSelf.setGeohash(gh.encode(loc));
+				mSelf.setPhone(mPhone);
+				mSelf.setAlert(mAlert);
+				mSelf.setRadius(TEMP_RADIUS);
+				mBackend.update(mSelf.asEntity(), updateHandler);
+			}
+	}
+	
+	private void addPersonIfNecessary() {
+		if (mSelf == null || mSelf.asEntity().getId() == null) {
+			// Query backend
+	        mBackend.listByProperty("Person", "name", Op.EQ,
+	                mAccount, Order.ASC, 1, Scope.PAST,
+	                new CloudCallbackHandler<List<CloudEntity>>() {
+	                        @Override
+	                        public void onComplete(List<CloudEntity> results) {
+	                                if (results.size() > 0) {
+	                                        mSelf = new Person(results.get(0));
+	                                        mSelf.setGeohash("none");
+	                                        mSelf.setPhone(mPhone);
+	                                        mSelf.setAlert(mAlert);
+	                                        mSelf.setRadius(TEMP_RADIUS);
+	                                        mBackend.update(mSelf.asEntity(),
+	                                                        updateHandler);
+	                                } else {
+	                                	// TODO: get radius from preferences
+	                                        mSelf = new Person(mAccount, mPhone, 
+	                                        				   "none", mAlert, TEMP_RADIUS);
+	                                        mBackend.insert(mSelf.asEntity(),
+	                                                        updateHandler);
+	                                }
+	                        }
+	                });
+		}
 	}
 }
