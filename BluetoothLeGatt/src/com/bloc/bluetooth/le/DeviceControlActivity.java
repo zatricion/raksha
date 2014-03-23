@@ -36,7 +36,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -163,7 +163,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	finish();
         }
         else {
-	        setContentView(R.layout.gatt_services_characteristics);
+	        setContentView(R.layout.device_control);
 	
 	        if (mDeviceName == null) {
 	        	mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
@@ -396,6 +396,24 @@ public class DeviceControlActivity extends CloudBackendActivity {
             mNotifyCharacteristic = button;
             mBluetoothLeService.setCharacteristicNotification(button, true);
         }
+    }
+    
+    // methods for onClick events set up in device_control.xml  
+    public void quitApplication(View view) {
+    	Intent stopBluetoothIntent = new Intent(this, BluetoothLeService.class);
+    	stopService(stopBluetoothIntent);
+    	
+    	Intent stopBackgroundIntent = new Intent(this, BackgroundService.class);
+    	stopService(stopBackgroundIntent);
+    	
+    	exitActivities(view);
+    }
+    
+    public void exitActivities(View view) {
+    	Intent exitIntent = new Intent(this, DeviceScanActivity.class);
+    	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    	exitIntent.putExtra("EXIT", true);
+    	startActivity(exitIntent);
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

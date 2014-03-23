@@ -46,5 +46,7 @@
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="navigate">Get Directions</string>
+    <string name="run_background">Run in Background</string>
+    <string name="quit_app">Quit Bloc</string>
     
 </resources>

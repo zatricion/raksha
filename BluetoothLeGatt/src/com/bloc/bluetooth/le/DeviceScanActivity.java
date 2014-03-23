@@ -61,6 +61,10 @@ public class DeviceScanActivity extends ListActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        if (getIntent().getBooleanExtra("EXIT", false)) {
+            finish();  
+        }
+        
         if (BluetoothLeService.isRunning) {
         	moveOn(false);
         }
