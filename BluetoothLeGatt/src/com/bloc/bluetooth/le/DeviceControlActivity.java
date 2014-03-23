@@ -99,6 +99,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
             if (!mBluetoothLeService.initialize()) {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 finish();
+                return;
             }
             // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
@@ -208,7 +209,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     	// Start bluetooth service
     	if (mDeviceAddress != null) {
 	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
+	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
 	        startService(gattServiceIntent);
     	}
     	
@@ -318,9 +319,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBluetoothLeService != null) {
-        	unbindService(mServiceConnection);
-        }
+        unbindService(mServiceConnection);
         mBluetoothLeService = null;
     }
 
@@ -354,7 +353,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
             	else if (mDeviceAddress != null) {
                     Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show();
         	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-        	        bindService(gattServiceIntent, mServiceConnection, BIND_ABOVE_CLIENT);
+        	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
         	        startService(gattServiceIntent);
             	}
                 return true;
@@ -400,16 +399,17 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     // methods for onClick events set up in device_control.xml  
     public void quitApplication(View view) {
-    	Intent stopBluetoothIntent = new Intent(this, BluetoothLeService.class);
-    	stopService(stopBluetoothIntent);
-    	
     	Intent stopBackgroundIntent = new Intent(this, BackgroundService.class);
     	stopService(stopBackgroundIntent);
+    	
+    	Intent stopBluetoothIntent = new Intent(this, BluetoothLeService.class);
+    	stopService(stopBluetoothIntent);
     	
     	exitActivities(view);
     }
     
     public void exitActivities(View view) {
+    	setUserDisconnect(true);
     	Intent exitIntent = new Intent(this, DeviceScanActivity.class);
     	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     	exitIntent.putExtra("EXIT", true);

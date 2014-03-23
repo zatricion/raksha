@@ -92,7 +92,7 @@ public class BluetoothLeService extends Service {
         startForeground(42, note);
         isRunning = true;
         
-		return START_STICKY;
+        return START_NOT_STICKY;
 	}
 
     // Implements callback methods for GATT events that the app cares about.  For example,

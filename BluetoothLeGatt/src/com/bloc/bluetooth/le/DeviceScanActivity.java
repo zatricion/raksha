@@ -62,7 +62,8 @@ public class DeviceScanActivity extends ListActivity {
         super.onCreate(savedInstanceState);
         
         if (getIntent().getBooleanExtra("EXIT", false)) {
-            finish();  
+            finish();
+            return;
         }
         
         if (BluetoothLeService.isRunning) {
@@ -109,6 +110,12 @@ public class DeviceScanActivity extends ListActivity {
             menu.findItem(R.id.menu_scan).setVisible(false);
         }
         return true;
+    }
+	
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
     }
 
     @Override

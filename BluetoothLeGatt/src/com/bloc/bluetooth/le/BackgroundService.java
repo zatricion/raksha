@@ -232,8 +232,7 @@ public class BackgroundService extends Service implements
 	        }
 		}
         
-		// Continue running until explicitly stopped
-		return START_STICKY;
+		return START_NOT_STICKY;
 	}
 	
 	private void createAlertNotification() {
@@ -407,7 +406,6 @@ public class BackgroundService extends Service implements
 					else {
 	                	// End the alert
 	                	Intent intent = new Intent(ACTION_END_ALERT);
-	                	intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 	                	sendBroadcast(intent);
 	                	
 						Log.e(TAG, "END ALERT");
