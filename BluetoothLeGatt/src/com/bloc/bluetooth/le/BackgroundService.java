@@ -421,6 +421,7 @@ public class BackgroundService extends Service implements
 					else {
 	                	// End the alert
 	                	Intent intent = new Intent(ACTION_END_ALERT);
+	                	intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 	                	sendBroadcast(intent);
 	                	
 						Log.e(TAG, "END ALERT");
@@ -467,7 +468,6 @@ public class BackgroundService extends Service implements
 	                        public void onComplete(List<CloudEntity> results) {
 	                                if (results.size() > 0) {
 	                                        mSelf = new Person(results.get(0));
-	                                        mSelf.setPhone(mPhone);
 	                                        mSelf.setAlert(mAlert);
 	                                        mSelf.setRadius(TEMP_RADIUS);
 	                                        mBackend.update(mSelf.asEntity(),
