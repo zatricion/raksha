@@ -38,7 +38,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapActivity extends FragmentActivity implements 
 				OnCameraChangeListener, OnMyLocationChangeListener {
 	private GoogleMap mMap;
-    private Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+    private Vibrator v;
 	private LatLng victim_loc;
 	private boolean mWaitingForLoc;
 	private boolean isFinishing = false;
@@ -82,6 +82,8 @@ public class MapActivity extends FragmentActivity implements
             window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
 
             setContentView(R.layout.activity_map);
+            
+            v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
             
             // Vibrate for 500 milliseconds
             long[] pattern = {0, 500, 1000, 500, 1000, 500, 1000, 500, 1000};
