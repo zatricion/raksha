@@ -12,8 +12,11 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.bloc.R;
@@ -37,6 +40,7 @@ public class MapActivity extends FragmentActivity implements
 	private GoogleMap mMap;
 	private LatLng victim_loc;
 	private boolean mWaitingForLoc;
+	private boolean isFinishing = false;
     private static final String KEY_CURRENT_LOC = "mCurrentLocation";
     private static final String KEY_ZOOM = "zoom";
     
@@ -50,20 +54,37 @@ public class MapActivity extends FragmentActivity implements
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if (BackgroundService.ACTION_UPDATE_MAP.equals(action)) {
+            if (!isFinishing && BackgroundService.ACTION_UPDATE_MAP.equals(action)) {
             	victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
             } 
             else if (BackgroundService.ACTION_END_ALERT.equals(action)) {
 		        Toast.makeText(MapActivity.this, "Bloc Member no longer in danger!", Toast.LENGTH_LONG).show();
 		        finish();
+		        return;
             } 
         }
+    };
+    
+    public void finish() {
+    	isFinishing = true;
+        super.finish();
     };
     
     @Override
     protected void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
+            Window window = this.getWindow();
+            window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+
             setContentView(R.layout.activity_map);
+            
+            Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+            // Vibrate for 500 milliseconds
+            long[] pattern = {0, 500, 1000, 500, 1000, 500, 1000, 500, 1000};
+            v.vibrate(pattern, -1);
             
             Intent intent = getIntent();
             victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
