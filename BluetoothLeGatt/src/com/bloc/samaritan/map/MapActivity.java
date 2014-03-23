@@ -38,6 +38,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MapActivity extends FragmentActivity implements 
 				OnCameraChangeListener, OnMyLocationChangeListener {
 	private GoogleMap mMap;
+    private Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
 	private LatLng victim_loc;
 	private boolean mWaitingForLoc;
 	private boolean isFinishing = false;
@@ -58,6 +59,7 @@ public class MapActivity extends FragmentActivity implements
             	victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
             } 
             else if (BackgroundService.ACTION_END_ALERT.equals(action)) {
+            	v.vibrate(1000);
 		        Toast.makeText(MapActivity.this, "Bloc Member no longer in danger!", Toast.LENGTH_LONG).show();
 		        finish();
 		        return;
@@ -81,7 +83,6 @@ public class MapActivity extends FragmentActivity implements
 
             setContentView(R.layout.activity_map);
             
-            Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
             // Vibrate for 500 milliseconds
             long[] pattern = {0, 500, 1000, 500, 1000, 500, 1000, 500, 1000};
             v.vibrate(pattern, -1);
