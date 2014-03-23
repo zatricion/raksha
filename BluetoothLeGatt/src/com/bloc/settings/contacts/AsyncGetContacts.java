@@ -1,7 +1,6 @@
 package com.bloc.settings.contacts;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -15,7 +14,6 @@ import android.widget.ListView;
 public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
 	private ArrayList<Contact> contactList = new ArrayList<Contact>();
 	private Context context;
-	private ContactListAdapter contactListAdapter;
 	private ListView contactListView;
 	
 	public AsyncGetContacts(Context context, ListView contactListView){

@@ -1,15 +1,7 @@
 package com.bloc.settings.contacts;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.content.ContentResolver;
-import android.content.Context;
-import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.provider.ContactsContract;
 
 public class Contact implements Parcelable{
 	// TODO These need to be made private

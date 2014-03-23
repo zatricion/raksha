@@ -1,7 +1,6 @@
 package com.bloc.settings.contacts;
 
 import com.bloc.R;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -11,15 +10,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
 
 public class ContactListAdapterNoCheckBox extends ArrayAdapter<Contact>{
 	private final Context context;
 	private final List<Contact> contactList;
-	private Boolean[] contactSelectedList;
 
 	public ContactListAdapterNoCheckBox(Context context, List<Contact> list) {
 		super(context, R.layout.contact_list_row, list);

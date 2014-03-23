@@ -151,25 +151,26 @@ public class MapActivity extends FragmentActivity implements
 
 	@Override
 	public void onMyLocationChange(Location location) {
-        double lat = location.getLatitude();
-        double lon = location.getLongitude();
-        // on start or first reliable fix, center the map
-        boolean firstGoodFix = mWaitingForLoc && location.getAccuracy() < 30.;
-        if (mCurrentLocation == null || firstGoodFix) {
-                LatLng myLocation = new LatLng(lat, lon);
-                // center map on new location
-                mMap.animateCamera(CameraUpdateFactory.newLatLng(myLocation));
-        }
-        mCurrentLocation = location;
-
-        // Convert my Location to LatLng
-        LatLng my_loc = new LatLng(location.getLatitude(), location.getLongitude());
-        
-        if (firstGoodFix) {
-            mWaitingForLoc = false;
-        }		
-        
-        drawMarkers(my_loc, victim_loc);
+        if (!isFinishing) {
+			double lat = location.getLatitude();
+			double lon = location.getLongitude();
+			// on start or first reliable fix, center the map
+			boolean firstGoodFix = mWaitingForLoc
+					&& location.getAccuracy() < 30.;
+			if (mCurrentLocation == null || firstGoodFix) {
+				LatLng myLocation = new LatLng(lat, lon);
+				// center map on new location
+				mMap.animateCamera(CameraUpdateFactory.newLatLng(myLocation));
+			}
+			mCurrentLocation = location;
+			// Convert my Location to LatLng
+			LatLng my_loc = new LatLng(location.getLatitude(),
+					location.getLongitude());
+			if (firstGoodFix) {
+				mWaitingForLoc = false;
+			}
+			drawMarkers(my_loc, victim_loc);
+		}
 	}
 
 	@Override
