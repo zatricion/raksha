@@ -400,6 +400,12 @@ public class BackgroundService extends Service implements
 							updateVictimLocation(name);
 							break;
 						}
+					 	// Delete the message now that it has been received
+					 	try {
+							mBackend.delete(gcm);
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}

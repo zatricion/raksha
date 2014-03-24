@@ -85,9 +85,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     private String mDeviceName;
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
-    private BackgroundService mBackgroundService;
     private boolean mConnected = false;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -394,7 +392,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
         final int charaProp = button.getProperties();   
         // Enable notifications for button characteristic
         if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-            mNotifyCharacteristic = button;
             mBluetoothLeService.setCharacteristicNotification(button, true);
         }
     }
