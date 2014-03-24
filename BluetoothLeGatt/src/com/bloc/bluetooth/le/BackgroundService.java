@@ -1,11 +1,14 @@
 package com.bloc.bluetooth.le;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 import com.bloc.R;
 import com.bloc.samaritan.map.MapActivity;
+import com.bloc.settings.contacts.Contact;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.location.LocationClient;
@@ -23,6 +26,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,6 +44,8 @@ import com.google.cloud.backend.android.CloudQuery;
 import com.google.cloud.backend.android.CloudQuery.Order;
 import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.cloud.backend.android.F;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class BackgroundService extends Service implements
 		GooglePlayServicesClient.ConnectionCallbacks,
@@ -60,6 +66,7 @@ public class BackgroundService extends Service implements
     private static final Geohasher gh = new Geohasher();
     private Location mCurrLocation;
     private String recentlyCancelled;
+    private boolean isHelping;
     
 	// TODO: get radius from preferences
     private Double TEMP_RADIUS = 50.0; // meters
@@ -165,6 +172,9 @@ public class BackgroundService extends Service implements
         
         // The Service is running
         isRunning = true;
+        
+        // Not yet helping anyone
+        isHelping = false;
     }
 	
 	@Override
@@ -205,6 +215,9 @@ public class BackgroundService extends Service implements
 			// Set up the service
 			initialize();
 			
+			// Listen for alerts from people who have you as an emergency contact
+			listenForContactAlerts();
+			
 			// TODO: better notification
 	        Notification note = new Notification.Builder(this)
 								        .setContentTitle("SensorTag")
@@ -229,6 +242,9 @@ public class BackgroundService extends Service implements
                 mBackend.update(mSelf.asEntity(),
                         updateHandler);
 			}
+			
+			// Alert emergency contacts
+			alertEmergencyContacts();
 	
 			// Start getting fast updates
 	        if (mLocationClient.isConnected()) {
@@ -355,12 +371,52 @@ public class BackgroundService extends Service implements
     	startActivity(getBackendIntent);
 	}
 	
-	private void listenForContactEmergencies() {
-		
+	private void listenForContactAlerts() {
+		CloudCallbackHandler<List<CloudEntity>> contactAlertHandler =
+				new CloudCallbackHandler<List<CloudEntity>>() {
+			@Override
+			public void onComplete(List<CloudEntity> messages) {	
+				for (CloudEntity gcm : messages) {
+				 	if (gcm.get("type").equals("alert") && !isHelping && !mAlert) {
+				 		Log.e(TAG, "Got contact alert");
+				 		isHelping = true;
+						mBackend.unsubscribeFromQuery("AlertListener");
+						// Get info from message
+						String name = (String) gcm.get("name");
+						String geohash = (String) gcm.get("location");
+						
+						// Start MapActivity
+						Intent intent = new Intent(BackgroundService.this,
+								MapActivity.class);
+						intent.putExtra(MapActivity.VICTIM_LOC, geohash);
+						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						startActivity(intent);
+						
+						updateVictimLocation(name);
+						break;
+					}
+				}
+			}
+		};
+				  
+		mBackend.subscribeToCloudMessage(mPhone, contactAlertHandler);	
 	}
 	
 	private void alertEmergencyContacts() {
-		
+        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+        String contacts = prefs.getString(DeviceControlActivity.KEY_CONTACTS, null);
+        
+    	Gson gson = new Gson();
+        Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
+        ArrayList<Contact> contactList = gson.fromJson(contacts, collectionType);
+
+    	for (Contact contact : contactList) {
+			CloudEntity ce = mBackend.createCloudMessage(String.valueOf(contact.phNum));
+			ce.put("type", "alert");
+			ce.put("name", mAccount);
+			ce.put("location", gh.encode(mCurrLocation));
+			mBackend.sendCloudMessage(ce);
+		}
 	}
 	
 	private void listenForAlertCancellation(final String name) {
@@ -372,6 +428,7 @@ public class BackgroundService extends Service implements
             	Intent intent = new Intent(ACTION_END_ALERT);
             	sendBroadcast(intent);
             	recentlyCancelled = name;
+            	isHelping = false;
             	
 				Log.e(TAG, "END ALERT");
 			}
@@ -382,6 +439,7 @@ public class BackgroundService extends Service implements
 	
 	private void cancelAlert() {
 		CloudEntity ce = mBackend.createCloudMessage(mAccount);
+		ce.put("type", "cancellation");
 		ce.put("cancel", mAccount);
 		mBackend.sendCloudMessage(ce);
 	}
@@ -393,10 +451,11 @@ public class BackgroundService extends Service implements
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Received", "ALERT");
             	Log.e("Recently Cancelled", recentlyCancelled);
+            	Log.e("Received", results.toString());
 				for (Person victim : Person.fromEntities(results)) {
 					String name = victim.getName();
-					// Don't want alerts from yourself or recently cancelled people
-					if (!name.equals(mAccount) && !name.equals(recentlyCancelled)) {
+					// Don't want alerts from yourself or recently cancelled people or if you have an emergency
+					if (!(name.equals(mAccount) || name.equals(recentlyCancelled) || isHelping || mAlert)) {
 	                    LatLng where = gh.decode(victim.getGeohash());
 	                    BigDecimal radius = victim.getRadius();
 	                    if (where == null || radius == null || mCurrLocation == null) {
@@ -407,6 +466,7 @@ public class BackgroundService extends Service implements
 	                    help.setLongitude(where.longitude);
 	                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
 	                    	// Stop listening for alerts
+	                    	isHelping = true;
 	                    	mBackend.unsubscribeFromQuery("AlertListener");
 	                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
 	                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
@@ -449,6 +509,7 @@ public class BackgroundService extends Service implements
 							public void run() {
 								listenForAlerts();
 								recentlyCancelled = "none";
+								isHelping = false;
 							}
 						}, 5000);
 	                    break;
