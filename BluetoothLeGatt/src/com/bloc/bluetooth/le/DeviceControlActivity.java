@@ -18,6 +18,7 @@ package com.bloc.bluetooth.le;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.NotificationManager;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
@@ -398,6 +399,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     // methods for onClick events set up in device_control.xml  
     public void quitApplication(View view) {
+		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.cancelAll();
+		
     	Intent stopBackgroundIntent = new Intent(this, BackgroundService.class);
     	stopService(stopBackgroundIntent);
     	

@@ -15,9 +15,7 @@ public class AlertNotificationActivity extends Activity {
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		Log.e("ASDLKJF", "CREATE");
-		
+		super.onCreate(savedInstanceState);		
 
 		new AlertDialog.Builder(this)
 		   .setTitle("Cancel Emergency Alert")
