@@ -59,6 +59,7 @@ public class BackgroundService extends Service implements
     private static CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
     private Location mCurrLocation;
+    private String recentlyCancelled;
     
 	// TODO: get radius from preferences
     private Double TEMP_RADIUS = 50.0; // meters
@@ -145,6 +146,9 @@ public class BackgroundService extends Service implements
         // Start with alert turned off
         mAlert = Boolean.FALSE;
         
+        // No recently cancelled alerts
+        recentlyCancelled = "none";
+        
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
@@ -181,6 +185,7 @@ public class BackgroundService extends Service implements
 		final String action = intent.getAction();
 		
 		if (ACTION_STOP_ALERT.equals(action)) {
+			cancelAlert();
 			mAlert = Boolean.FALSE;
 			if (mCurrLocation != null) {
 				sendMyLocation(mCurrLocation);
@@ -350,16 +355,48 @@ public class BackgroundService extends Service implements
     	startActivity(getBackendIntent);
 	}
 	
-	void listenForAlerts() {
+	private void listenForContactEmergencies() {
+		
+	}
+	
+	private void alertEmergencyContacts() {
+		
+	}
+	
+	private void listenForAlertCancellation(final String name) {
+		CloudCallbackHandler<List<CloudEntity>> cancellationHandler =
+				new CloudCallbackHandler<List<CloudEntity>>() {
+			@Override
+			public void onComplete(List<CloudEntity> messages) {				
+            	// End the alert
+            	Intent intent = new Intent(ACTION_END_ALERT);
+            	sendBroadcast(intent);
+            	recentlyCancelled = name;
+            	
+				Log.e(TAG, "END ALERT");
+			}
+		};
+				  
+		mBackend.subscribeToCloudMessage(name, cancellationHandler);	
+	}
+	
+	private void cancelAlert() {
+		CloudEntity ce = mBackend.createCloudMessage(mAccount);
+		ce.put("cancel", mAccount);
+		mBackend.sendCloudMessage(ce);
+	}
+	
+	private void listenForAlerts() {
         CloudCallbackHandler<List<CloudEntity>> alertHandler =
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Received", "ALERT");
+            	Log.e("Recently Cancelled", recentlyCancelled);
 				for (Person victim : Person.fromEntities(results)) {
 					String name = victim.getName();
-					// Don't want alerts from yourself
-					if (!name.equals(mAccount)) {
+					// Don't want alerts from yourself or recently cancelled people
+					if (!name.equals(mAccount) && !name.equals(recentlyCancelled)) {
 	                    LatLng where = gh.decode(victim.getGeohash());
 	                    BigDecimal radius = victim.getRadius();
 	                    if (where == null || radius == null || mCurrLocation == null) {
@@ -391,24 +428,19 @@ public class BackgroundService extends Service implements
 		mBackend.list(cq, alertHandler);
 	}
 	
-	void updateVictimLocation(String name) {
+	private void updateVictimLocation(String name) {
         CloudCallbackHandler<List<CloudEntity>> updateLocationHandler =
         		new CloudCallbackHandler<List<CloudEntity>>() {
             @Override
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Victim", "Update");
 				for (Person victim : Person.fromEntities(results)) {
-					if (victim.getAlert()) {
+					if (victim.getAlert() && (victim.getName() != recentlyCancelled)) {
 	                	Intent intent = new Intent(ACTION_UPDATE_MAP);
 	                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 	                	sendBroadcast(intent);
 					}
 					else {
-	                	// End the alert
-	                	Intent intent = new Intent(ACTION_END_ALERT);
-	                	sendBroadcast(intent);
-	                	
-						Log.e(TAG, "END ALERT");
 	                	mBackend.unsubscribeFromQuery("VictimUpdater");
 	                	
 	                	// This alert is done, start listening for alerts again in 5 seconds
@@ -416,6 +448,7 @@ public class BackgroundService extends Service implements
 							@Override
 							public void run() {
 								listenForAlerts();
+								recentlyCancelled = "none";
 							}
 						}, 5000);
 	                    break;
@@ -430,9 +463,11 @@ public class BackgroundService extends Service implements
 		cq.setScope(Scope.FUTURE);
 		cq.setSubscriptionDurationSec(HOUR_IN_SECONDS);
 		mBackend.list(cq, updateLocationHandler);
+		
+		listenForAlertCancellation(name);
 	}
 
-	void sendMyLocation(final Location loc) {
+	private void sendMyLocation(final Location loc) {
             if (mSelf != null) {
 				mSelf.setGeohash(gh.encode(loc));
 				mSelf.setPhone(mPhone);
