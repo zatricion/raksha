@@ -1,5 +1,6 @@
 package com.bloc.bluetooth.le;
 
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -284,7 +285,7 @@ public class BackgroundService extends Service implements
 		super.onDestroy();
 		isRunning = false;
 		mLocationClient.disconnect();	
-		mBackend.clearAllSubscription();
+		//mBackend.clearAllSubscription();
 	}
 	
 	@Override
@@ -319,8 +320,13 @@ public class BackgroundService extends Service implements
 	        if (phone_number != null) {
 	        	mPhone = phone_number;
 	        }
+	        else if (mSelf != null) {
+	        	mPhone = mSelf.getPhone();
+	        }
 	        else {
-	        	mPhone =  UUID.randomUUID().toString();
+//	        	mPhone =  UUID.randomUUID().toString();
+//	        	Log.e(TAG, "Using fake phone number");
+	        	mPhone = "18646508209";
 	        }
 		}
 		
@@ -375,29 +381,36 @@ public class BackgroundService extends Service implements
 			public void onComplete(List<CloudEntity> messages) {
 				Log.e(TAG, "message");
 				for (CloudEntity gcm : messages) {
-				 	if (!(isHelping || mAlert)) {
-				 		Log.e(TAG, "Got contact alert");
-				 		isHelping = true;
-						mBackend.unsubscribeFromQuery("AlertListener");
-						// Get info from message
-						String name = (String) gcm.get("name");
-						String geohash = (String) gcm.get("location");
-						
-						// Start MapActivity
-						Intent intent = new Intent(BackgroundService.this,
-								MapActivity.class);
-						intent.putExtra(MapActivity.VICTIM_LOC, geohash);
-						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-						startActivity(intent);
-						
-						updateVictimLocation(name);
-						break;
+					if (gcm.get("recipient").equals(mPhone)) {
+					 	if (!(isHelping || mAlert)) {
+					 		Log.e(TAG, "Got contact alert");
+					 		isHelping = true;
+							mBackend.unsubscribeFromQuery("AlertListener");
+							// Get info from message
+							String name = (String) gcm.get("name");
+							String geohash = (String) gcm.get("location");
+							
+							// Start MapActivity
+							Intent intent = new Intent(BackgroundService.this,
+									MapActivity.class);
+							intent.putExtra(MapActivity.VICTIM_LOC, geohash);
+							intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+							startActivity(intent);
+							
+							updateVictimLocation(name);
+							break;
+						}
 					}
 				}
 			}
+			
+			@Override
+			public void onError(IOException exception) {
+				Log.e(TAG, exception.toString());
+			}
 		};
 				  
-		mBackend.subscribeToCloudMessage(mPhone, contactAlertHandler);	
+		mBackend.subscribeToCloudMessage("ContactAlert", contactAlertHandler);	
 	}
 	
 	private void alertEmergencyContacts() {
@@ -409,11 +422,14 @@ public class BackgroundService extends Service implements
         ArrayList<Contact> contactList = gson.fromJson(contacts, collectionType);
 
     	for (Contact contact : contactList) {
-			CloudEntity ce = mBackend.createCloudMessage(String.valueOf(contact.phNum));
-			Log.e("Sending alert to", String.valueOf(contact.phNum));
-			ce.put("name", mAccount);
-			ce.put("location", gh.encode(mCurrLocation));
-			mBackend.sendCloudMessage(ce);
+    		if (contact.selected) {
+				CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
+				Log.e("Sending alert to", String.valueOf(contact.phNum));
+				ce.put("recipient", String.valueOf(contact.phNum));
+				ce.put("name", mAccount);
+				ce.put("location", gh.encode(mCurrLocation));
+				mBackend.sendCloudMessage(ce);
+    		}
 		}
 	}
 	
@@ -426,6 +442,9 @@ public class BackgroundService extends Service implements
             	Intent intent = new Intent(ACTION_END_ALERT);
             	sendBroadcast(intent);
             	isHelping = false;
+            	
+            	mBackend.unsubscribeFromQuery("VictimUpdater");
+            	listenForAlerts();
             	
 				Log.e(TAG, "END ALERT");
 			}
@@ -494,19 +513,6 @@ public class BackgroundService extends Service implements
 	                	Intent intent = new Intent(ACTION_UPDATE_MAP);
 	                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 	                	sendBroadcast(intent);
-					}
-					else {
-	                	mBackend.unsubscribeFromQuery("VictimUpdater");
-	                	
-	                	// This alert is done, start listening for alerts again in 5 seconds
-						new Handler().postDelayed(new Runnable() {
-							@Override
-							public void run() {
-								listenForAlerts();
-								isHelping = false;
-							}
-						}, 5000);
-	                    break;
 					}
             	}
             }
