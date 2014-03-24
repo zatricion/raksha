@@ -65,11 +65,10 @@ public class BackgroundService extends Service implements
     private static CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
     private Location mCurrLocation;
-    private String recentlyCancelled;
     private boolean isHelping;
     
 	// TODO: get radius from preferences
-    private Double TEMP_RADIUS = 50.0; // meters
+    private Double TEMP_RADIUS = 0.0; // meters
     
     private boolean mAlert;
     
@@ -153,9 +152,6 @@ public class BackgroundService extends Service implements
         // Start with alert turned off
         mAlert = Boolean.FALSE;
         
-        // No recently cancelled alerts
-        recentlyCancelled = "none";
-        
         /*
          * Create a new location client, using the enclosing class to
          * handle callbacks.
@@ -214,9 +210,6 @@ public class BackgroundService extends Service implements
 		else if (ACTION_INIT.equals(action)) {
 			// Set up the service
 			initialize();
-			
-			// Listen for alerts from people who have you as an emergency contact
-			listenForContactAlerts();
 			
 			// TODO: better notification
 	        Notification note = new Notification.Builder(this)
@@ -355,7 +348,10 @@ public class BackgroundService extends Service implements
 		}
 		     
         // Get notified of alerts
-        listenForAlerts();      
+        listenForAlerts();    
+        
+		// Listen for alerts from people who have you as an emergency contact
+		listenForContactAlerts();
 	}
 
 	@Override
@@ -372,12 +368,14 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void listenForContactAlerts() {
+		Log.e(TAG, mPhone);
 		CloudCallbackHandler<List<CloudEntity>> contactAlertHandler =
 				new CloudCallbackHandler<List<CloudEntity>>() {
 			@Override
-			public void onComplete(List<CloudEntity> messages) {	
+			public void onComplete(List<CloudEntity> messages) {
+				Log.e(TAG, "message");
 				for (CloudEntity gcm : messages) {
-				 	if (gcm.get("type").equals("alert") && !isHelping && !mAlert) {
+				 	if (!(isHelping || mAlert)) {
 				 		Log.e(TAG, "Got contact alert");
 				 		isHelping = true;
 						mBackend.unsubscribeFromQuery("AlertListener");
@@ -412,7 +410,7 @@ public class BackgroundService extends Service implements
 
     	for (Contact contact : contactList) {
 			CloudEntity ce = mBackend.createCloudMessage(String.valueOf(contact.phNum));
-			ce.put("type", "alert");
+			Log.e("Sending alert to", String.valueOf(contact.phNum));
 			ce.put("name", mAccount);
 			ce.put("location", gh.encode(mCurrLocation));
 			mBackend.sendCloudMessage(ce);
@@ -427,7 +425,6 @@ public class BackgroundService extends Service implements
             	// End the alert
             	Intent intent = new Intent(ACTION_END_ALERT);
             	sendBroadcast(intent);
-            	recentlyCancelled = name;
             	isHelping = false;
             	
 				Log.e(TAG, "END ALERT");
@@ -439,7 +436,6 @@ public class BackgroundService extends Service implements
 	
 	private void cancelAlert() {
 		CloudEntity ce = mBackend.createCloudMessage(mAccount);
-		ce.put("type", "cancellation");
 		ce.put("cancel", mAccount);
 		mBackend.sendCloudMessage(ce);
 	}
@@ -450,12 +446,11 @@ public class BackgroundService extends Service implements
             @Override
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Received", "ALERT");
-            	Log.e("Recently Cancelled", recentlyCancelled);
             	Log.e("Received", results.toString());
 				for (Person victim : Person.fromEntities(results)) {
 					String name = victim.getName();
-					// Don't want alerts from yourself or recently cancelled people or if you have an emergency
-					if (!(name.equals(mAccount) || name.equals(recentlyCancelled) || isHelping || mAlert)) {
+					// Don't want alerts from yourself or if you have an emergency
+					if (!(name.equals(mAccount) || isHelping || mAlert)) {
 	                    LatLng where = gh.decode(victim.getGeohash());
 	                    BigDecimal radius = victim.getRadius();
 	                    if (where == null || radius == null || mCurrLocation == null) {
@@ -495,7 +490,7 @@ public class BackgroundService extends Service implements
             public void onComplete(List<CloudEntity> results) {
             	Log.e("Victim", "Update");
 				for (Person victim : Person.fromEntities(results)) {
-					if (victim.getAlert() && (victim.getName() != recentlyCancelled)) {
+					if (victim.getAlert()) {
 	                	Intent intent = new Intent(ACTION_UPDATE_MAP);
 	                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 	                	sendBroadcast(intent);
@@ -508,7 +503,6 @@ public class BackgroundService extends Service implements
 							@Override
 							public void run() {
 								listenForAlerts();
-								recentlyCancelled = "none";
 								isHelping = false;
 							}
 						}, 5000);
