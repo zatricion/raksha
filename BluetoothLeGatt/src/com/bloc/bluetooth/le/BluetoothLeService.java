@@ -184,6 +184,7 @@ public class BluetoothLeService extends Service {
 	@Override
 	public void onDestroy() {
 		close();
+		isRunning = false;
 		super.onDestroy();
 	}
 
