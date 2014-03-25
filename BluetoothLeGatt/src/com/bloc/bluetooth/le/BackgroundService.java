@@ -68,7 +68,7 @@ public class BackgroundService extends Service implements
     private Location mCurrLocation;
     private boolean isHelping;
     
-    private int mRadius; // meters
+    public static int mRadius; // meters
     
     private boolean mAlert;
     
@@ -226,6 +226,10 @@ public class BackgroundService extends Service implements
 		else if (ACTION_EMERGENCY_ALERT.equals(action)) {
 			// Notify the user about the alert
 			createAlertNotification();
+			
+			// Get radius
+	        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+	        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, mRadius); // default (meters)
 			
 			// Send out the alert!
 			mAlert = Boolean.TRUE;
@@ -447,15 +451,7 @@ public class BackgroundService extends Service implements
 				new CloudCallbackHandler<List<CloudEntity>>() {
 			@Override
 			public void onComplete(List<CloudEntity> messages) {				
-            	// End the alert
-            	Intent intent = new Intent(ACTION_END_ALERT);
-            	sendBroadcast(intent);
-            	isHelping = false;
-            	
-            	mBackend.unsubscribeFromQuery("VictimUpdater");
-            	listenForAlerts();
-            	
-				Log.e(TAG, "END ALERT");
+            	endAlert();
 			}
 		};
 				  
@@ -466,6 +462,18 @@ public class BackgroundService extends Service implements
 		CloudEntity ce = mBackend.createCloudMessage(mAccount);
 		ce.put("cancel", mAccount);
 		mBackend.sendCloudMessage(ce);
+	}
+	
+	private void endAlert() {
+    	// End the alert
+    	Intent intent = new Intent(ACTION_END_ALERT);
+    	sendBroadcast(intent);
+    	isHelping = false;
+    	
+    	mBackend.unsubscribeFromQuery("VictimUpdater");
+    	listenForAlerts();
+    	
+		Log.e(TAG, "END ALERT");
 	}
 	
 	private void listenForAlerts() {
@@ -522,6 +530,10 @@ public class BackgroundService extends Service implements
 	                	Intent intent = new Intent(ACTION_UPDATE_MAP);
 	                	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 	                	sendBroadcast(intent);
+					}
+					else {
+						endAlert();
+						break;
 					}
             	}
             }
