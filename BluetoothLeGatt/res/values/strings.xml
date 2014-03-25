@@ -48,5 +48,6 @@
     <string name="navigate">Get Directions</string>
     <string name="run_background">Run in Background</string>
     <string name="quit_app">Quit Bloc</string>
+    <string name="set_radius">Set Radius</string>
     
 </resources>

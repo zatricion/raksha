@@ -68,8 +68,7 @@ public class BackgroundService extends Service implements
     private Location mCurrLocation;
     private boolean isHelping;
     
-	// TODO: get radius from preferences
-    private Double TEMP_RADIUS = 0.0; // meters
+    private int mRadius; // meters
     
     private boolean mAlert;
     
@@ -172,6 +171,10 @@ public class BackgroundService extends Service implements
         
         // Not yet helping anyone
         isHelping = false;
+        
+        // Get radius
+        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, 50); // default (meters)
     }
 	
 	@Override
@@ -539,7 +542,7 @@ public class BackgroundService extends Service implements
 				mSelf.setGeohash(gh.encode(loc));
 				mSelf.setPhone(mPhone);
 				mSelf.setAlert(mAlert);
-				mSelf.setRadius(TEMP_RADIUS);
+				mSelf.setRadius(mRadius);
 				mBackend.update(mSelf.asEntity(), updateHandler);
 			}
 	}
@@ -555,13 +558,13 @@ public class BackgroundService extends Service implements
 	                                if (results.size() > 0) {
 	                                        mSelf = new Person(results.get(0));
 	                                        mSelf.setAlert(mAlert);
-	                                        mSelf.setRadius(TEMP_RADIUS);
+	                                        mSelf.setRadius(mRadius);
 	                                        mBackend.update(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                } else {
 	                                	// TODO: get radius from preferences
 	                                        mSelf = new Person(mAccount, mPhone, 
-	                                        				   "none", mAlert, TEMP_RADIUS);
+	                                        				   "none", mAlert, mRadius);
 	                                        mBackend.insert(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                }

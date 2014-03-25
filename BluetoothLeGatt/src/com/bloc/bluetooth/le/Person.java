@@ -23,7 +23,7 @@ public class Person {
 	public static final String KEY_ALERT = "alert";
 	public static final String KEY_RADIUS = "radius";
 
-	public Person(String name, String number, String geohash, Boolean alert, Double radius) {
+	public Person(String name, String number, String geohash, Boolean alert, float radius) {
 		this.cloudEntity = new CloudEntity("Person");
 		this.setName(name);
 		this.setPhone(number);
@@ -84,7 +84,7 @@ public class Person {
 		return (BigDecimal) cloudEntity.get(KEY_RADIUS);
 	}
 
-	public void setRadius(Double radius) {
+	public void setRadius(float radius) {
 		cloudEntity.put(KEY_RADIUS, radius);
 	}
 

@@ -34,6 +34,7 @@ import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.DialogFragment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -56,6 +57,7 @@ import com.google.gson.reflect.TypeToken;
 import com.bloc.R;
 import com.bloc.settings.contacts.Contact;
 import com.bloc.settings.contacts.ContactPickerDialog;
+import com.bloc.settings.prefs.RadiusPickerDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
@@ -73,8 +75,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public static final String ACTION_USER_DISCONNECT = "com.bloc.bluetooth.le.ACTION_USER_DISCONNECT";
     
     public static final String KEY_CONTACTS = "contacts";
+    public static final String KEY_RADIUS = "radius";
        
     public static ArrayList<Contact> mContactList;
+    public static int mRadius;
     
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
     
@@ -223,6 +227,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	startService(bgServiceIntent);    
         }
         
+        // Set up contacts
         SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
         String contacts = prefs.getString(KEY_CONTACTS, null);
         
@@ -234,6 +239,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
             Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
             ArrayList<Contact> contact_list = gson.fromJson(contacts, collectionType);
         	mContactList = contact_list;
+        }
+        
+        // Set up radius
+        mRadius = prefs.getInt(KEY_RADIUS, -1);
+        if (mRadius == -1) {
+        	showRadiusPickerDialog();
         }
     }
     
@@ -274,9 +285,16 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     private void showContactPickerDialog() {
 		ContactPickerDialog dlg = new ContactPickerDialog();
+    	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 		dlg.show(getFragmentManager(), "contacts");
 	}
 
+    private void showRadiusPickerDialog() {
+    	RadiusPickerDialog dlg = new RadiusPickerDialog();
+    	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+		dlg.show(getFragmentManager(), "radius");
+	}
+    
     @Override
     protected void onResume() {
         super.onResume();
@@ -369,7 +387,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
                 return true;
             case R.id.action_contacts:
             	showContactPickerDialog();
-            	return true;        	
+            	return true;   
+            case R.id.action_radius:
+            	showRadiusPickerDialog();
+            	return true;     
         }
         return super.onOptionsItemSelected(item);
     }
