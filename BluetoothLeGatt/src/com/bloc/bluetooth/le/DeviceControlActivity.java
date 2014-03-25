@@ -336,7 +336,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (!noDevice) {
+        if (BluetoothLeService.isBound) {
         	unbindService(mServiceConnection);
         }
         mBluetoothLeService = null;

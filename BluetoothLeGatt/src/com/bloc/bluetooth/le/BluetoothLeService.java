@@ -48,6 +48,7 @@ public class BluetoothLeService extends Service {
     private BluetoothGatt mBluetoothGatt;
     
     static boolean isRunning;
+    static boolean isBound;
     public static String mBluetoothDeviceAddress;
     
     @SuppressWarnings("unused")
@@ -91,7 +92,7 @@ public class BluetoothLeService extends Service {
         // Keep this service in the foreground
         startForeground(42, note);
         isRunning = true;
-        
+        isBound = false;
         return START_NOT_STICKY;
 	}
 
@@ -167,6 +168,7 @@ public class BluetoothLeService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
+    	isBound = true;
         return mBinder;
     }
 
@@ -178,6 +180,7 @@ public class BluetoothLeService extends Service {
     	
     	// Don't close because we want this service to keep the connection going.
         //close();
+    	isBound = false;
         return super.onUnbind(intent);
     }
     
