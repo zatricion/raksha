@@ -47,6 +47,8 @@ import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.cloud.backend.android.F;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.PhoneNumberUtil.MatchType;
 
 public class BackgroundService extends Service implements
 		GooglePlayServicesClient.ConnectionCallbacks,
@@ -65,6 +67,7 @@ public class BackgroundService extends Service implements
     private String mAccount;
     private static CloudBackendMessaging mBackend;
     private static final Geohasher gh = new Geohasher();
+    private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
     private Location mCurrLocation;
     private boolean isHelping;
     
@@ -388,7 +391,8 @@ public class BackgroundService extends Service implements
 			public void onComplete(List<CloudEntity> messages) {
 				Log.e(TAG, "message");
 				for (CloudEntity gcm : messages) {
-					if (gcm.get("recipient").equals(mPhone)) {
+					MatchType match = phoneUtil.isNumberMatch((String) gcm.get("recipient"), mPhone);
+					if (match.equals(MatchType.EXACT_MATCH) || match.equals(MatchType.NSN_MATCH)) {
 					 	if (!(isHelping || mAlert)) {
 					 		Log.e(TAG, "Got contact alert");
 					 		isHelping = true;
