@@ -73,10 +73,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
        
     public static ArrayList<Contact> mContactList;
     public static int mRadius;
-    
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-    
+        
     private boolean noDevice;
+    public static boolean isBLeServiceBound;
     
     private LocationManager manager;
 
@@ -100,11 +99,13 @@ public class DeviceControlActivity extends CloudBackendActivity {
             }
             // Automatically connects to the device upon successful start-up initialization.
             mBluetoothLeService.connect(mDeviceAddress);
+            isBLeServiceBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
             mBluetoothLeService = null;
+            isBLeServiceBound = false;
         }
     };
 
@@ -214,7 +215,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     	checkLocationEnabled();
         
     	// Start background service
-        if (checkGooglePlayApk() && !BackgroundService.isRunning) {
+        if (!BackgroundService.isRunning) {
         	// Enable location tracking
         	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
         	bgServiceIntent.setAction(BackgroundService.ACTION_INIT);
@@ -303,23 +304,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
             Log.d(TAG, "Connect request result=" + result);
         }
     }
-    
-    // Check for Google Play (location service)	
-    private boolean checkGooglePlayApk() {
-        int isAvailable = GooglePlayServicesUtil
-                .isGooglePlayServicesAvailable(this);
-        if (isAvailable == ConnectionResult.SUCCESS) {
-            return true;
-        } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
-            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
-                    this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            dialog.show();
-        } else {
-            Toast.makeText(this, "Connect Connect to Maps", Toast.LENGTH_SHORT)
-                    .show();
-        }
-        return false;
-    }
 
     @Override
     protected void onPause() {
@@ -330,7 +314,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (BluetoothLeService.isBound) {
+        if (isBLeServiceBound && (mBluetoothLeService != null)) {
         	unbindService(mServiceConnection);
         }
         mBluetoothLeService = null;

@@ -17,6 +17,7 @@
 package com.bloc.bluetooth.le;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Set;
 
 import com.bloc.R;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
@@ -51,6 +54,8 @@ public class DeviceScanActivity extends ListActivity {
     private boolean mScanning;
     private Handler mHandler;
     
+    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+
     public final static String MY_DEVICE = "SensorTag";
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -60,15 +65,17 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+                
         if (getIntent().getBooleanExtra("EXIT", false)) {
             finish();
             return;
         }
         
-        if (BluetoothLeService.isRunning) {
+        if (DeviceControlActivity.isBLeServiceBound) {
         	moveOn(false);
+        	return;
         }
+
         getActionBar().setTitle(R.string.app_name);
         mHandler = new Handler();
 
@@ -76,21 +83,7 @@ public class DeviceScanActivity extends ListActivity {
         // selectively disable BLE-related features.
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
             Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
-        // BluetoothAdapter through BluetoothManager.
-        final BluetoothManager bluetoothManager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-
-        // Checks if Bluetooth is supported on the device.
-        if (mBluetoothAdapter == null) {
-            Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+            //TODO: allow alternative for non-BLE devices
         }
     }
     
@@ -98,6 +91,24 @@ public class DeviceScanActivity extends ListActivity {
 		final Intent intent = new Intent(this, DeviceControlActivity.class);
 		intent.putExtra("noDevice", noDevice);
 		startActivity(intent);
+    }
+    
+    // Check for Google Play (location service)	
+    private void checkGooglePlayApk() {
+        int isAvailable = GooglePlayServicesUtil
+                .isGooglePlayServicesAvailable(this);
+        if (isAvailable == ConnectionResult.SUCCESS) {
+            return;
+        } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
+                    this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "Google Play Services unavailable", Toast.LENGTH_SHORT)
+                    .show();
+            finish();
+            return;
+        }
     }
 
 	@Override
@@ -139,6 +150,21 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        
+        checkGooglePlayApk();    
+
+        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
+        // BluetoothAdapter through BluetoothManager.
+        final BluetoothManager bluetoothManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothAdapter = bluetoothManager.getAdapter();
+
+        // Checks if Bluetooth is supported on the device.
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
