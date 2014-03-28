@@ -128,8 +128,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
                 updateConnectionState(R.string.disconnected);
                 invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                // Enable button notifications
-                enableNotifications(mBluetoothLeService.getButtonService());
+            	if (mBluetoothLeService != null) {
+	                // Enable button notifications
+	                enableNotifications(mBluetoothLeService.getButtonService());
+            	}
             } 
             else if (BluetoothLeService.ACTION_BOND_STATE_CHANGED.equals(action)) {
                 // Let the user know that the device is bonded
