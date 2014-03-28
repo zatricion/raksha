@@ -46,12 +46,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import com.google.cloud.backend.android.CloudBackendActivity;
-import com.google.cloud.backend.android.CloudBackendMessaging;
-import com.google.cloud.backend.android.CloudCallbackHandler;
-import com.google.cloud.backend.android.CloudEntity;
-import com.google.cloud.backend.android.CloudQuery;
-import com.google.cloud.backend.android.CloudQuery.Order;
-import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.bloc.R;
@@ -142,9 +136,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
             } 
             else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
                 // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
-            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
-            	String pin = "";
-            	//device.setPin(pin.getBytes());
+//            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+//            	String pin = "";
+//            	device.setPin(pin.getBytes());
             } 
         }
     };
