@@ -309,6 +309,10 @@ public class BackgroundService extends Service implements
         }
         mCurrLocation = location;
         sendMyLocation(mCurrLocation);	
+        
+        //TODO: Not sure whether this is a good idea
+		// Listen for alerts from people who have you as an emergency contact
+		listenForContactAlerts();
 	}
 
 	@Override
@@ -393,7 +397,10 @@ public class BackgroundService extends Service implements
 				Log.e(TAG, "message");
 				for (CloudEntity gcm : messages) {
 					MatchType match = phoneUtil.isNumberMatch((String) gcm.get("recipient"), mPhone);
-					if (match.equals(MatchType.EXACT_MATCH) || match.equals(MatchType.NSN_MATCH)) {
+					Log.e(TAG, match.name());
+					if (match.equals(MatchType.EXACT_MATCH) 
+							|| match.equals(MatchType.NSN_MATCH) 
+							|| match.equals(MatchType.SHORT_NSN_MATCH)) {
 					 	if (!(isHelping || mAlert)) {
 					 		Log.e(TAG, "Got contact alert");
 					 		isHelping = true;
