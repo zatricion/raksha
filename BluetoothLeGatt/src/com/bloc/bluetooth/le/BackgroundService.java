@@ -70,6 +70,7 @@ public class BackgroundService extends Service implements
     private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
     private Location mCurrLocation;
     private boolean isHelping;
+    private ArrayList<String> sentGCMs = new ArrayList<String>();
     
     public static int mRadius; // meters
     
@@ -396,7 +397,6 @@ public class BackgroundService extends Service implements
 					 	if (!(isHelping || mAlert)) {
 					 		Log.e(TAG, "Got contact alert");
 					 		isHelping = true;
-							mBackend.unsubscribeFromQuery("AlertListener");
 							// Get info from message
 							String name = (String) gcm.get("name");
 							String geohash = (String) gcm.get("location");
@@ -410,12 +410,6 @@ public class BackgroundService extends Service implements
 							
 							updateVictimLocation(name);
 							break;
-						}
-					 	// Delete the message now that it has been received
-					 	try {
-							mBackend.delete(gcm);
-						} catch (IOException e) {
-							e.printStackTrace();
 						}
 					}
 				}
@@ -442,9 +436,11 @@ public class BackgroundService extends Service implements
     		if (contact.selected) {
 				CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
 				Log.e("Sending alert to", String.valueOf(contact.phNum));
+				ce.setId(String.valueOf(contact.phNum));
 				ce.put("recipient", String.valueOf(contact.phNum));
 				ce.put("name", mAccount);
 				ce.put("location", gh.encode(mCurrLocation));
+				sentGCMs.add(ce.getId());
 				mBackend.sendCloudMessage(ce);
     		}
 		}
@@ -466,6 +462,20 @@ public class BackgroundService extends Service implements
 		CloudEntity ce = mBackend.createCloudMessage(mAccount);
 		ce.put("cancel", mAccount);
 		mBackend.sendCloudMessage(ce);
+		
+	 	// Delete sent cloud messages
+		new Thread(new Runnable() {
+		    public void run() {
+		    	for (String id : sentGCMs) {
+				 	try {
+						mBackend.delete("_CloudMessages", id);;
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				sentGCMs.clear();
+		    }
+		}).start();
 	}
 	
 	private void endAlert() {
@@ -475,7 +485,6 @@ public class BackgroundService extends Service implements
     	isHelping = false;
     	
     	mBackend.unsubscribeFromQuery("VictimUpdater");
-    	listenForAlerts();
     	
 		Log.e(TAG, "END ALERT");
 	}
@@ -502,7 +511,6 @@ public class BackgroundService extends Service implements
 	                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
 	                    	// Stop listening for alerts
 	                    	isHelping = true;
-	                    	mBackend.unsubscribeFromQuery("AlertListener");
 	                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
 	                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
 	                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
