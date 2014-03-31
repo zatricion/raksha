@@ -33,6 +33,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
@@ -403,14 +404,19 @@ public class DeviceControlActivity extends CloudBackendActivity {
 		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
 		notificationManager.cancelAll();
 		
-    	Intent stopBackgroundIntent = new Intent(this, BackgroundService.class);
-    	stopService(stopBackgroundIntent);
-    	
-    	Intent stopBluetoothIntent = new Intent(this, BluetoothLeService.class);
-    	stopService(stopBluetoothIntent);
-    	
     	exitActivities(view);
-    }
+    	
+    	new Handler().postDelayed(new Runnable(){
+            @Override
+            public void run() {
+            	Intent stopBackgroundIntent = new Intent(DeviceControlActivity.this, BackgroundService.class);
+            	stopService(stopBackgroundIntent);
+            	
+            	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
+            	stopService(stopBluetoothIntent);
+            }
+        }, 1000);
+    	}
     
     public void exitActivities(View view) {
     	setUserDisconnect(true);

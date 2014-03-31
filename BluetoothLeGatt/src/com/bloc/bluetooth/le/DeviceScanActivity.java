@@ -52,7 +52,7 @@ public class DeviceScanActivity extends ListActivity {
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
-    private Handler mHandler;
+    private boolean noBLE;
     
     private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
@@ -77,7 +77,6 @@ public class DeviceScanActivity extends ListActivity {
         }
 
         getActionBar().setTitle(R.string.app_name);
-        mHandler = new Handler();
 
         // Use this check to determine whether BLE is supported on the device.  Then you can
         // selectively disable BLE-related features.
@@ -114,7 +113,10 @@ public class DeviceScanActivity extends ListActivity {
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        if (!mScanning) {
+        if (noBLE) {
+        	menu.findItem(R.id.menu_stop).setVisible(false);
+            menu.findItem(R.id.menu_scan).setVisible(false);
+        } else if (!mScanning) {
             menu.findItem(R.id.menu_stop).setVisible(false);
             menu.findItem(R.id.menu_scan).setVisible(true);
         } else {
@@ -126,8 +128,7 @@ public class DeviceScanActivity extends ListActivity {
 	
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        
+        super.onDestroy();        
     }
 
     @Override
@@ -155,20 +156,27 @@ public class DeviceScanActivity extends ListActivity {
 
         // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
         // BluetoothAdapter through BluetoothManager.
-        final BluetoothManager bluetoothManager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-
+//        final BluetoothManager bluetoothManager =
+//                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+//        mBluetoothAdapter = bluetoothManager.getAdapter();
+        
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        
         // Checks if Bluetooth is supported on the device.
         if (mBluetoothAdapter == null) {
             Toast.makeText(this, R.string.error_bluetooth_not_supported, Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
-
+        
+        noBLE = false;
+        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
+            noBLE = true;
+        }
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
-        if (!mBluetoothAdapter.isEnabled()) {
+        else if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
@@ -223,7 +231,7 @@ public class DeviceScanActivity extends ListActivity {
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
+            new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
