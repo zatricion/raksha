@@ -17,7 +17,7 @@ limitations under the License.
 <manifest package="com.bloc"
           android:versionCode="1"
           android:versionName="1.0" xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-sdk android:minSdkVersion="16"
+    <uses-sdk android:minSdkVersion="14"
               android:targetSdkVersion="19"/>
  
     <permission
@@ -57,7 +57,7 @@ limitations under the License.
                  android:allowBackup="true"
                  android:icon="@drawable/ic_launcher"
                  android:theme="@android:style/Theme.Holo.Light">
-        <activity android:name="com.bloc.bluetooth.le.DeviceScanActivity"
+        <activity android:name="com.bloc.bluetooth.le.BlocActivity"
                   android:screenOrientation="portrait"
                   android:label="@string/app_name">
             <intent-filter>
@@ -72,6 +72,8 @@ limitations under the License.
             <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED"/>
           </intent-filter>
         </receiver>
+        <activity android:name="com.bloc.bluetooth.le.DeviceScanActivity"
+                  android:screenOrientation="portrait"/>
         <activity android:name="com.bloc.bluetooth.le.DeviceControlActivity"
                   android:screenOrientation="portrait"/>
         <service android:name="com.bloc.bluetooth.le.BluetoothLeService" android:enabled="true"/>

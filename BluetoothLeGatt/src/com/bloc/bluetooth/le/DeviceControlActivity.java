@@ -414,13 +414,15 @@ public class DeviceControlActivity extends CloudBackendActivity {
             	
             	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
             	stopService(stopBluetoothIntent);
+            	
+            	isBLeServiceBound = false;
             }
         }, 1000);
     	}
     
     public void exitActivities(View view) {
     	setUserDisconnect(true);
-    	Intent exitIntent = new Intent(this, DeviceScanActivity.class);
+    	Intent exitIntent = new Intent(this, BlocActivity.class);
     	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     	exitIntent.putExtra("EXIT", true);
     	startActivity(exitIntent);

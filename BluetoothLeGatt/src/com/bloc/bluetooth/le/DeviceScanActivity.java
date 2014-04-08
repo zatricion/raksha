@@ -52,10 +52,8 @@ public class DeviceScanActivity extends ListActivity {
     private LeDeviceListAdapter mLeDeviceListAdapter;
     private BluetoothAdapter mBluetoothAdapter;
     private boolean mScanning;
-    private boolean noBLE;
     
-    private final static int CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
-
+    // TODO: set this on first pairing
     public final static String MY_DEVICE = "SensorTag";
 
     private static final int REQUEST_ENABLE_BT = 1;
@@ -65,11 +63,6 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-                
-        if (getIntent().getBooleanExtra("EXIT", false)) {
-            finish();
-            return;
-        }
         
         if (DeviceControlActivity.isBLeServiceBound) {
         	moveOn(false);
@@ -77,13 +70,6 @@ public class DeviceScanActivity extends ListActivity {
         }
 
         getActionBar().setTitle(R.string.app_name);
-
-        // Use this check to determine whether BLE is supported on the device.  Then you can
-        // selectively disable BLE-related features.
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
-            //TODO: allow alternative for non-BLE devices
-        }
     }
     
     private void moveOn(boolean noDevice) {
@@ -91,32 +77,11 @@ public class DeviceScanActivity extends ListActivity {
 		intent.putExtra("noDevice", noDevice);
 		startActivity(intent);
     }
-    
-    // Check for Google Play (location service)	
-    private void checkGooglePlayApk() {
-        int isAvailable = GooglePlayServicesUtil
-                .isGooglePlayServicesAvailable(this);
-        if (isAvailable == ConnectionResult.SUCCESS) {
-            return;
-        } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
-            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
-                    this, CONNECTION_FAILURE_RESOLUTION_REQUEST);
-            dialog.show();
-        } else {
-            Toast.makeText(this, "Google Play Services unavailable", Toast.LENGTH_SHORT)
-                    .show();
-            finish();
-            return;
-        }
-    }
 
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
-        if (noBLE) {
-        	menu.findItem(R.id.menu_stop).setVisible(false);
-            menu.findItem(R.id.menu_scan).setVisible(false);
-        } else if (!mScanning) {
+        if (!mScanning) {
             menu.findItem(R.id.menu_stop).setVisible(false);
             menu.findItem(R.id.menu_scan).setVisible(true);
         } else {
@@ -152,14 +117,6 @@ public class DeviceScanActivity extends ListActivity {
     protected void onResume() {
         super.onResume();
         
-        checkGooglePlayApk();    
-
-        // Initializes a Bluetooth adapter.  For API level 18 and above, get a reference to
-        // BluetoothAdapter through BluetoothManager.
-//        final BluetoothManager bluetoothManager =
-//                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-//        mBluetoothAdapter = bluetoothManager.getAdapter();
-        
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         
         // Checks if Bluetooth is supported on the device.
@@ -169,11 +126,6 @@ public class DeviceScanActivity extends ListActivity {
             return;
         }
         
-        noBLE = false;
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
-            noBLE = true;
-        }
         // Ensures Bluetooth is enabled on the device.  If Bluetooth is not currently enabled,
         // fire an intent to display a dialog asking the user to grant permission to enable it.
         else if (!mBluetoothAdapter.isEnabled()) {
