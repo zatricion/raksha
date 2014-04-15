@@ -13,7 +13,10 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<resources>
+<resources
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="MissingTranslation" >
+    
     <string name="app_name">bloc</string>
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>

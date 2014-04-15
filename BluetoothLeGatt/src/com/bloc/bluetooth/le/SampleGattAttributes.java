@@ -24,8 +24,12 @@ import java.util.HashMap;
 public class SampleGattAttributes {
     private static HashMap<String, String> attributes = new HashMap<String, String>();
     public static String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
-    public static String BUTTON_CHAR = "0000ffe1-0000-1000-8000-00805f9b34fb";
-    public static String BUTTON_SERV = "0000ffe0-0000-1000-8000-00805f9b34fb";
+    // Sensor Tag UUIDs
+//    public static String BUTTON_CHAR = "0000ffe1-0000-1000-8000-00805f9b34fb";
+//    public static String BUTTON_SERV = "0000ffe0-0000-1000-8000-00805f9b34fb";
+    // Bluegiga UUIDs
+    public static String BUTTON_CHAR = "bdbc1a0d-59cc-4880-a35b-ab6baf540beb";
+    public static String BUTTON_SERV = "94721b66-2361-49db-b5a5-bc0e67fe3d1f";
 
     static {
     	// key press

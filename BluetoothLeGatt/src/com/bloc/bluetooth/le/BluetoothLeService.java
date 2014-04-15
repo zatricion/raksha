@@ -156,6 +156,7 @@ public class BluetoothLeService extends Service {
             intent.putExtra(EXTRA_DATA, "Button");
         }
         sendBroadcast(intent);
+        Log.e(TAG, "BALKDSJFLKASDJFLKJAFSDL");
     }
 
     public class LocalBinder extends Binder {
@@ -316,12 +317,12 @@ public class BluetoothLeService extends Service {
             return;
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
-
+        Log.e(characteristic.getUuid().toString(), UUID_BUTTON_CHAR.toString());
         // Enable notifications from the button characteristic
         if (UUID_BUTTON_CHAR.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }
     }

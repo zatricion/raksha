@@ -220,8 +220,9 @@ public class BackgroundService extends Service implements
 			initialize();
 			
 			// TODO: better notification
-	        Notification note = new Notification.Builder(this)
+	        Notification note = new NotificationCompat.Builder(this)
 								        .setContentTitle("SensorTag")
+								        .setSmallIcon(R.drawable.ic_launcher)
 								        .build();
 	        // Keep this service in the foreground
 	        startForeground(42, note);
@@ -569,17 +570,20 @@ public class BackgroundService extends Service implements
 	}
 
 	private void sendMyLocation(final Location loc) {
-            if (mSelf != null) {
-				mSelf.setGeohash(gh.encode(loc));
-				mSelf.setPhone(mPhone);
-				mSelf.setAlert(mAlert);
-				mSelf.setRadius(mRadius);
-				mBackend.update(mSelf.asEntity(), updateHandler);
-			}
+		Log.e(TAG, "SENDING LOCATION");
+        if (mSelf != null) {
+			mSelf.setGeohash(gh.encode(loc));
+			mSelf.setPhone(mPhone);
+			mSelf.setAlert(mAlert);
+			mSelf.setRadius(mRadius);
+			mBackend.update(mSelf.asEntity(), updateHandler);
+		}
 	}
 	
 	private void addPersonIfNecessary() {
+		Log.e(TAG, "Check for Person");
 		if (mSelf == null || mSelf.asEntity().getId() == null) {
+			Log.e(TAG, "Adding Person");
 			// Query backend
 	        mBackend.listByProperty("Person", "name", Op.EQ,
 	                mAccount, Order.ASC, 1, Scope.PAST,

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.Toast;
+import android.os.Process;
 
 // Handles various events fired by the BluetoothLeService.
 public class MyBroadcastReceiver extends BroadcastReceiver {	
@@ -13,7 +14,10 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         final String action = intent.getAction();
-        if (DeviceControlActivity.ACTION_USER_DISCONNECT.equals(action)) {      	
+        if (DeviceControlActivity.ACTION_KILL_RECEIVER.equals(action)) {
+        	Process.killProcess(Process.myPid());
+        }
+        else if (DeviceControlActivity.ACTION_USER_DISCONNECT.equals(action)) {      	
         	userDisconnect = intent.getBooleanExtra("value", false);
         }
         else if (BluetoothLeService.ACTION_ACL_DISCONNECTED.equals(action)) {
@@ -25,6 +29,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
         else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
         	String extra = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
             // Toast.makeText(context, intent.getStringExtra(BluetoothLeService.EXTRA_DATA), Toast.LENGTH_SHORT).show();
+        	Log.e("data", extra);
         	if (extra.equals("Button")) {
         		sendAlert(context);
         	}

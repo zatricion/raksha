@@ -68,6 +68,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String ACTION_USER_DISCONNECT = "com.bloc.bluetooth.le.ACTION_USER_DISCONNECT";
+    public static final String ACTION_KILL_RECEIVER = "com.bloc.bluetooth.le.ACTION_KILL_RECEIVER";
     
     public static final String KEY_CONTACTS = "contacts";
     public static final String KEY_RADIUS = "radius";
@@ -180,7 +181,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
 	        noDevice = intent.getBooleanExtra("noDevice", false);
 
 	        // Device already connected
-	        if (BluetoothLeService.isRunning && !noDevice) {
+	        if (!noDevice && BluetoothLeService.isRunning) {
 	        	mDeviceAddress = BluetoothLeService.mBluetoothDeviceAddress;
 	        	updateConnectionState(R.string.connected);
 	        	mConnected = true;
@@ -208,7 +209,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
     	
     	// Start bluetooth service
-    	if (mDeviceAddress != null) {
+    	if (!noDevice && (mDeviceAddress != null)) {
 	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
 	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
 	        startService(gattServiceIntent);
@@ -302,7 +303,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         checkLocationEnabled();
         
         // Check for bluetooth
-        if (mBluetoothLeService != null && mDeviceAddress != null) {
+        if (!noDevice && (mBluetoothLeService != null) && (mDeviceAddress != null)) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
@@ -394,7 +395,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         
         final int charaProp = button.getProperties();   
         // Enable notifications for button characteristic
-        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
             mBluetoothLeService.setCharacteristicNotification(button, true);
         }
     }
@@ -415,6 +416,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
             	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
             	stopService(stopBluetoothIntent);
             	
+        		// Kill the broadcast receiver
+	       	   	final Intent intent = new Intent(ACTION_KILL_RECEIVER);
+	       	   	sendBroadcast(intent);
+       		
             	isBLeServiceBound = false;
             }
         }, 1000);
