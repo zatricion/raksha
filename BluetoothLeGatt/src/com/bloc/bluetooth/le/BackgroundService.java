@@ -440,6 +440,10 @@ public class BackgroundService extends Service implements
         Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
         ArrayList<Contact> contactList = gson.fromJson(contacts, collectionType);
 
+        if (contactList == null) {
+        	return;
+        }
+        
     	for (Contact contact : contactList) {
     		if (contact.selected) {
 				CloudEntity ce = mBackend.createCloudMessage("ContactAlert");

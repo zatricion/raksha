@@ -54,7 +54,7 @@ public class DeviceScanActivity extends ListActivity {
     private boolean mScanning;
     
     // TODO: set this on first pairing
-    public final static String MY_DEVICE = "SensorTag";
+    public final static String MY_DEVICE = "Rakshak";
 
     private static final int REQUEST_ENABLE_BT = 1;
     // Stops scanning after 10 seconds.
@@ -170,6 +170,7 @@ public class DeviceScanActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
         if (device == null) return;
+
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
@@ -178,6 +179,9 @@ public class DeviceScanActivity extends ListActivity {
             mScanning = false;
         }
         startActivity(intent);
+        
+        // Add device to list of previously paired devices   
+        // device.createBond();
     }
 
     private void scanLeDevice(final boolean enable) {

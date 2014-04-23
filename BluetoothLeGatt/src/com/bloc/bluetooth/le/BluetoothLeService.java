@@ -257,9 +257,6 @@ public class BluetoothLeService extends Service {
         mBluetoothDeviceAddress = address;
         mConnectionState = STATE_CONNECTING;
         
-        // Add device to list of previously paired devices   
-        // device.createBond();
-        
         return true;
     }
 

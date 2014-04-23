@@ -141,7 +141,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
             } 
             else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
                 // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
-//            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
 //            	String pin = "";
 //            	device.setPin(pin.getBytes());
             } 
