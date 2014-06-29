@@ -63,7 +63,7 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
+           
         if (DeviceControlActivity.isBLeServiceBound) {
         	moveOn(false);
         	return;
@@ -75,6 +75,8 @@ public class DeviceScanActivity extends ListActivity {
     private void moveOn(boolean noDevice) {
 		final Intent intent = new Intent(this, DeviceControlActivity.class);
 		intent.putExtra("noDevice", noDevice);
+		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 		startActivity(intent);
     }
 

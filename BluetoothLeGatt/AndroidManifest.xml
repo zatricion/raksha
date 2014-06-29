@@ -21,11 +21,11 @@ limitations under the License.
               android:targetSdkVersion="19"/>
  
     <permission
-        android:name=".permission.C2D_MESSAGE"
+        android:name="com.bloc.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
 
     <permission
-        android:name=".permission.MAPS_RECEIVE"
+        android:name="com.bloc.permission.MAPS_RECEIVE"
         android:protectionLevel="signature" />
 
 
@@ -35,7 +35,7 @@ limitations under the License.
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name=".permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.bloc.permission.C2D_MESSAGE" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -65,7 +65,9 @@ limitations under the License.
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <receiver android:name="com.bloc.bluetooth.le.MyBroadcastReceiver" android:process=":receive">
+        <receiver android:name="com.bloc.bluetooth.le.MyBroadcastReceiver" 
+                  android:exported="false"
+                  android:process=":receive">
           <intent-filter>
             <action android:name="com.bloc.bluetooth.le.ACTION_USER_DISCONNECT"/>
             <action android:name="com.bloc.bluetooth.le.ACTION_DATA_AVAILABLE"/>

@@ -37,11 +37,11 @@ public class BlocActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-                
-        if (getIntent().getBooleanExtra("EXIT", false)) {
-            finish();
-            return;
-        }
+        
+		if (getIntent().getBooleanExtra("EXIT", false)) {
+		    finish();
+		    return;
+		}
         
         checkGooglePlayApk();   
 

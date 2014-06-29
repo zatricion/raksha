@@ -129,11 +129,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
                 mConnected = false;
                 updateConnectionState(R.string.disconnected);
                 invalidateOptionsMenu();
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-            	if (mBluetoothLeService != null) {
-	                // Enable button notifications
-	                enableNotifications(mBluetoothLeService.getButtonService());
-            	}
             } 
             else if (BluetoothLeService.ACTION_BOND_STATE_CHANGED.equals(action)) {
                 // Let the user know that the device is bonded
@@ -141,7 +136,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
             } 
             else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
                 // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
-            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+//            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
 //            	String pin = "";
 //            	device.setPin(pin.getBytes());
             } 
@@ -386,20 +381,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
         });
     }
     
-    private void enableNotifications(BluetoothGattService gattService) {
-        if (gattService == null) return;
-        
-        // Get button characteristic
-        BluetoothGattCharacteristic button = 
-        		gattService.getCharacteristic(BluetoothLeService.UUID_BUTTON_CHAR);
-        
-        final int charaProp = button.getProperties();   
-        // Enable notifications for button characteristic
-        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
-            mBluetoothLeService.setCharacteristicNotification(button, true);
-        }
-    }
-    
     // methods for onClick events set up in device_control.xml  
     public void quitApplication(View view) {
 		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
@@ -416,10 +397,10 @@ public class DeviceControlActivity extends CloudBackendActivity {
             	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
             	stopService(stopBluetoothIntent);
             	
-        		// Kill the broadcast receiver
-	       	   	final Intent intent = new Intent(ACTION_KILL_RECEIVER);
-	       	   	sendBroadcast(intent);
-       		
+//        		// Kill the broadcast receiver
+//	       	   	final Intent intent = new Intent(ACTION_KILL_RECEIVER);
+//	       	   	sendBroadcast(intent);
+//       		
             	isBLeServiceBound = false;
             }
         }, 1000);
@@ -431,6 +412,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     	exitIntent.putExtra("EXIT", true);
     	startActivity(exitIntent);
+    	finish();
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

@@ -16,6 +16,7 @@
 
 package com.bloc.bluetooth.le;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
@@ -30,6 +31,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -120,7 +122,7 @@ public class BluetoothLeService extends Service {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+            	enableNotifications(getButtonService());
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
@@ -156,7 +158,6 @@ public class BluetoothLeService extends Service {
             intent.putExtra(EXTRA_DATA, "Button");
         }
         sendBroadcast(intent);
-        Log.e(TAG, "BALKDSJFLKASDJFLKJAFSDL");
     }
 
     public class LocalBinder extends Binder {
@@ -195,7 +196,8 @@ public class BluetoothLeService extends Service {
      *
      * @return Return true if the initialization is successful.
      */
-    public boolean initialize() {
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+	public boolean initialize() {
         // For API level 18 and above, get a reference to BluetoothAdapter through
         // BluetoothManager.
         if (mBluetoothManager == null) {
@@ -284,6 +286,20 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.close();
         mBluetoothGatt = null;
+    }
+    
+    private void enableNotifications(BluetoothGattService gattService) {
+        if (gattService == null) return;
+        
+        // Get button characteristic
+        BluetoothGattCharacteristic button = 
+        		gattService.getCharacteristic(BluetoothLeService.UUID_BUTTON_CHAR);
+        
+        final int charaProp = button.getProperties();   
+        // Enable notifications for button characteristic
+        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
+        	setCharacteristicNotification(button, true);
+        }
     }
 
     /**
