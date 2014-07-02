@@ -15,7 +15,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.cloud.backend.android.CloudBackendActivity;
 
-public class MainWithMapActivity extends CloudBackendActivity {
+public class MainWithMapActivity extends FragmentActivity {
   static final LatLng HAMBURG = new LatLng(53.558, 9.927);
   static final LatLng KIEL = new LatLng(53.551, 9.993);
   private GoogleMap map;
