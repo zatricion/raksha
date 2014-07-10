@@ -2,14 +2,23 @@ package com.bloc;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.Display;
+import android.view.Gravity;
 import android.view.Menu;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.R.color;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -34,6 +43,24 @@ public class MainWithMapActivity extends FragmentActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.fragment_main_with_map);
+    LinearLayout topLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_top);
+    FrameLayout ringFrameLayout = new FrameLayout(this);
+    // Getting display size
+    Display display = getWindowManager().getDefaultDisplay();
+    Point size = new Point();
+    display.getSize(size);
+    int width = size.x;
+    int height = size.y;
+    
+    ringFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(width, 0, (float) 3));
+    topLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    
+    Resources res = this.getResources();
+    Drawable ring = (GradientDrawable) res.getDrawable(R.drawable.ring);
+    ring = ring.mutate();
+    ringFrameLayout.setBackground(ring);
+    topLinearLayout.addView(ringFrameLayout);
+    
     map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map1))
     		.getMap();
     

@@ -378,14 +378,14 @@ containing a value of this type.
         public static final int ic_plusone_standard_off_client=0x7f02001c;
         public static final int ic_plusone_tall_off_client=0x7f02001d;
         public static final int map_mask=0x7f02001e;
-        public static final int shape_circle_oval=0x7f02001f;
-        public static final int shape_circle_rect=0x7f020020;
+        public static final int ring=0x7f02001f;
+        public static final int shape_circle_oval=0x7f020020;
+        public static final int shape_circle_rect=0x7f020021;
     }
     public static final class id {
         public static final int action_contacts=0x7f050019;
         public static final int action_radius=0x7f05001c;
         public static final int action_settings=0x7f050020;
-        public static final int button_map=0x7f050015;
         public static final int check_box=0x7f05000d;
         public static final int confirm=0x7f050006;
         public static final int connection_state=0x7f05000f;
@@ -396,6 +396,7 @@ containing a value of this type.
         public static final int done=0x7f050007;
         public static final int go_on=0x7f05001f;
         public static final int hybrid=0x7f050004;
+        public static final int linear_layout_top=0x7f050015;
         public static final int map=0x7f050009;
         public static final int map1=0x7f050012;
         public static final int menu_connect=0x7f05001a;
@@ -593,6 +594,7 @@ containing a value of this type.
         /**  Transparent Activity 
          */
         public static final int Theme_Transparent=0x7f090002;
+        public static final int ringFrameLayoutStyle=0x7f090003;
     }
     public static final class styleable {
         /** Attributes that can be used with a AdsAttrs.
