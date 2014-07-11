@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 
 import com.google.android.gms.R.color;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -33,34 +34,35 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.cloud.backend.android.CloudBackendActivity;
 
+import de.passsy.holocircularprogressbar.HoloCircularProgressBar;
+
 public class MainWithMapActivity extends FragmentActivity {
   private GoogleMap map;
   private LocationManager locationManager;
   private String provider;
   private LatLng curLatLng;
+  private HoloCircularProgressBar progressBar;
+  private int progressStatus = 0;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.fragment_main_with_map);
-    LinearLayout topLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_top);
-    FrameLayout ringFrameLayout = new FrameLayout(this);
-    // Getting display size
-    Display display = getWindowManager().getDefaultDisplay();
-    Point size = new Point();
-    display.getSize(size);
-    int width = size.x;
-    int height = size.y;
     
-    ringFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(width, 0, (float) 3));
-    topLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
+    // To create the ring
+    LinearLayout ringLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_ring);
+    FrameLayout ringFrameLayout = new FrameLayout(this);
+    
+    ringFrameLayout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, (float) 3));
+    ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
     Resources res = this.getResources();
     Drawable ring = (GradientDrawable) res.getDrawable(R.drawable.ring);
     ring = ring.mutate();
     ringFrameLayout.setBackground(ring);
-    topLinearLayout.addView(ringFrameLayout);
+    ringLinearLayout.addView(ringFrameLayout);
     
+    // To create the map
     map = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map1))
     		.getMap();
     
@@ -79,7 +81,17 @@ public class MainWithMapActivity extends FragmentActivity {
     } else {
       Log.e("KCoderError", "location not obtained");
     }
-  //TODO: Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 docs
+    //TODO: Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 docs
+    
+    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
+    progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
+    progressBar.setProgressBackgroundColor(R.color.red);
+    progressBar.setProgressColor(Color.BLACK);
+    progressBar.setMarkerProgress(0.25f);//unnecessary line
+    progressBar.setProgress(0.4f);
+    progressBar.setThumbEnabled(false);
+    progressBar.setMarkerEnabled(false);
+	
   }
 
 //  @Override
