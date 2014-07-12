@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    xmlns:tools="http://schemas.android.com/tools"
+	    xmlns:app="http://schemas.android.com/apk/res/de.passsy.circularprogressbarsample"
+	    android:layout_width="fill_parent"
+   		android:layout_height="fill_parent">
+	<LinearLayout 
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:orientation="vertical"
+	    android:background="@color/red"
+	    tools:context=".MainWithMapActivity">
+
+	    <fragment
+	        android:id="@+id/map1"
+    	    android:layout_height="0dp"
+    	    android:layout_width="match_parent"
+    	    android:layout_weight="3"
+	        class="com.google.android.gms.maps.SupportMapFragment" />
+	    <LinearLayout
+	        android:layout_weight = "2"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:orientation="vertical">    
+		    <TextView
+		        android:id="@+id/textview_connected_status"
+		        android:layout_width="match_parent"
+		        android:layout_height="0dp"
+		        android:layout_weight="1"
+		        android:text="@string/connected_status"/>
+		    
+		    <TextView 
+		        android:id="@+id/textview_alert_status"
+		        android:layout_width="match_parent"
+		        android:layout_height="0dp"
+		        android:layout_weight="1"
+		        android:text="@string/alert_status"/>
+		</LinearLayout>
+	</LinearLayout>
+	<LinearLayout 
+	    android:id="@+id/linear_layout_ring"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:orientation="vertical"
+	    android:background="#10000000"
+	    android:weightSum="5"
+	    tools:context=".MainWithMapActivity">
+	</LinearLayout>
+	
+	<LinearLayout 
+	    android:id="@+id/linear_layout_top"
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:layout_gravity="center_vertical"
+	    android:orientation="vertical"
+	    android:background="#10000000"
+	    android:weightSum="5"
+	    tools:context=".MainWithMapActivity"
+	    xmlns:app="http://schemas.android.com/apk/res/de.passsy.holohcircularprogressbarsample">
+	    <de.passsy.holocircularprogressbar.HoloCircularProgressBar
+		    android:id="@+id/progress_bar"
+		    android:layout_width="wrap_content"
+		    android:layout_height="0dp"
+		    android:layout_weight="3"
+		    app:progress_color="@android:color/holo_orange_dark"
+		    app:marker_visible="false"/>
+	</LinearLayout>
+</FrameLayout>  

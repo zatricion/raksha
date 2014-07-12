@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	    xmlns:tools="http://schemas.android.com/tools">
+	<LinearLayout 
+	    android:layout_width="fill_parent"
+	    android:layout_height="fill_parent"
+	    android:paddingLeft="16dp"
+	    android:paddingRight="16dp"
+	    android:orientation="vertical"
+	    android:background="@color/red"
+	    tools:context=".MainWithMapActivity">
+	
+	    <fragment
+	        android:id="@+id/map1"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:layout_weight="3"
+	        class="com.google.android.gms.maps.SupportMapFragment" />
+	    
+	    <TextView
+	        android:id="@+id/textview_connected_status"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:layout_weight="1"
+	        android:text="@string/connected_status"/>
+	    
+	    <TextView 
+	        android:id="@+id/textview_alert_status"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:layout_weight="1"
+	        android:text="@string/alert_status"/>
+	
+	</LinearLayout>
+</FrameLayout>  
