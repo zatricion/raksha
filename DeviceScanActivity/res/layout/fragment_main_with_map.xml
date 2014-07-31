@@ -2,20 +2,20 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    xmlns:tools="http://schemas.android.com/tools"
 	    android:layout_width="fill_parent"
-   		android:layout_height="fill_parent">
-	<LinearLayout 
+   		android:layout_height="fill_parent"
+   		android:gravity="top">
+    <fragment
+        android:id="@+id/map1"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        class="com.google.android.gms.maps.SupportMapFragment" />
+    
+<!-- 	<LinearLayout 
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent"
 	    android:orientation="vertical"
 	    android:background="@color/red"
 	    tools:context=".MainWithMapActivity">
-
-	    <fragment
-	        android:id="@+id/map1"
-    	    android:layout_height="0dp"
-    	    android:layout_width="match_parent"
-    	    android:layout_weight="3"
-	        class="com.google.android.gms.maps.SupportMapFragment" />
 	    <LinearLayout
 	        android:layout_weight = "2"
 	        android:layout_width="match_parent"
@@ -32,14 +32,29 @@
 		        style="@style/mainWithMapTextView"/>
 		</LinearLayout>
 	</LinearLayout>
-	<LinearLayout 
+-->	<LinearLayout 
 	    android:id="@+id/linear_layout_ring"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent"
+	    android:layout_margin="-10dp"
 	    android:orientation="vertical"
 	    android:background="#10000000"
 	    android:weightSum="5"
 	    tools:context=".MainWithMapActivity">
+	    <ImageView
+	        android:id="@+id/image_view_ring"
+	        android:layout_width="match_parent"
+	        android:layout_height="0dp"
+	        android:layout_weight="3">
+	    </ImageView>
+	    <ImageView
+	        android:id="@+id/view_below_ring"
+	        android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2" 
+            android:background="#AF000000"
+	        />
+	        
 	</LinearLayout>
 	
 	<LinearLayout 
@@ -49,8 +64,7 @@
 	    android:orientation="vertical"
 	    android:background="#10000000"
 	    android:weightSum="5"
-	    tools:context=".MainWithMapActivity"
-	    xmlns:progressBar="http://schemas.android.com/apk/lib/de.passsy.holohcircularprogressbarsample">
+	    tools:context=".MainWithMapActivity">
 <!-- 	    <ProgressBar
 		    android:id="@+id/progress_ring"
 		    style="?android:attr/progressBarStyleHorizontal"

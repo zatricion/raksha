@@ -69,7 +69,6 @@ public class DeviceScanActivity extends ListActivity {
         	return;
         }
 
-        getActionBar().setTitle(R.string.app_name);
     }
     
     private void moveOn(boolean noDevice) {

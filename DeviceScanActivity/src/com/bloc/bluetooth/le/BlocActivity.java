@@ -50,7 +50,6 @@ public class BlocActivity extends Activity {
         
         checkGooglePlayApk();   
 
-        getActionBar().setTitle(R.string.app_name);
     }
     
     private void moveOn(boolean noDevice) {

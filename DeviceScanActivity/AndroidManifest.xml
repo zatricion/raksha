@@ -64,19 +64,19 @@ limitations under the License.
             android:name="com.bloc.bluetooth.le.BlocActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
-            
+         
         </activity>
         
         <activity
             android:name="com.bloc.MainWithMapActivity"
             android:label="@string/title_activity_main_with_map"
             android:screenOrientation="portrait" >
-            
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+       
         </activity>
 
         <receiver
