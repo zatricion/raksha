@@ -439,17 +439,20 @@ public class BackgroundService extends Service implements
         Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
         ArrayList<Contact> contactList = gson.fromJson(contacts, collectionType);
 
-    	for (Contact contact : contactList) {
-    		if (contact.selected) {
-				CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
-				Log.e("Sending alert to", String.valueOf(contact.phNum));
-				ce.setId(String.valueOf(contact.phNum));
-				ce.put("recipient", String.valueOf(contact.phNum));
-				ce.put("name", mAccount);
-				ce.put("location", gh.encode(mCurrLocation));
-				sentGCMs.add(ce.getId());
-				mBackend.sendCloudMessage(ce);
-    		}
+    	if (contactList != null) {
+			for (Contact contact : contactList) {
+				if (contact.selected) {
+					CloudEntity ce = mBackend
+							.createCloudMessage("ContactAlert");
+					Log.e("Sending alert to", String.valueOf(contact.phNum));
+					ce.setId(String.valueOf(contact.phNum));
+					ce.put("recipient", String.valueOf(contact.phNum));
+					ce.put("name", mAccount);
+					ce.put("location", gh.encode(mCurrLocation));
+					sentGCMs.add(ce.getId());
+					mBackend.sendCloudMessage(ce);
+				}
+			}
 		}
 	}
 	

@@ -20,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
@@ -69,7 +70,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private String provider;
   private LatLng curLatLng;
   private HoloCircularProgressBar progressBar;
-  private int progressStatus = 0;
   private static int M2LAT = 111111;
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
   private float markerDisplayAdj = 3f/3f; //Hardcoded change!!
@@ -132,7 +132,8 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		        for(int j = 0; j < height; j++)
 		        {
 		        	int cJ = j - height / 2;
-		            if (cI*cI + cJ*cJ >=  (width*width) / 4) {
+		        	float radius = Math.min(width, height);
+		            if (cI*cI + cJ*cJ >=  (radius*radius) / 4) {
 		            		 icon.setPixel(i, j, desiredAlpha);
 		            }		 
 		        }
@@ -185,10 +186,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
       // Enables/disables the compass (icon in the top left that indicates the orientation of the
       // map).
       map.getUiSettings().setCompassEnabled(false);
-      // Add marker to the map.
-      you = map.addMarker(new MarkerOptions()
-      						.position(curLatLng)
-      						.title("You"));
+
 
       // Cannot zoom to bounds until the map has a size.
       final View mapView = getSupportFragmentManager().findFragmentById(R.id.map1).getView();
@@ -229,7 +227,10 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		@Override
 		protected void onPreExecute() {
 			progressBar.setVisibility(View.VISIBLE);
-		    progressBar.setWheelSize(30);
+			DisplayMetrics metrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(metrics);
+			int px = (int) Math.ceil(15 * metrics.density);
+		    progressBar.setWheelSize(px);
 		    progressBar.setProgressBackgroundColor(Color.TRANSPARENT);
 		    progressBar.setProgressColor(Color.RED);
 		    progressBar.setProgress(0f);
@@ -242,6 +243,11 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		protected Void doInBackground(Void... params) {
 			while (System.currentTimeMillis() - startTime <= progressBarTimeMillis){
 				publishProgress((System.currentTimeMillis() - startTime) / progressBarTimeMillis);
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 			return null;
 		}
@@ -336,6 +342,11 @@ public class MainWithMapActivity extends DeviceControlActivity {
 			  .include(new LatLng(curLatLng.latitude - (markerDisplayAdj * mRadius) / M2LAT, curLatLng.longitude))
 		      .build();
 		
+		// Add marker to the map.
+		map.clear();
+		you = map.addMarker(new MarkerOptions()
+				  						.position(curLatLng)
+				  						.title("You"));
 		you.setPosition(curLatLng);
 		
 		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
@@ -346,8 +357,12 @@ public class MainWithMapActivity extends DeviceControlActivity {
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (ACTION_RADIUS_CHANGE.equals(action)) {
-                updateMap();
+            	if (curLatLng != null) {
+	            	setUpMapIfNeeded();
+	                updateMap();
+            	}
             } else if (ACTION_LOC_CHANGE.equals(action)) {
+            	setUpMapIfNeeded();
             	curLatLng = gh.decode(intent.getStringExtra("loc"));
         		updateMap();
             }
