@@ -198,7 +198,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
               public void onGlobalLayout() {
             	  // Set radius of visible map to Neighborhood radius
                   mRadius = getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-                		  			.getInt(KEY_RADIUS, 5000);
+                		  			.getInt(KEY_RADIUS, 2000);
                   
                   updateMap();
                   
