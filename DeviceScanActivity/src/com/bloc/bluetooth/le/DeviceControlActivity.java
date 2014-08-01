@@ -203,12 +203,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	mContactList = contact_list;
         }
         
-        // Set up radius
-        mRadius = prefs.getInt(KEY_RADIUS, -1);
-        if (mRadius == -1) {
-        	mRadius = 500;
-        	showRadiusPickerDialog();
-        }
+//        // Set up radius
+//        mRadius = prefs.getInt(KEY_RADIUS, -1);
+//        if (mRadius == -1) {
+//        	mRadius = 500;
+//        	showRadiusPickerDialog();
+//        }
     }
     
     private void checkLocationEnabled() {

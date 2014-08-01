@@ -36,6 +36,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.bloc.bluetooth.le.DeviceScanActivity;
@@ -62,7 +63,7 @@ import com.google.cloud.backend.android.CloudBackendActivity;
 
 import de.passsy.holocircularprogressbar.HoloCircularProgressBar;
 
-public class MainWithMapActivity extends DeviceControlActivity implements OnMyLocationChangeListener {
+public class MainWithMapActivity extends DeviceControlActivity {
   private GoogleMap map;
   private LocationManager locationManager;
   private String provider;
@@ -71,7 +72,7 @@ public class MainWithMapActivity extends DeviceControlActivity implements OnMyLo
   private int progressStatus = 0;
   private static int M2LAT = 111111;
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
-  private float markerDisplayAdj = 7f/3f; //Hardcoded change!!
+  private float markerDisplayAdj = 3f/3f; //Hardcoded change!!
   private Bitmap icon;
   private Marker you;
   private static float progressBarTimeMillis = 2000;
@@ -91,8 +92,11 @@ public class MainWithMapActivity extends DeviceControlActivity implements OnMyLo
     
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
-    // Register radius change receiver
-    registerReceiver(mapUpdateReceiver, new IntentFilter(ACTION_RADIUS_CHANGE));
+    // Register radius and location change receiver
+    IntentFilter changeFilter = new IntentFilter();
+    changeFilter.addAction(ACTION_RADIUS_CHANGE);
+    changeFilter.addAction(ACTION_LOC_CHANGE);
+    registerReceiver(mapUpdateReceiver, changeFilter);
     
     // Get the location manager
     locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -250,7 +254,9 @@ public class MainWithMapActivity extends DeviceControlActivity implements OnMyLo
 		protected void onPostExecute(Void res) {
 			progressBar.setVisibility(View.INVISIBLE);
 			Toast.makeText(getApplicationContext(), "Sending Alert", Toast.LENGTH_SHORT).show();
-			
+	    	Intent bgServiceIntent = new Intent(getApplicationContext(), BackgroundService.class);
+	    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
+	    	startService(bgServiceIntent);
 		}
 	};
 	
@@ -319,11 +325,6 @@ public class MainWithMapActivity extends DeviceControlActivity implements OnMyLo
     public void settings(View v) {
 		showRadiusPickerDialog();
     }
-    
-	@Override
-	public void onMyLocationChange(Location location) {
-
-	}
 	
 	private void updateMap() {
 		LatLngBounds bounds = new LatLngBounds.Builder()

@@ -50,7 +50,7 @@ public class RadiusPickerDialog extends DialogFragment {
         
 		doneButton = (Button) view.findViewById(R.id.done);
 		sb = (SeekBar) view.findViewById(R.id.pick_radius);
-		sb.setMax(500); // in tens of meters
+		sb.setMax(200); // in tens of meters
 		
 		if (DeviceControlActivity.mRadius != -1) {
 			radius = DeviceControlActivity.mRadius;

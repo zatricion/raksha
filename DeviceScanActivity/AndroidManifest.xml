@@ -60,16 +60,10 @@ limitations under the License.
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Holo.Light.NoActionBar" >
-        <activity
-            android:name="com.bloc.bluetooth.le.BlocActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait" >
-         
-        </activity>
         
         <activity
             android:name="com.bloc.MainWithMapActivity"
-            android:label="@string/title_activity_main_with_map"
+            android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
