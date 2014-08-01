@@ -68,23 +68,23 @@ public class DeviceControlActivity extends CloudBackendActivity {
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
     public static final String ACTION_USER_DISCONNECT = "com.bloc.bluetooth.le.ACTION_USER_DISCONNECT";
-    
+    public static final String ACTION_RADIUS_CHANGE = "com.bloc.bluetooth.le.ACTION_RADIUS_CHANGE";
+    public static final String ACTION_LOC_CHANGE = "com.bloc.bluetooth.le.ACTION_LOC_CHANGE";
+
     public static final String KEY_CONTACTS = "contacts";
     public static final String KEY_RADIUS = "radius";
        
     public static ArrayList<Contact> mContactList;
     public static int mRadius;
         
-    private boolean noDevice;
-    public static boolean isBLeServiceBound;
+    public static boolean isBLeServiceBound = false;
     
     private LocationManager manager;
 
-    private TextView mConnectionState;
-    private String mDeviceName;
+    protected String mDeviceName;
     private String mDeviceAddress;
-    private BluetoothLeService mBluetoothLeService;
-    private boolean mConnected = false;
+    protected BluetoothLeService mBluetoothLeService;
+    protected boolean mConnected = false;
 
     // Code to manage Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -122,12 +122,8 @@ public class DeviceControlActivity extends CloudBackendActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
-                updateConnectionState(R.string.connected);
-                invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-                updateConnectionState(R.string.disconnected);
-                invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
             	if (mBluetoothLeService != null) {
 	                // Enable button notifications
@@ -147,14 +143,14 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
     };
     
-    private void setUserDisconnect(boolean bool) {
+    protected void setUserDisconnect(boolean bool) {
     	 final Intent intent = new Intent(ACTION_USER_DISCONNECT);
     	 intent.putExtra("value", bool);
     	 sendBroadcast(intent);
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState) {
         final Intent intent = getIntent();
         final String action = intent.getAction();
         
@@ -165,34 +161,12 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	finish();
         }
         else {
-	        setContentView(R.layout.device_control);
-	
-	        if (mDeviceName == null) {
-	        	mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
-	        }
-	        
-	        if (mDeviceAddress == null) {
-	        	mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
-	        }
-	        	        
-	        mConnectionState = (TextView) findViewById(R.id.connection_state);
-
-	        noDevice = intent.getBooleanExtra("noDevice", false);
-
+    
 	        // Device already connected
-	        if (BluetoothLeService.isRunning && !noDevice) {
+	        if (BluetoothLeService.isRunning) {
 	        	mDeviceAddress = BluetoothLeService.mBluetoothDeviceAddress;
-	        	updateConnectionState(R.string.connected);
 	        	mConnected = true;
 	        }
-	
-	        if (mDeviceAddress != null) {
-		        // Sets up UI references.
-		        ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
-	        }
-	        	        
-	        getActionBar().setTitle(mDeviceName);
-	        getActionBar().setDisplayHomeAsUpEnabled(true);
 	        
 	        setUserDisconnect(false);
         }
@@ -206,17 +180,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     	
     	((BlocApplication) this.getApplication()).setAccountName(getAccountName());
     	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
-    	
-    	// Start bluetooth service
-    	if (mDeviceAddress != null) {
-	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
-	        startService(gattServiceIntent);
-    	}
-    	
-        // Make sure location is enabled
-    	checkLocationEnabled();
-        
+
     	// Start background service
         if (!BackgroundService.isRunning) {
         	// Enable location tracking
@@ -242,6 +206,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         // Set up radius
         mRadius = prefs.getInt(KEY_RADIUS, -1);
         if (mRadius == -1) {
+        	mRadius = 500;
         	showRadiusPickerDialog();
         }
     }
@@ -287,7 +252,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
 		dlg.show(getFragmentManager(), "contacts");
 	}
 
-    private void showRadiusPickerDialog() {
+    protected void showRadiusPickerDialog() {
     	RadiusPickerDialog dlg = new RadiusPickerDialog();
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 		dlg.show(getFragmentManager(), "radius");
@@ -298,9 +263,9 @@ public class DeviceControlActivity extends CloudBackendActivity {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         
-        // Check for GPS
-        checkLocationEnabled();
-        
+        // Make sure location is enabled
+    	checkLocationEnabled();
+    
         // Check for bluetooth
         if (mBluetoothLeService != null && mDeviceAddress != null) {
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
@@ -322,68 +287,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
         mBluetoothLeService = null;
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.gatt_services, menu);
-        if (mConnected) {
-            menu.findItem(R.id.menu_connect).setVisible(false);
-            menu.findItem(R.id.menu_disconnect).setVisible(true);
-        } 
-        else if (noDevice) {
-        	 menu.findItem(R.id.menu_connect).setVisible(false);
-             menu.findItem(R.id.menu_disconnect).setVisible(false);
-        }
-        else {
-            menu.findItem(R.id.menu_connect).setVisible(true);
-            menu.findItem(R.id.menu_disconnect).setVisible(false);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
-            case R.id.menu_connect:
-            	if (mBluetoothLeService != null && mDeviceAddress != null) {
-                    Toast.makeText(this, "Connecting...", Toast.LENGTH_LONG).show();
-            		mBluetoothLeService.connect(mDeviceAddress);
-            		setUserDisconnect(false);
-            	}
-            	else if (mDeviceAddress != null) {
-                    Toast.makeText(this, "Connecting...", Toast.LENGTH_SHORT).show();
-        	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-        	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
-        	        startService(gattServiceIntent);
-            	}
-                return true;
-            case R.id.menu_disconnect:
-            	if (mBluetoothLeService != null) {
-            		setUserDisconnect(true);
-            		mBluetoothLeService.disconnect();
-            	}
-                return true;
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-            case R.id.action_contacts:
-            	showContactPickerDialog();
-            	return true;   
-            case R.id.action_radius:
-            	showRadiusPickerDialog();
-            	return true;     
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void updateConnectionState(final int resourceId) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mConnectionState.setText(resourceId);
-            }
-        });
-    }
     
     private void enableNotifications(BluetoothGattService gattService) {
         if (gattService == null) return;
@@ -399,34 +302,46 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
     }
     
-    // methods for onClick events set up in device_control.xml  
-    public void quitApplication(View view) {
-		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancelAll();
-		
-    	exitActivities(view);
-    	
-    	new Handler().postDelayed(new Runnable(){
-            @Override
-            public void run() {
-            	Intent stopBackgroundIntent = new Intent(DeviceControlActivity.this, BackgroundService.class);
-            	stopService(stopBackgroundIntent);
-            	
-            	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
-            	stopService(stopBluetoothIntent);
-            	
-            	isBLeServiceBound = false;
-            }
-        }, 1000);
-    	}
+//    // methods for onClick events set up in device_control.xml  
+//    public void quitApplication(View view) {
+//		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+//		notificationManager.cancelAll();
+//		
+//    	exitActivities(view);
+//    	
+//    	new Handler().postDelayed(new Runnable(){
+//            @Override
+//            public void run() {
+//            	Intent stopBackgroundIntent = new Intent(DeviceControlActivity.this, BackgroundService.class);
+//            	stopService(stopBackgroundIntent);
+//            	
+//            	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
+//            	stopService(stopBluetoothIntent);
+//            	
+//            	isBLeServiceBound = false;
+//            }
+//        }, 1000);
+//    	}
+//    
+//    public void exitActivities(View view) {
+//    	setUserDisconnect(true);
+//    	Intent exitIntent = new Intent(this, BlocActivity.class);
+//    	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//    	exitIntent.putExtra("EXIT", true);
+//    	startActivity(exitIntent);
+//    }
     
-    public void exitActivities(View view) {
-    	setUserDisconnect(true);
-    	Intent exitIntent = new Intent(this, BlocActivity.class);
-    	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    	exitIntent.putExtra("EXIT", true);
-    	startActivity(exitIntent);
+    @SuppressWarnings("unused")
+	protected void bindBleService(String address) {
+    	mDeviceAddress = address;
+		// Start bluetooth service
+		if (mDeviceAddress != null) {
+	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
+	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
+	        startService(gattServiceIntent);
+		}
     }
+    
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();

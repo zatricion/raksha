@@ -1,7 +1,11 @@
 package com.bloc;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,13 +33,20 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
+import com.bloc.bluetooth.le.DeviceScanActivity;
+import com.bloc.bluetooth.le.Geohasher;
 import com.google.android.gms.R.color;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
+import com.google.android.gms.maps.GoogleMap.OnMyLocationChangeListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -51,7 +62,7 @@ import com.google.cloud.backend.android.CloudBackendActivity;
 
 import de.passsy.holocircularprogressbar.HoloCircularProgressBar;
 
-public class MainWithMapActivity extends FragmentActivity {
+public class MainWithMapActivity extends DeviceControlActivity implements OnMyLocationChangeListener {
   private GoogleMap map;
   private LocationManager locationManager;
   private String provider;
@@ -62,8 +73,12 @@ public class MainWithMapActivity extends FragmentActivity {
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
   private float markerDisplayAdj = 7f/3f; //Hardcoded change!!
   private Bitmap icon;
+  private Marker you;
   private static float progressBarTimeMillis = 2000;
+  private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+  private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
+  private static final Geohasher gh = new Geohasher();
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +91,8 @@ public class MainWithMapActivity extends FragmentActivity {
     
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
+    // Register radius change receiver
+    registerReceiver(mapUpdateReceiver, new IntentFilter(ACTION_RADIUS_CHANGE));
     
     // Get the location manager
     locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -92,8 +109,9 @@ public class MainWithMapActivity extends FragmentActivity {
     } else {
       Log.e("KCoderError", "location not obtained");
     }
-    //TODO: Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
     
+    // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
+    checkGooglePlayApk();
 
     ringImageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 
@@ -119,6 +137,8 @@ public class MainWithMapActivity extends FragmentActivity {
 		    
 		}
     });
+    
+    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
     progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
 
     ringImageView.setOnTouchListener(new View.OnTouchListener(){
@@ -136,9 +156,7 @@ public class MainWithMapActivity extends FragmentActivity {
 			}
 			return true;
 		}
-    }); 
-    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
-    
+    });     
 	
   }
   private void setUpMapIfNeeded() {
@@ -163,8 +181,8 @@ public class MainWithMapActivity extends FragmentActivity {
       // Enables/disables the compass (icon in the top left that indicates the orientation of the
       // map).
       map.getUiSettings().setCompassEnabled(false);
-      // Add lots of markers to the map.
-      map.addMarker(new MarkerOptions()
+      // Add marker to the map.
+      you = map.addMarker(new MarkerOptions()
       						.position(curLatLng)
       						.title("You"));
 
@@ -175,24 +193,16 @@ public class MainWithMapActivity extends FragmentActivity {
               @Override
               public void onGlobalLayout() {
             	  // Set radius of visible map to Neighborhood radius
-                  float radius = getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
-                		  			.getFloat(DeviceControlActivity.KEY_RADIUS, 5000);
-               
-                  LatLngBounds bounds = new LatLngBounds.Builder()
-		                  .include(new LatLng(curLatLng.latitude, curLatLng.longitude - 
-												(radius / (M2LAT * Math.cos(curLatLng.latitude)))))
-						  .include(new LatLng(curLatLng.latitude, curLatLng.longitude + 
-                		  						(radius / (M2LAT * Math.cos(curLatLng.latitude)))))
-                		  .include(new LatLng(curLatLng.latitude + radius / M2LAT, curLatLng.longitude))
-                		  .include(new LatLng(curLatLng.latitude - (markerDisplayAdj * radius) / M2LAT, curLatLng.longitude))
-                          .build();
+                  mRadius = getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+                		  			.getInt(KEY_RADIUS, 5000);
+                  
+                  updateMap();
                   
                   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
                     mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                   } else {
                     mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                   }
-                  map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
               }
           });
       }
@@ -243,5 +253,103 @@ public class MainWithMapActivity extends FragmentActivity {
 			
 		}
 	};
+	
+    // Check for Google Play (location service)	
+    private void checkGooglePlayApk() {
+        int isAvailable = GooglePlayServicesUtil
+                .isGooglePlayServicesAvailable(this);
+        if (isAvailable == ConnectionResult.SUCCESS) {
+            return;
+        } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
+            Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
+                    this, PLAY_SERVICES_RESOLUTION_REQUEST);
+            dialog.show();
+        } else {
+            Toast.makeText(this, "Google Play Services unavailable", Toast.LENGTH_SHORT)
+                    .show();
+            finish();
+        }
+        return;
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+      switch (requestCode) {
+        case PLAY_SERVICES_RESOLUTION_REQUEST:
+          if (resultCode == RESULT_CANCELED) {
+            Toast.makeText(this, "Google Play Services must be installed.",
+                Toast.LENGTH_SHORT).show();
+            finish();
+          }
+          else if (resultCode == RESULT_OK) {
+        	  return;
+          }
+        case SCAN_REQUEST:
+        	if (resultCode == RESULT_OK) {
+        		mDeviceName = data.getStringExtra(EXTRAS_DEVICE_NAME);
+        		bindBleService(data.getStringExtra(EXTRAS_DEVICE_ADDRESS));
+        		final TextView deviceStatusTV = (TextView) findViewById(R.id.text_view_status);
+        		deviceStatusTV.setText("Disconnect Device");
+        		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						setUserDisconnect(true);
+	            		mBluetoothLeService.disconnect();
+	            		deviceStatusTV.setText("Pair Device");
+	            		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
+	    					
+	    					@Override
+	    					public void onClick(View v) {
+	    						connectDevice(v);
+	    					}
+	            		});
+					}
+				});
+        		// TODO: Change text when device disconnects
+        	}
+      }
+      super.onActivityResult(requestCode, resultCode, data);
+    }    
+    
+    public void connectDevice(View v) {
+    	startActivityForResult(new Intent(this, DeviceScanActivity.class), SCAN_REQUEST);
+    }
 
+    public void settings(View v) {
+		showRadiusPickerDialog();
+    }
+    
+	@Override
+	public void onMyLocationChange(Location location) {
+
+	}
+	
+	private void updateMap() {
+		LatLngBounds bounds = new LatLngBounds.Builder()
+		      .include(new LatLng(curLatLng.latitude, curLatLng.longitude - 
+									(mRadius / (M2LAT * Math.cos(curLatLng.latitude)))))
+			  .include(new LatLng(curLatLng.latitude, curLatLng.longitude + 
+			  						(mRadius / (M2LAT * Math.cos(curLatLng.latitude)))))
+			  .include(new LatLng(curLatLng.latitude + mRadius / M2LAT, curLatLng.longitude))
+			  .include(new LatLng(curLatLng.latitude - (markerDisplayAdj * mRadius) / M2LAT, curLatLng.longitude))
+		      .build();
+		
+		you.setPosition(curLatLng);
+		
+		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
+	}
+	
+    private final BroadcastReceiver mapUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (ACTION_RADIUS_CHANGE.equals(action)) {
+                updateMap();
+            } else if (ACTION_LOC_CHANGE.equals(action)) {
+            	curLatLng = gh.decode(intent.getStringExtra("loc"));
+        		updateMap();
+            }
+        }
+    };
 }

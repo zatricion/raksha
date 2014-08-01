@@ -576,6 +576,9 @@ public class BackgroundService extends Service implements
 				mSelf.setRadius(mRadius);
 				mBackend.update(mSelf.asEntity(), updateHandler);
 			}
+            Intent locIntent = new Intent(DeviceControlActivity.ACTION_LOC_CHANGE);
+            locIntent.putExtra("loc", gh.encode(loc));
+            sendBroadcast(locIntent);
 	}
 	
 	private void addPersonIfNecessary() {

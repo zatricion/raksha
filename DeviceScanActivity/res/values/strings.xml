@@ -54,8 +54,8 @@
     <string name="hello_world">Hello world!</string>
     
     <!-- Main with Map -->
-    <string name="connected_status">Hard coded</string>
-    <string name="alert_status">Hard Coded</string>
+    <string name="device_connection_status">Pair Device</string>
+    <string name="settings">Settings</string>
     
 
 </resources>

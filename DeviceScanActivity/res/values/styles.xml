@@ -32,7 +32,6 @@
 	    <item name="android:layout_height">0dp</item>
 	    <item name="android:layout_weight">4</item>
 	    <item name="android:layout_gravity">center_horizontal</item>
-	    <item name="android:text">@string/alert_status</item>
     </style>
     
     <style name="mainWithMapTextView">
@@ -41,7 +40,8 @@
 		<item name="android:layout_weight">1</item>
 		<item name="android:gravity">bottom</item>
 		<item name="android:paddingLeft">20dp</item>
-		<item name="android:textSize">30sp</item>
+		<item name="android:paddingBottom">20dp</item>
+		<item name="android:textSize">35sp</item>
 		<item name="android:textColor">@color/white</item>
     </style>
  

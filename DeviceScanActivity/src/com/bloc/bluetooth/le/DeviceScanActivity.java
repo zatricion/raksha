@@ -63,53 +63,11 @@ public class DeviceScanActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        if (DeviceControlActivity.isBLeServiceBound) {
-        	moveOn(false);
-        	return;
-        }
-
-    }
-    
-    private void moveOn(boolean noDevice) {
-		final Intent intent = new Intent(this, DeviceControlActivity.class);
-		intent.putExtra("noDevice", noDevice);
-		startActivity(intent);
     }
 
-	@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        if (!mScanning) {
-            menu.findItem(R.id.menu_stop).setVisible(false);
-            menu.findItem(R.id.menu_scan).setVisible(true);
-        } else {
-            menu.findItem(R.id.menu_stop).setVisible(true);
-            menu.findItem(R.id.menu_scan).setVisible(false);
-        }
-        return true;
-    }
-	
     @Override
     protected void onDestroy() {
         super.onDestroy();        
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_scan:
-                mLeDeviceListAdapter.clear();
-                scanLeDevice(true);
-                break;
-            case R.id.menu_stop:
-                scanLeDevice(false);
-                break;
-            case R.id.go_on:
-            	moveOn(true);
-            	break;
-        }
-        return true;
     }
 
     @Override
@@ -144,8 +102,7 @@ public class DeviceScanActivity extends ListActivity {
 				mLeDeviceListAdapter.addDevice(device);
 			}
 		}
-        // Don't scan for devices unless asked to
-		// scanLeDevice(true);
+		scanLeDevice(true);
     }
 
     @Override
@@ -169,14 +126,15 @@ public class DeviceScanActivity extends ListActivity {
     protected void onListItemClick(ListView l, View v, int position, long id) {
         final BluetoothDevice device = mLeDeviceListAdapter.getDevice(position);
         if (device == null) return;
-        final Intent intent = new Intent(this, DeviceControlActivity.class);
+        final Intent intent = new Intent();
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_NAME, device.getName());
         intent.putExtra(DeviceControlActivity.EXTRAS_DEVICE_ADDRESS, device.getAddress());
         if (mScanning) {
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;
         }
-        startActivity(intent);
+        setResult(RESULT_OK, intent);
+        finish();
     }
 
     private void scanLeDevice(final boolean enable) {
@@ -197,7 +155,6 @@ public class DeviceScanActivity extends ListActivity {
             mScanning = false;
             mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
-        invalidateOptionsMenu();
     }
 
     // Adapter for holding devices found through scanning.

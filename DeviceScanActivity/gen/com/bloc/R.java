@@ -719,7 +719,6 @@ containing a value of this type.
         /**  From Contacts 
          */
         public static final int action_settings=0x7f050001;
-        public static final int alert_status=0x7f05003f;
         public static final int app_name=0x7f050000;
         public static final int auth_client_needs_enabling_title=0x7f050004;
         public static final int auth_client_needs_installation_title=0x7f050005;
@@ -821,7 +820,7 @@ containing a value of this type.
         public static final int connected=0x7f050028;
         /**  Main with Map 
          */
-        public static final int connected_status=0x7f05003e;
+        public static final int device_connection_status=0x7f05003e;
         public static final int disconnected=0x7f050029;
         public static final int done=0x7f050034;
         public static final int error_bluetooth_not_supported=0x7f05002a;
@@ -842,6 +841,7 @@ containing a value of this type.
         public static final int quit_app=0x7f05003b;
         public static final int run_background=0x7f05003a;
         public static final int set_radius=0x7f05003c;
+        public static final int settings=0x7f05003f;
         public static final int title_activity_few_contacts=0x7f050036;
         public static final int title_activity_main_with_map=0x7f05003d;
         public static final int unknown_characteristic=0x7f05002c;

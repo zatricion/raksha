@@ -76,10 +76,16 @@
         <TextView
             android:id="@+id/text_view_settings"
 	        style="@style/mainWithMapTextView"
-            android:text="SETTINGS"/>
+            android:text="@string/settings"
+            android:onClick="settings"
+            android:clickable="true"
+            android:paddingBottom="10dp"/>
         <TextView
             android:id="@+id/text_view_status"            
             style="@style/mainWithMapTextView"
-            android:text="DEVICE STATUS"/>    
+            android:text="@string/device_connection_status"
+            android:onClick="connectDevice"
+            android:clickable="true"
+            android:paddingBottom="50dp"/>
 	</LinearLayout>
 </FrameLayout>  
