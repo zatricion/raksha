@@ -32,6 +32,7 @@ import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.google.android.gms.R.color;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.UiSettings;
@@ -68,14 +69,8 @@ public class MainWithMapActivity extends FragmentActivity {
     LinearLayout ringLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_ring);
     final ImageView ringImageView = (ImageView) findViewById(R.id.image_view_ring);
     
-//    ringImageView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, 0, 3));
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
-    Resources res = this.getResources();
-//    Drawable ring = (GradientDrawable) res.getDrawable(R.drawable.ring);
-//    ring = ring.mutate();
-//    ringImageView.setBackgroundResource(R.drawable.ring);
-//    ringLinearLayout.addView(ringImageView);
     
     // Get the location manager
     locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -94,28 +89,14 @@ public class MainWithMapActivity extends FragmentActivity {
     }
     //TODO: Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
     
-//    Display display = getWindowManager().getDefaultDisplay();
-//    Point size = new Point();
-//    display.getSize(size);
-//    int width = size.x;
-//    int height = size.y;
-//    Log.i("Height is ", String.valueOf(height));
-//    Bitmap icon = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-//    int desiredAlpha = 0xFF000000;
-//    for(int i = 0; i < icon.getWidth(); i++)
-//    {
-//        for(int j = 0; j < icon.getHeight(); j++)
-//        {
-//             icon.setPixel(i, j, desiredAlpha);
-//        }
-//    }
+
     ringImageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 
 		@Override
 		public void onGlobalLayout() {
 			int width = ringImageView.getMeasuredWidth();
 			int height = ringImageView.getMeasuredHeight();
-			Bitmap icon = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+			icon = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
 		    int desiredAlpha = 0xAF000000;
 		    for(int i = 0; i < width; i++)
 		    {
@@ -124,22 +105,16 @@ public class MainWithMapActivity extends FragmentActivity {
 		        for(int j = 0; j < height; j++)
 		        {
 		        	int cJ = j - height / 2;
-		            if (cI*cI + cJ*cJ >= 540*540) {
+		            if (cI*cI + cJ*cJ >=  (width*width) / 4) {
 		            		 icon.setPixel(i, j, desiredAlpha);
 		            }		 
 		        }
 		    }
 		    ringImageView.setImageBitmap(icon);
 		}
-	    
-
-    	
     });
     
-    
-//    ringImageView.setScaleType(ScaleType.FIT_XY);
-//    ringImageView.setImageBitmap(icon);
-    
+        
     // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
     progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
     progressBar.setProgressBackgroundColor(getResources().getColor(R.color.red));
@@ -174,8 +149,9 @@ public class MainWithMapActivity extends FragmentActivity {
       // map).
       map.getUiSettings().setCompassEnabled(false);
       // Add lots of markers to the map.
-      map.addMarker(new MarkerOptions().position(curLatLng)
-  	        .title("You"));
+      map.addMarker(new MarkerOptions()
+      						.position(curLatLng)
+      						.title("You"));
 
       // Cannot zoom to bounds until the map has a size.
       final View mapView = getSupportFragmentManager().findFragmentById(R.id.map1).getView();
@@ -205,6 +181,18 @@ public class MainWithMapActivity extends FragmentActivity {
               }
           });
       }
+      
+      // Credit to http://stackoverflow.com/questions/14497734/dont-snap-to-marker-after-click-in-android-map-v2
+      // Don't center marker when clicked
+      map.setOnMarkerClickListener(new OnMarkerClickListener() {
+    	  public boolean onMarkerClick(Marker marker) {
+    		  // Open the info window for the marker
+    		  marker.showInfoWindow();
+		
+    		  // Event was handled by our code do not launch default behaviour.
+    		  return true;
+    	  }
+      });
   }
 
 } 
