@@ -60,7 +60,6 @@ public class BlocActivity extends Activity {
     
     private void startBloc() {
 	    if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-	        Toast.makeText(this, R.string.ble_not_supported, Toast.LENGTH_SHORT).show();
 			final Intent intent = new Intent(this, DeviceScanActivity.class);
 			startActivity(intent);
 	    } else {

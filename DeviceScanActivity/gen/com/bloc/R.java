@@ -638,9 +638,9 @@ containing a value of this type.
         public static final int shape_circle_rect=0x7f020028;
     }
     public static final class id {
-        public static final int action_contacts=0x7f08002a;
-        public static final int action_radius=0x7f08002d;
-        public static final int action_settings=0x7f08002e;
+        public static final int action_contacts=0x7f08002c;
+        public static final int action_radius=0x7f08002f;
+        public static final int action_settings=0x7f080030;
         public static final int book_now=0x7f080010;
         public static final int buyButton=0x7f08000a;
         public static final int buy_now=0x7f08000f;
@@ -652,9 +652,9 @@ containing a value of this type.
         public static final int contact_list_view=0x7f080014;
         public static final int container=0x7f080017;
         public static final int device_address=0x7f08001d;
-        public static final int device_name=0x7f080027;
+        public static final int device_name=0x7f080029;
         public static final int done=0x7f080016;
-        public static final int go_on=0x7f080031;
+        public static final int go_on=0x7f080033;
         public static final int grayscale=0x7f080012;
         public static final int holo_dark=0x7f080005;
         public static final int holo_light=0x7f080006;
@@ -665,27 +665,29 @@ containing a value of this type.
         public static final int map=0x7f080018;
         public static final int map1=0x7f080021;
         public static final int match_parent=0x7f08000c;
-        public static final int menu_connect=0x7f08002b;
-        public static final int menu_disconnect=0x7f08002c;
-        public static final int menu_scan=0x7f08002f;
-        public static final int menu_stop=0x7f080030;
+        public static final int menu_connect=0x7f08002d;
+        public static final int menu_disconnect=0x7f08002e;
+        public static final int menu_scan=0x7f080031;
+        public static final int menu_stop=0x7f080032;
         public static final int monochrome=0x7f080013;
         public static final int name_text_view=0x7f08001a;
         public static final int navigate=0x7f080019;
         public static final int none=0x7f080000;
         public static final int normal=0x7f080001;
         public static final int phone_text_view=0x7f08001b;
-        public static final int pick_radius=0x7f080029;
+        public static final int pick_radius=0x7f08002b;
         public static final int production=0x7f080007;
         public static final int progress_ring=0x7f080026;
         public static final int quit_app=0x7f080020;
-        public static final int radius_progress=0x7f080028;
+        public static final int radius_progress=0x7f08002a;
         public static final int run_background=0x7f08001f;
         public static final int sandbox=0x7f080008;
         public static final int satellite=0x7f080002;
         public static final int selectionDetails=0x7f08000b;
         public static final int strict_sandbox=0x7f080009;
         public static final int terrain=0x7f080003;
+        public static final int text_view_settings=0x7f080027;
+        public static final int text_view_status=0x7f080028;
         public static final int view_below_ring=0x7f080024;
         public static final int wrap_content=0x7f08000d;
     }

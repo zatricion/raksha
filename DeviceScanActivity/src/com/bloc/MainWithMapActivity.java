@@ -12,6 +12,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
@@ -27,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.google.android.gms.R.color;
@@ -59,6 +62,8 @@ public class MainWithMapActivity extends FragmentActivity {
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
   private float markerDisplayAdj = 7f/3f; //Hardcoded change!!
   private Bitmap icon;
+  private static float progressBarTimeMillis = 2000;
+  private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -111,18 +116,29 @@ public class MainWithMapActivity extends FragmentActivity {
 		        }
 		    }
 		    ringImageView.setImageBitmap(icon);
+		    
 		}
     });
-    
-        
-    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
     progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
-    progressBar.setProgressBackgroundColor(getResources().getColor(R.color.red));
-    progressBar.setProgressColor(Color.BLACK);
-    progressBar.setMarkerProgress(0.25f);//unnecessary line
-    progressBar.setProgress(0.4f);
-    progressBar.setThumbEnabled(false);
-    progressBar.setMarkerEnabled(false);
+
+    ringImageView.setOnTouchListener(new View.OnTouchListener(){
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			if (event.getAction() == MotionEvent.ACTION_DOWN) {
+			    progressBarUpdateTask = new progressAnimation().execute();
+			}
+			else if (event.getAction() == MotionEvent.ACTION_UP) {
+				progressBar.setVisibility(View.INVISIBLE);
+				if (progressBarUpdateTask != null) {
+					progressBarUpdateTask.cancel(true);
+				}
+			}
+			return true;
+		}
+    }); 
+    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
+    
 	
   }
   private void setUpMapIfNeeded() {
@@ -138,10 +154,9 @@ public class MainWithMapActivity extends FragmentActivity {
       }
   }
   private void setUpMap() {
-       // Hide the zoom controls as the button panel will cover it.
-      UiSettings mUiSettings = map.getUiSettings();
       // Enables/disables zoom gestures (i.e., double tap, pinch & stretch).
       map.getUiSettings().setZoomGesturesEnabled(false);
+      // Hide the zoom controls as the button panel will cover it.
       map.getUiSettings().setZoomControlsEnabled(false);
       //Enables/disables scroll gestures (i.e. panning the map).
       map.getUiSettings().setScrollGesturesEnabled(false);
@@ -195,4 +210,38 @@ public class MainWithMapActivity extends FragmentActivity {
       });
   }
 
-} 
+	class progressAnimation extends AsyncTask<Void, Float, Void> {
+		private long startTime;
+		@Override
+		protected void onPreExecute() {
+			progressBar.setVisibility(View.VISIBLE);
+		    progressBar.setWheelSize(30);
+		    progressBar.setProgressBackgroundColor(Color.TRANSPARENT);
+		    progressBar.setProgressColor(Color.RED);
+		    progressBar.setProgress(0f);
+		    progressBar.setThumbEnabled(false);
+		    progressBar.setMarkerEnabled(false);
+		    
+			startTime = System.currentTimeMillis();
+		}
+		@Override
+		protected Void doInBackground(Void... params) {
+			while (System.currentTimeMillis() - startTime <= progressBarTimeMillis){
+				publishProgress((System.currentTimeMillis() - startTime) / progressBarTimeMillis);
+			}
+			return null;
+		}
+		@Override
+		protected void onProgressUpdate(Float... elapsed) {
+			progressBar.setProgress(elapsed[0]);
+		}
+		
+		@Override
+		protected void onPostExecute(Void res) {
+			progressBar.setVisibility(View.INVISIBLE);
+			Toast.makeText(getApplicationContext(), "Sending Alert", Toast.LENGTH_SHORT).show();
+			
+		}
+	};
+
+}
