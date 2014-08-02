@@ -92,12 +92,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
     
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
-    // Register radius and location change receiver
-    IntentFilter changeFilter = new IntentFilter();
-    changeFilter.addAction(ACTION_RADIUS_CHANGE);
-    changeFilter.addAction(ACTION_LOC_CHANGE);
-    registerReceiver(mapUpdateReceiver, changeFilter);
-    
     // Get the location manager
     locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     // Define the criteria how to select the location provider -> use
@@ -164,6 +158,23 @@ public class MainWithMapActivity extends DeviceControlActivity {
     });     
 	
   }
+  
+  @Override
+  protected void onPause() {
+      super.onPause();
+      unregisterReceiver(mapUpdateReceiver);
+  }
+  
+  @Override
+  protected void onResume() {
+      super.onResume();
+      // Register radius and location change receiver
+      IntentFilter changeFilter = new IntentFilter();
+      changeFilter.addAction(ACTION_RADIUS_CHANGE);
+      changeFilter.addAction(ACTION_LOC_CHANGE);
+      registerReceiver(mapUpdateReceiver, changeFilter);
+  }
+
   private void setUpMapIfNeeded() {
       // Do a null check to confirm that we have not already instantiated the map.
       if (map == null) {
