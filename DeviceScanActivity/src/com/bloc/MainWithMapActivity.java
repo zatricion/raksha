@@ -80,12 +80,18 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   private static final Geohasher gh = new Geohasher();
-  
+  private TextView deviceStatusTV;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.fragment_main_with_map);
-    
+    deviceStatusTV = (TextView) findViewById(R.id.text_view_status);
+    if (BluetoothLeService.isRunning) {
+	      bindBleService(BluetoothLeService.mBluetoothDeviceAddress);
+	      changeConnectionText(true);
+    }
+
     // To create the ring
     LinearLayout ringLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_ring);
     final ImageView ringImageView = (ImageView) findViewById(R.id.image_view_ring);
@@ -99,15 +105,16 @@ public class MainWithMapActivity extends DeviceControlActivity {
     provider = locationManager.getBestProvider(criteria, false);
     Location location = locationManager.getLastKnownLocation(provider);
 
-    if (location != null) {
-      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-      
-      setUpMapIfNeeded();
-     
-    } else {
-      Log.e("KCoderError", "location not obtained");
+    if (curLatLng == null) {
+	    if (location != null) {
+	      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+	      
+	      setUpMapIfNeeded();
+	     
+	    } else {
+	      Log.e("KCoderError", "location not obtained");
+	    }
     }
-    
     // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
     checkGooglePlayApk();
 
@@ -173,7 +180,32 @@ public class MainWithMapActivity extends DeviceControlActivity {
       changeFilter.addAction(ACTION_RADIUS_CHANGE);
       changeFilter.addAction(ACTION_LOC_CHANGE);
       registerReceiver(mapUpdateReceiver, changeFilter);
+      
   }
+	  
+  // Change Pair Device to Disconnect Device
+  private void changeConnectionText(boolean connected) {
+	if (connected) {
+		deviceStatusTV.setText("Disconnect Device");
+		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				setUserDisconnect(true);
+	  		    mBluetoothLeService.disconnect();
+	  		    deviceStatusTV.setText("Pair Device");
+	  		    deviceStatusTV.setOnClickListener(new View.OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						connectDevice(v);
+					}
+	  		});
+			}
+		});
+	}
+  }
+	
 
   private void setUpMapIfNeeded() {
       // Do a null check to confirm that we have not already instantiated the map.
@@ -311,24 +343,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
         	if (resultCode == RESULT_OK) {
         		mDeviceName = data.getStringExtra(EXTRAS_DEVICE_NAME);
         		bindBleService(data.getStringExtra(EXTRAS_DEVICE_ADDRESS));
-        		final TextView deviceStatusTV = (TextView) findViewById(R.id.text_view_status);
-        		deviceStatusTV.setText("Disconnect Device");
-        		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
-					
-					@Override
-					public void onClick(View v) {
-						setUserDisconnect(true);
-	            		mBluetoothLeService.disconnect();
-	            		deviceStatusTV.setText("Pair Device");
-	            		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
-	    					
-	    					@Override
-	    					public void onClick(View v) {
-	    						connectDevice(v);
-	    					}
-	            		});
-					}
-				});
+        		changeConnectionText(true);
         		// TODO: Change text when device disconnects
         	}
       }

@@ -50,12 +50,11 @@ public class BluetoothLeService extends Service {
     public static boolean isRunning;
     public static String mBluetoothDeviceAddress;
     
-    @SuppressWarnings("unused")
-	private int mConnectionState = STATE_DISCONNECTED;
+	public int mConnectionState = STATE_DISCONNECTED;
 
-    private static final int STATE_DISCONNECTED = 0;
-    private static final int STATE_CONNECTING = 1;
-    private static final int STATE_CONNECTED = 2;
+    public static final int STATE_DISCONNECTED = 0;
+    public static final int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTED = 2;
 
     public final static String ACTION_GATT_CONNECTED =
             "com.bloc.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -323,6 +322,7 @@ public class BluetoothLeService extends Service {
                     UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
+            Log.e("Enable", "DESC");
         }
     }
 

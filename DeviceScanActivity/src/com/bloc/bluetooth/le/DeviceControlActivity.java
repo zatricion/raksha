@@ -136,7 +136,8 @@ public class DeviceControlActivity extends CloudBackendActivity {
             } 
             else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
                 // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
-//            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
+            	Log.e("Pairing", "REQ");
 //            	String pin = "";
 //            	device.setPin(pin.getBytes());
             } 
@@ -297,7 +298,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         
         final int charaProp = button.getProperties();   
         // Enable notifications for button characteristic
-        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
+        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0) {
             mBluetoothLeService.setCharacteristicNotification(button, true);
         }
     }
@@ -331,7 +332,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
 //    	startActivity(exitIntent);
 //    }
     
-    @SuppressWarnings("unused")
 	protected void bindBleService(String address) {
     	mDeviceAddress = address;
 		// Start bluetooth service
