@@ -13,9 +13,13 @@
  */
 package com.google.cloud.backend.spi;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 
+import com.github.davidmoten.geo.GeoHash;
+import com.github.davidmoten.geo.LatLong;
 import com.google.android.gcm.server.Message;
 import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
@@ -27,12 +31,21 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.BadRequestException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
 import com.google.appengine.api.users.User;
 import com.google.cloud.backend.beans.EntityDto;
 import com.google.cloud.backend.beans.EntityListDto;
 import com.google.cloud.backend.beans.QueryDto;
 import com.google.cloud.backend.config.BackendConfigManager;
+import com.github.davidmoten.geo.GeoHash;
 
 import javax.inject.Named;
 
@@ -43,6 +56,8 @@ import javax.inject.Named;
     ownerName = "google.com", packagePath = "cloud.backend.android"),
     useDatastoreForAdditionalConfig = AnnotationBoolean.TRUE)
 public class EndpointV1 {
+	private static int M2LAT = 111111;
+
 
   /**
    * Inserts a CloudEntity on the backend. If it does not have any Id, it
@@ -68,23 +83,63 @@ public class EndpointV1 {
     CrudOperations.getInstance().saveAll(cdl, user);
     return cd;
   }
-
-  public void sendAlerts(String geohash) {
-
+  
+  private void sendAlerts(String geohash, String from_name, Double rad) throws IOException {
+    int GCM_SEND_RETRIES = 3;
+    // Get the Datastore Service
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    		
 	// TODO: probably this doesn't work
 	BackendConfigManager backendConfigManager = new BackendConfigManager();
 
 	String gcmKey = backendConfigManager.getGcmKey();
     boolean isGcmKeySet = !(gcmKey == null || gcmKey.trim().length() == 0);
 
-    // TODO: get regIds from location
+    // get bounding box hashes from location and radius
+    LatLong pos = GeoHash.decodeHash(geohash);
+    double radius = (double) rad;
+    double lat = pos.getLat();
+    double lon = pos.getLon();
+    Set<String> ghSet = GeoHash.coverBoundingBox((lat - radius / M2LAT), 
+    											 (lon - M2LAT * Math.cos(lat)),
+    											 (lat + radius / M2LAT), 
+    											 (lon + M2LAT * Math.cos(lat))).getHashes();
+    
+    ArrayList<String> regIdList = new ArrayList<String>();
+    // Get regIds from prefix search of bounding box hashes
+    for (String gh : ghSet) {
+    	Filter ghMinFilter =
+		  new FilterPredicate("gh",
+		                      FilterOperator.GREATER_THAN_OR_EQUAL,
+		                      gh);
+	
+		Filter ghMaxFilter =
+		  new FilterPredicate("gh",
+		                      FilterOperator.LESS_THAN_OR_EQUAL,
+		                      (gh + Character.MAX_VALUE));
+	
+		//Use CompositeFilter to combine multiple filters
+		Filter ghRangeFilter =
+		  CompositeFilterOperator.and(ghMinFilter, ghMaxFilter);
+	
+	
+		// Use class Query to assemble a query
+		Query q = new Query("Person").setFilter(ghRangeFilter);
+	
+		// Use PreparedQuery interface to retrieve results
+		PreparedQuery pq = datastore.prepare(q);
+	
+		for (Entity result : pq.asIterable()) {
+		  String regId = (String) result.getProperty("regId");
+		  regIdList.add(regId);
+		}
+    }
     
     // Only attempt to send GCM if GcmKey is available
     if (isGcmKeySet) {
       Sender sender = new Sender(gcmKey);
-      Message message = new Message.Builder().addData(SubscriptionUtility.GCM_KEY_SUBID, subId)
-          .build();
-      Result r = sender.send(message, regId, GCM_SEND_RETRIES);
+      Message message = new Message.Builder().addData("from_name", from_name).build();
+      sender.send(message, regIdList, GCM_SEND_RETRIES);
     }
   }
   
@@ -101,10 +156,11 @@ public class EndpointV1 {
    * @throws UnauthorizedException
    *           if the requesting {@link User} has no sufficient permission for
    *           the operation.
+   * @throws IOException 
    */
   @ApiMethod(path = "CloudEntities/update/{kind}", httpMethod = "POST")
   public EntityDto update(@Named("kind") String kindName, EntityDto cd, User user)
-      throws UnauthorizedException {
+      throws UnauthorizedException, IOException {
 
     SecurityChecker.getInstance().checkIfUserIsAvailable(user);
 
@@ -116,7 +172,7 @@ public class EndpointV1 {
       String propName = (String) key;
       Object val = values.get(key);
       if ((propName == "alert") && (val == Boolean.TRUE)) {
-    	  sendAlerts((String) values.get("location"));
+    	  sendAlerts((String) values.get("location"), (String) values.get("name"), ((Float) values.get("radius")).doubleValue());
     	  break;
       }
     }
