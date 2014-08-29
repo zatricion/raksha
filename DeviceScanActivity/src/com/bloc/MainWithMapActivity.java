@@ -98,25 +98,26 @@ public class MainWithMapActivity extends DeviceControlActivity {
     
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
     
-    // Get the location manager
-    locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-    // Define the criteria how to select the location provider -> use
-    Criteria criteria = new Criteria();
-    provider = locationManager.getBestProvider(criteria, false);
-    Location location = locationManager.getLastKnownLocation(provider);
-
-    if (curLatLng == null) {
-	    if (location != null) {
-	      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-	      
-	      setUpMapIfNeeded();
-	     
-	    } else {
-	      Log.e("KCoderError", "location not obtained");
-	    }
-    }
     // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
     checkGooglePlayApk();
+    
+    if (curLatLng == null) {
+        // Get the location manager
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (location == null) {
+	        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        }
+	    if (location != null) {
+	      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+	    } else {
+	      Log.e("Error", "location not obtained");
+	    }
+    }
+    setUpMapIfNeeded();
+    
+
 
     ringImageView.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 
@@ -175,6 +176,9 @@ public class MainWithMapActivity extends DeviceControlActivity {
   @Override
   protected void onResume() {
       super.onResume();
+      // Set up the map
+      setUpMapIfNeeded();
+      
       // Register radius and location change receiver
       IntentFilter changeFilter = new IntentFilter();
       changeFilter.addAction(ACTION_RADIUS_CHANGE);
@@ -359,6 +363,25 @@ public class MainWithMapActivity extends DeviceControlActivity {
     }
 	
 	private void updateMap() {
+		// Set radius of visible map to Neighborhood radius
+	    mRadius = getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+	  		  			.getInt(KEY_RADIUS, 2000);
+	    
+	    if (curLatLng == null) {
+	        // Get the location manager
+	        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+	        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+	        if (location == null) {
+		        location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+	        }
+		    if (location != null) {
+		      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+		    } else {
+		      Log.e("Error", "location not obtained");
+		    }
+	    }
+	    
 		LatLngBounds bounds = new LatLngBounds.Builder()
 		      .include(new LatLng(curLatLng.latitude, curLatLng.longitude - 
 									(mRadius / (M2LAT * Math.cos(curLatLng.latitude)))))

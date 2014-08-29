@@ -13,6 +13,12 @@
  */
 package com.google.cloud.backend.spi;
 
+import java.util.ArrayList;
+import java.util.Map;
+
+import com.google.android.gcm.server.Message;
+import com.google.android.gcm.server.Result;
+import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.AnnotationBoolean;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
@@ -21,10 +27,12 @@ import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.BadRequestException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.users.User;
 import com.google.cloud.backend.beans.EntityDto;
 import com.google.cloud.backend.beans.EntityListDto;
 import com.google.cloud.backend.beans.QueryDto;
+import com.google.cloud.backend.config.BackendConfigManager;
 
 import javax.inject.Named;
 
@@ -61,6 +69,25 @@ public class EndpointV1 {
     return cd;
   }
 
+  public void sendAlerts(String geohash) {
+
+	// TODO: probably this doesn't work
+	BackendConfigManager backendConfigManager = new BackendConfigManager();
+
+	String gcmKey = backendConfigManager.getGcmKey();
+    boolean isGcmKeySet = !(gcmKey == null || gcmKey.trim().length() == 0);
+
+    // TODO: get regIds from location
+    
+    // Only attempt to send GCM if GcmKey is available
+    if (isGcmKeySet) {
+      Sender sender = new Sender(gcmKey);
+      Message message = new Message.Builder().addData(SubscriptionUtility.GCM_KEY_SUBID, subId)
+          .build();
+      Result r = sender.send(message, regId, GCM_SEND_RETRIES);
+    }
+  }
+  
   /**
    * Updates a CloudEntity on the backend. If it does not have any Id, it
    * creates a new Entity. If it has, find the existing entity and update it.
@@ -80,6 +107,20 @@ public class EndpointV1 {
       throws UnauthorizedException {
 
     SecurityChecker.getInstance().checkIfUserIsAvailable(user);
+
+    // get properties
+    @SuppressWarnings("rawtypes")
+	Map values = (Map) cd.getProperties();
+    for (Object key : values.keySet()) {
+      // get property name and value
+      String propName = (String) key;
+      Object val = values.get(key);
+      if ((propName == "alert") && (val == Boolean.TRUE)) {
+    	  sendAlerts((String) values.get("location"));
+    	  break;
+      }
+    }
+    
     EntityListDto cdl = new EntityListDto();
     cdl.add(cd);
     CrudOperations.getInstance().saveAll(cdl, user);

@@ -21,6 +21,7 @@ import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery.Scope;
 import com.google.cloud.backend.android.F.Op;
 
+import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -75,6 +76,7 @@ public class BackgroundService extends Service implements
     public static int mRadius; // meters
     
     private boolean mAlert;
+    private String mRegId;
     
     // If we are using fastLocationRequest without having received an alert
     private boolean fastWithoutAlert = false; 
@@ -585,6 +587,7 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void addPersonIfNecessary() {
+		mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
 		if (mSelf == null || mSelf.asEntity().getId() == null) {
 			// Query backend
 	        mBackend.listByProperty("Person", "name", Op.EQ,
@@ -596,12 +599,13 @@ public class BackgroundService extends Service implements
 	                                        mSelf = new Person(results.get(0));
 	                                        mSelf.setAlert(mAlert);
 	                                        mSelf.setRadius(mRadius);
+	                                        mSelf.setRegId(mRegId);
 	                                        mBackend.update(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                } else {
 	                                	// TODO: get radius from preferences
 	                                        mSelf = new Person(mAccount, mPhone, 
-	                                        				   "none", mAlert, mRadius);
+	                                        				   "none", mAlert, mRadius, mRegId);
 	                                        mBackend.insert(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                }
