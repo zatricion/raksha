@@ -525,7 +525,6 @@ public class BackgroundService extends Service implements
             }
 		}
 	}
-
 	
 	private void updateVictimLocation(String name) {
         CloudCallbackHandler<List<CloudEntity>> updateLocationHandler =

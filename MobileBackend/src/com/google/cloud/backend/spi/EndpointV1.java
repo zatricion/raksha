@@ -140,10 +140,12 @@ public class EndpointV1 {
 	
 		for (Entity result : pq.asIterable()) {
 		  String regId = (String) result.getProperty("regId");
-		  regIdList.add(regId);
+		  if (regId != null) {
+			  regIdList.add(regId);
+			  Log.warning(regId);
+		  }
 		}
     }
-    
     // Only attempt to send GCM if GcmKey is available
     if (isGcmKeySet && !regIdList.isEmpty()) {
       Sender sender = new Sender(gcmKey);
