@@ -384,9 +384,9 @@ public class MainWithMapActivity extends DeviceControlActivity {
 	    
 		LatLngBounds bounds = new LatLngBounds.Builder()
 		      .include(new LatLng(curLatLng.latitude, curLatLng.longitude - 
-									(mRadius / (M2LAT * Math.cos(curLatLng.latitude)))))
+									(mRadius / (M2LAT * Math.cos(Math.toRadians(curLatLng.latitude))))))
 			  .include(new LatLng(curLatLng.latitude, curLatLng.longitude + 
-			  						(mRadius / (M2LAT * Math.cos(curLatLng.latitude)))))
+			  						(mRadius / (M2LAT * Math.cos(Math.toRadians(curLatLng.latitude))))))
 			  .include(new LatLng(curLatLng.latitude + mRadius / M2LAT, curLatLng.longitude))
 			  .include(new LatLng(curLatLng.latitude - (markerDisplayAdj * mRadius) / M2LAT, curLatLng.longitude))
 		      .build();

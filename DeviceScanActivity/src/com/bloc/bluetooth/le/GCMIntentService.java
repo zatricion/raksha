@@ -122,17 +122,21 @@ public class GCMIntentService extends GCMBaseIntentService {
    */
   @Override
   public void onMessage(Context context, Intent intent) {
-
-    // decode subId in the message
-    String subId = intent.getStringExtra(GCM_KEY_SUBID);
-    Log.i(Consts.TAG, "onMessage: subId: " + subId);
-    String[] tokens = subId.split(":");
-    String typeId = tokens[1];
-
-    // dispatch message
-    if (GCM_TYPEID_QUERY.equals(typeId)) {
-      CloudBackendAsync.handleQueryMessage(tokens[2]);
-    }
+	if (intent.hasExtra("from_name")) {
+		String from_name = intent.getStringExtra("from_name");
+		
+	} else {
+	    // decode subId in the message
+	    String subId = intent.getStringExtra(GCM_KEY_SUBID);
+	    Log.i(Consts.TAG, "onMessage: subId: " + subId);
+	    String[] tokens = subId.split(":");
+	    String typeId = tokens[1];
+	    	
+	    // dispatch message
+	    if (GCM_TYPEID_QUERY.equals(typeId)) {
+	      CloudBackendAsync.handleQueryMessage(tokens[2]);
+	    }
+	}
   }
 
   /**

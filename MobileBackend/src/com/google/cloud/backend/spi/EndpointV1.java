@@ -15,9 +15,11 @@ package com.google.cloud.backend.spi;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.davidmoten.geo.Coverage;
 import com.github.davidmoten.geo.GeoHash;
 import com.github.davidmoten.geo.LatLong;
 import com.google.android.gcm.server.Message;
@@ -40,6 +42,7 @@ import com.google.appengine.api.datastore.Query.Filter;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
+import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.appengine.api.users.User;
 import com.google.cloud.backend.beans.EntityDto;
 import com.google.cloud.backend.beans.EntityListDto;
@@ -49,6 +52,8 @@ import com.github.davidmoten.geo.GeoHash;
 
 import javax.inject.Named;
 
+import java.util.logging.Logger;
+
 /**
  * An endpoint for all CloudBackend requests.
  */
@@ -57,7 +62,7 @@ import javax.inject.Named;
     useDatastoreForAdditionalConfig = AnnotationBoolean.TRUE)
 public class EndpointV1 {
 	private static int M2LAT = 111111;
-
+	private static final Logger Log = Logger.getLogger(EndpointV1.class.getName());
 
   /**
    * Inserts a CloudEntity on the backend. If it does not have any Id, it
@@ -84,12 +89,11 @@ public class EndpointV1 {
     return cd;
   }
   
-  private void sendAlerts(String geohash, String from_name, Double rad) throws IOException {
+  private void sendAlerts(String geohash, String from_name, double radius) throws IOException {
     int GCM_SEND_RETRIES = 3;
     // Get the Datastore Service
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     		
-	// TODO: probably this doesn't work
 	BackendConfigManager backendConfigManager = new BackendConfigManager();
 
 	String gcmKey = backendConfigManager.getGcmKey();
@@ -97,24 +101,27 @@ public class EndpointV1 {
 
     // get bounding box hashes from location and radius
     LatLong pos = GeoHash.decodeHash(geohash);
-    double radius = (double) rad;
+    Log.info(geohash);
+    Log.info(pos.toString());
     double lat = pos.getLat();
     double lon = pos.getLon();
-    Set<String> ghSet = GeoHash.coverBoundingBox((lat - radius / M2LAT), 
-    											 (lon - M2LAT * Math.cos(lat)),
-    											 (lat + radius / M2LAT), 
-    											 (lon + M2LAT * Math.cos(lat))).getHashes();
-    
-    ArrayList<String> regIdList = new ArrayList<String>();
+    Coverage cover = GeoHash.coverBoundingBox((lat + radius / M2LAT), // top left lat
+											  (lon - radius / (M2LAT * Math.cos(Math.toRadians(lat)))), // top left lon
+											  (lat - radius / M2LAT), // bottom right lat
+											  (lon + radius / (M2LAT * Math.cos(Math.toRadians(lat))))); // bottom right lon
+
+    Log.info(cover.toString());
+    Set<String> ghSet = cover.getHashes();
+    List<String> regIdList = new ArrayList<String>();
     // Get regIds from prefix search of bounding box hashes
     for (String gh : ghSet) {
     	Filter ghMinFilter =
-		  new FilterPredicate("gh",
+		  new FilterPredicate("location",
 		                      FilterOperator.GREATER_THAN_OR_EQUAL,
 		                      gh);
 	
 		Filter ghMaxFilter =
-		  new FilterPredicate("gh",
+		  new FilterPredicate("location",
 		                      FilterOperator.LESS_THAN_OR_EQUAL,
 		                      (gh + Character.MAX_VALUE));
 	
@@ -124,7 +131,9 @@ public class EndpointV1 {
 	
 	
 		// Use class Query to assemble a query
-		Query q = new Query("Person").setFilter(ghRangeFilter);
+		Query q = new Query("Person")
+			.setFilter(ghRangeFilter)
+			.addSort("location", SortDirection.DESCENDING);
 	
 		// Use PreparedQuery interface to retrieve results
 		PreparedQuery pq = datastore.prepare(q);
@@ -136,7 +145,7 @@ public class EndpointV1 {
     }
     
     // Only attempt to send GCM if GcmKey is available
-    if (isGcmKeySet) {
+    if (isGcmKeySet && !regIdList.isEmpty()) {
       Sender sender = new Sender(gcmKey);
       Message message = new Message.Builder().addData("from_name", from_name).build();
       sender.send(message, regIdList, GCM_SEND_RETRIES);
@@ -172,7 +181,7 @@ public class EndpointV1 {
       String propName = (String) key;
       Object val = values.get(key);
       if ((propName == "alert") && (val == Boolean.TRUE)) {
-    	  sendAlerts((String) values.get("location"), (String) values.get("name"), ((Float) values.get("radius")).doubleValue());
+    	  sendAlerts((String) values.get("location"), (String) values.get("name"), ((Double) values.get("radius")).doubleValue());
     	  break;
       }
     }
