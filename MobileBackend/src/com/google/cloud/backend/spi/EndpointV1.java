@@ -147,7 +147,10 @@ public class EndpointV1 {
     // Only attempt to send GCM if GcmKey is available
     if (isGcmKeySet && !regIdList.isEmpty()) {
       Sender sender = new Sender(gcmKey);
-      Message message = new Message.Builder().addData("from_name", from_name).build();
+      Message message = new Message.Builder().addData("from_name", from_name)
+    		  								 .addData("geohash", geohash)
+    		  								 .addData("radius", String.valueOf(radius))
+    		  								 .build();
       sender.send(message, regIdList, GCM_SEND_RETRIES);
     }
   }

@@ -33,7 +33,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
     
     private void sendAlert(Context context) {
     	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
-    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
+    	bgServiceIntent.setAction(BackgroundService.ACTION_SEND_EMERGENCY_ALERT);
     	context.startService(bgServiceIntent);
     }
 };

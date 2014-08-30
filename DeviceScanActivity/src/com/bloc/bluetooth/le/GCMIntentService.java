@@ -122,9 +122,18 @@ public class GCMIntentService extends GCMBaseIntentService {
    */
   @Override
   public void onMessage(Context context, Intent intent) {
+	// Get alert
 	if (intent.hasExtra("from_name")) {
 		String from_name = intent.getStringExtra("from_name");
-		
+		String geohash = intent.getStringExtra("geohash");
+		double radius = Double.parseDouble((String) intent.getStringExtra("radius"));
+
+    	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
+    	bgServiceIntent.putExtra("from_name", from_name);
+    	bgServiceIntent.putExtra("geohash", geohash);
+    	bgServiceIntent.putExtra("radius", radius);
+    	bgServiceIntent.setAction(BackgroundService.ACTION_RECEIVE_EMERGENCY_ALERT);
+    	context.startService(bgServiceIntent);	
 	} else {
 	    // decode subId in the message
 	    String subId = intent.getStringExtra(GCM_KEY_SUBID);

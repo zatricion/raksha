@@ -308,7 +308,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
 			progressBar.setVisibility(View.INVISIBLE);
 			Toast.makeText(getApplicationContext(), "Sending Alert", Toast.LENGTH_SHORT).show();
 	    	Intent bgServiceIntent = new Intent(getApplicationContext(), BackgroundService.class);
-	    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
+	    	bgServiceIntent.setAction(BackgroundService.ACTION_SEND_EMERGENCY_ALERT);
 	    	startService(bgServiceIntent);
 		}
 	};
@@ -378,7 +378,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		    if (location != null) {
 		      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 		    } else {
-		      Log.e("Error", "location not obtained");
+		      Log.e("MainWithMapActivity", "location not obtained");
 		    }
 	    }
 	    

@@ -89,8 +89,11 @@ public class BackgroundService extends Service implements
     public final static String ACTION_STOP_ALERT =
             "com.bloc.bluetooth.le.ACTION_STOP_ALERT";
     
-    public final static String ACTION_EMERGENCY_ALERT =
-            "com.bloc.bluetooth.le.ACTION_EMERGENCY_ALERT";
+    public final static String ACTION_SEND_EMERGENCY_ALERT =
+            "com.bloc.bluetooth.le.ACTION_SEND_EMERGENCY_ALERT";
+    
+    public final static String ACTION_RECEIVE_EMERGENCY_ALERT =
+            "com.bloc.bluetooth.le.ACTION_RECEIVE_EMERGENCY_ALERT";
     
     public final static String ACTION_BACKEND =
             "com.bloc.bluetooth.le.ACTION_BACKEND";
@@ -180,7 +183,7 @@ public class BackgroundService extends Service implements
         
         // Get radius
         SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
-        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, 50); // default (meters)
+        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, 2000); // default (meters)
     }
 	
 	@Override
@@ -228,8 +231,13 @@ public class BackgroundService extends Service implements
 	        // Keep this service in the foreground
 	        startForeground(42, note);
 		}
-        // If the intent is from the button, send out an alert
-		else if (ACTION_EMERGENCY_ALERT.equals(action)) {
+		else if (ACTION_RECEIVE_EMERGENCY_ALERT.equals(action)) {
+			String from_name = intent.getStringExtra("from_name");
+			String geohash = intent.getStringExtra("geohash");
+			double radius = intent.getDoubleExtra("radius", 2000);
+			receiveAlert(from_name, geohash, radius);
+		}
+		else if (ACTION_SEND_EMERGENCY_ALERT.equals(action)) {
 			// Notify the user about the alert
 			createAlertNotification();
 			
@@ -369,9 +377,6 @@ public class BackgroundService extends Service implements
 		if (mCurrLocation != null) {
 			sendMyLocation(mCurrLocation);
 		}
-		     
-        // Get notified of alerts
-        listenForAlerts();    
         
 		// Listen for alerts from people who have you as an emergency contact
 		listenForContactAlerts();
@@ -391,7 +396,6 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void listenForContactAlerts() {
-		Log.e(TAG, mPhone);
 		CloudCallbackHandler<List<CloudEntity>> contactAlertHandler =
 				new CloudCallbackHandler<List<CloudEntity>>() {
 			@Override
@@ -501,47 +505,27 @@ public class BackgroundService extends Service implements
 		Log.e(TAG, "END ALERT");
 	}
 	
-	private void listenForAlerts() {
-        CloudCallbackHandler<List<CloudEntity>> alertHandler =
-        		new CloudCallbackHandler<List<CloudEntity>>() {
-            @Override
-            public void onComplete(List<CloudEntity> results) {
-            	Log.e("Received", "ALERT");
-            	Log.e("Received", results.toString());
-				for (Person victim : Person.fromEntities(results)) {
-					String name = victim.getName();
-					// Don't want alerts from yourself or if you have an emergency
-					if (!(name.equals(mAccount) || isHelping || mAlert)) {
-	                    LatLng where = gh.decode(victim.getGeohash());
-	                    BigDecimal radius = victim.getRadius();
-	                    if (where == null || radius == null || mCurrLocation == null) {
-	                    	break;
-	                    }
-	                    Location help = new Location("Help");
-	                    help.setLatitude(where.latitude);
-	                    help.setLongitude(where.longitude);
-	                    if (mCurrLocation.distanceTo(help) < radius.floatValue()) {
-	                    	// Stop listening for alerts
-	                    	isHelping = true;
-	                    	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
-	                    	intent.putExtra(MapActivity.VICTIM_LOC, victim.getGeohash());
-	                    	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	                    	startActivity(intent);
-	                    	updateVictimLocation(name);
-	                        break;
-	                    }
-                    }
-            	}
+	private void receiveAlert(String name, String geohash, double radius) {
+		if (!(name.equals(mAccount) || isHelping || mAlert)) {
+			LatLng where = gh.decode(geohash);
+            if (mCurrLocation == null) {
+            	return;
             }
-        };
-
-		CloudQuery cq = new CloudQuery("Person");
-		cq.setQueryId("AlertListener");
-		cq.setFilter(F.eq(Person.KEY_ALERT, Boolean.TRUE));
-		cq.setScope(Scope.FUTURE);
-		cq.setSubscriptionDurationSec(WEEK_IN_SECONDS);
-		mBackend.list(cq, alertHandler);
+            Location help = new Location("Help");
+            help.setLatitude(where.latitude);
+            help.setLongitude(where.longitude);
+            if (mCurrLocation.distanceTo(help) < radius) {
+            	// Stop listening for alerts
+            	isHelping = true;
+            	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
+            	intent.putExtra(MapActivity.VICTIM_LOC, geohash);
+            	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            	startActivity(intent);
+            	updateVictimLocation(name);
+            }
+		}
 	}
+
 	
 	private void updateVictimLocation(String name) {
         CloudCallbackHandler<List<CloudEntity>> updateLocationHandler =
