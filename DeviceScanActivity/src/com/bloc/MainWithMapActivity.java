@@ -177,8 +177,12 @@ public class MainWithMapActivity extends DeviceControlActivity {
   protected void onResume() {
       super.onResume();
       // Set up the map
-      setUpMapIfNeeded();
-      
+      if (map != null) {
+    	  setUpMap();
+      } else {
+    	  setUpMapIfNeeded();
+      }
+            
       // Register radius and location change receiver
       IntentFilter changeFilter = new IntentFilter();
       changeFilter.addAction(ACTION_RADIUS_CHANGE);

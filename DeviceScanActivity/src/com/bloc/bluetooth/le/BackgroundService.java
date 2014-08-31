@@ -320,7 +320,6 @@ public class BackgroundService extends Service implements
         mCurrLocation = location;
         sendMyLocation(mCurrLocation);	
         
-        //TODO: Not sure whether this is a good idea
 		// Listen for alerts from people who have you as an emergency contact
 		listenForContactAlerts();
 	}
