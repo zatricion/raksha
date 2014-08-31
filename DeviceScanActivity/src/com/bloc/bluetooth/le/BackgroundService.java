@@ -498,7 +498,14 @@ public class BackgroundService extends Service implements
     	// End the alert
     	Intent intent = new Intent(ACTION_END_ALERT);
     	sendBroadcast(intent);
-    	isHelping = false;
+    	
+    	// Wait a little before allowing more alerts
+	    new Handler().postDelayed(new Runnable() {
+	      @Override
+	      public void run() {
+	      	isHelping = false;
+	      }
+	    }, 10000);
     	
     	mBackend.unsubscribeFromQuery("VictimUpdater");
     	
@@ -557,11 +564,13 @@ public class BackgroundService extends Service implements
 	}
 
 	private void sendMyLocation(final Location loc) {
+			mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
             if (mSelf != null) {
 				mSelf.setGeohash(gh.encode(loc));
 				mSelf.setPhone(mPhone);
 				mSelf.setAlert(mAlert);
 				mSelf.setRadius(mRadius);
+				mSelf.setRegId(mRegId);
 				mBackend.update(mSelf.asEntity(), updateHandler);
 			}
             Intent locIntent = new Intent(DeviceControlActivity.ACTION_LOC_CHANGE);
