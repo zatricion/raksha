@@ -58,7 +58,7 @@ public class BackgroundService extends Service implements
 	
     // Global variables
     LocationClient mLocationClient;
-    static boolean isRunning = false;
+    public static boolean isRunning = false;
     
     // Local variables
     private final static String TAG = BackgroundService.class.getSimpleName();
@@ -100,6 +100,9 @@ public class BackgroundService extends Service implements
     
     public final static String ACTION_UPDATE_MAP =
             "com.bloc.bluetooth.le.ACTION_UPDATE_MAP";
+    
+    public final static String ACTION_GET_LOC =
+            "com.bloc.bluetooth.le.ACTION_GET_LOC";
     
     public final static String ACTION_END_ALERT =
             "com.bloc.bluetooth.le.ACTION_END_ALERT";
@@ -267,6 +270,10 @@ public class BackgroundService extends Service implements
 	        	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
 	        }
 		}
+		else if (ACTION_GET_LOC.equals(action)) {
+	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
+	        fastWithoutAlert = true;
+		}
         
 		return START_NOT_STICKY;
 	}
@@ -311,7 +318,7 @@ public class BackgroundService extends Service implements
 	
 	@Override
 	public void onLocationChanged(Location location) {
-        Toast.makeText(this, "Location Changed", Toast.LENGTH_SHORT).show();
+        // Toast.makeText(this, "Location Changed", Toast.LENGTH_SHORT).show();
 		if (fastWithoutAlert) {
         	mLocationClient.removeLocationUpdates(this);
         	mLocationClient.requestLocationUpdates(slowLocationRequest, this);	

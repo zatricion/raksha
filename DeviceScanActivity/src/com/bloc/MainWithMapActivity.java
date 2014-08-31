@@ -176,11 +176,14 @@ public class MainWithMapActivity extends DeviceControlActivity {
   @Override
   protected void onResume() {
       super.onResume();
+      
       // Set up the map
-      if (map != null) {
-    	  setUpMap();
-      } else {
-    	  setUpMapIfNeeded();
+      setUpMapIfNeeded();
+      
+      if (BackgroundService.isRunning) {
+	      Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+	      bgServiceIntent.setAction(BackgroundService.ACTION_GET_LOC);
+	      startService(bgServiceIntent);
       }
             
       // Register radius and location change receiver
@@ -188,7 +191,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
       changeFilter.addAction(ACTION_RADIUS_CHANGE);
       changeFilter.addAction(ACTION_LOC_CHANGE);
       registerReceiver(mapUpdateReceiver, changeFilter);
-      
   }
 	  
   // Change Pair Device to Disconnect Device
