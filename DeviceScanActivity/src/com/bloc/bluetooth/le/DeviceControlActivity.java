@@ -247,16 +247,16 @@ public class DeviceControlActivity extends CloudBackendActivity {
         }
     }
     
-    private void showContactPickerDialog() {
+    public void showContactPickerDialog() {
 		ContactPickerDialog dlg = new ContactPickerDialog();
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
-		dlg.show(getFragmentManager(), "contacts");
+		dlg.show(getSupportFragmentManager(), "contacts");
 	}
 
-    protected void showRadiusPickerDialog() {
+    public void showRadiusPickerDialog() {
     	RadiusPickerDialog dlg = new RadiusPickerDialog();
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
-		dlg.show(getFragmentManager(), "radius");
+		dlg.show(getSupportFragmentManager(), "radius");
 	}
     
     @Override

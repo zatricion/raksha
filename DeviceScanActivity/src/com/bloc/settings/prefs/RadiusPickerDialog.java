@@ -5,7 +5,7 @@ import com.bloc.R;
 import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 
-import android.app.DialogFragment;
+import android.support.v4.app.DialogFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;

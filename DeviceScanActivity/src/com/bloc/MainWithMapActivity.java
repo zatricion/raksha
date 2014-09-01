@@ -19,6 +19,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -42,6 +43,8 @@ import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.bloc.bluetooth.le.DeviceScanActivity;
 import com.bloc.bluetooth.le.Geohasher;
+import com.bloc.settings.prefs.RadiusPickerDialog;
+import com.bloc.settings.prefs.SettingsDialog;
 import com.google.android.gms.R.color;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -72,7 +75,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private HoloCircularProgressBar progressBar;
   private static int M2LAT = 111111;
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
-  private float markerDisplayAdj = 3f/3f; //Hardcoded change!!
+  private float markerDisplayAdj = 4f/3f; //Hardcoded change!!
   private Bitmap icon;
   private Marker you;
   private static float progressBarTimeMillis = 2000;
@@ -256,7 +259,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
                   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
                     mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                   } else {
-                    mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    mapView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                   }
               }
           });
@@ -365,7 +368,9 @@ public class MainWithMapActivity extends DeviceControlActivity {
     }
 
     public void settings(View v) {
-		showRadiusPickerDialog();
+    	SettingsDialog dlg = new SettingsDialog();
+    	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+		dlg.show(getSupportFragmentManager(), "settings");
     }
 	
 	private void updateMap() {
