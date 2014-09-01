@@ -48,13 +48,15 @@ public class SettingsDialog extends DialogFragment {
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id) {
 				// Pick the correct dialog to launch
-				switch(arrayAdapter.getItem(position)) {
-					case "Set Radius":
+				switch((int) id) {
+					case 0:
 						((DeviceControlActivity) getActivity()).showRadiusPickerDialog();
 						dismiss();
-					case "Set Emergency Contacts":
+						break;
+					case 1:
 						((DeviceControlActivity) getActivity()).showContactPickerDialog();
 						dismiss();
+						break;
 				}
 			}
 		});
