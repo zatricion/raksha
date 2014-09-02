@@ -43,7 +43,7 @@ public class ContactPickerDialog extends DialogFragment {
 			public void onClick(View arg0) {
 				if (contactListView.getAdapter() != null) {
 					Intent intent = new Intent(getActivity(), ContactListActivity.class);
-					intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getSelectedContacts());
+					intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getContacts());
 					startActivity(intent);
 				}
 				dismiss();

@@ -1,15 +1,18 @@
 package com.bloc.settings.contacts;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.bloc.R;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -30,7 +33,7 @@ public class ContactListActivity extends Activity {
 		contactListView = (ListView) findViewById(R.id.contact_list_view);
 		
 		// Only show selected contacts
-		List<Contact> selectedContacts = new ArrayList<Contact>();
+		final List<Contact> selectedContacts = new ArrayList<Contact>();
 		for (Contact contact : contactList) {
 		  if (contact.selected) {
 			  selectedContacts.add(contact);
@@ -43,10 +46,33 @@ public class ContactListActivity extends Activity {
 		confirmButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
-			public void onClick(View arg0) {               
+			public void onClick(View arg0) {
                 if (contactList != null) {
-                	SharedPreferences.Editor ed = getSharedPreferences("myPrefs", MODE_PRIVATE).edit();
+                	// Get old contacts to compare and send intro text messages to new choices
+                    SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+                    String old_contacts = prefs.getString(DeviceControlActivity.KEY_CONTACTS, null);
                 	Gson gson = new Gson();
+                    Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
+                    List<Contact> oldContactList = gson.fromJson(old_contacts, collectionType);
+                    final List<Contact> oldSelectedContactList = new ArrayList<Contact>();
+                    for (Contact contact : oldContactList) {
+                    	if (contact.selected) {
+                    		oldSelectedContactList.add(contact);
+                    	}
+                    }
+                    for (Contact contact : selectedContacts) {
+                    	if (!oldSelectedContactList.contains(contact)) {
+                    		// Send text message
+            			 	SmsManager sms = SmsManager.getDefault();
+            			 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
+            			 			+ "In an emergency, Bloc will text you my location. "
+            			 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
+            			 	sms.sendTextMessage(String.valueOf(contact.phNum), null, new_emergency_contact_text, null, null);
+                    	}
+                    }
+                    
+                    // Save contacts to myPrefs
+                	SharedPreferences.Editor ed = prefs.edit();
                 	String contacts = gson.toJson(contactList);
                 	ed.putString(DeviceControlActivity.KEY_CONTACTS, contacts);
                 	DeviceControlActivity.mContactList = contactList;

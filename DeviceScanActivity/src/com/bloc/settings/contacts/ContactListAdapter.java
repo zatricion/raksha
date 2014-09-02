@@ -50,19 +50,11 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 		 @Override
 	     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			 Contact changed = contactList.get((Integer) buttonView.getTag());
-			 if (isChecked) {
-			 	SmsManager sms = SmsManager.getDefault();
-			 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
-			 			+ "In an emergency, Bloc will text you my location. "
-			 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
-			 	sms.sendTextMessage(String.valueOf(changed.phNum), null, new_emergency_contact_text, null, null);
-			 	Log.e("HI", "HIHI");
-			 }
 			 changed.selected = isChecked;
 	     }
 	};
 	
-	public ArrayList<Contact> getSelectedContacts(){
+	public ArrayList<Contact> getContacts(){
 		ArrayList<Contact> retList = new ArrayList<Contact>();
 		int i;
 		for(i=0;i<contactList.size();i++){
