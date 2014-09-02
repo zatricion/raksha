@@ -6,6 +6,7 @@ import java.util.List;
 import com.bloc.R;
 
 import android.content.Context;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -36,19 +37,28 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 	    TextView phoneTextView = (TextView) rowView.findViewById(R.id.phone_text_view);
 	    CheckBox checkBox = (CheckBox) rowView.findViewById(R.id.check_box);
 	    
-	    checkBox.setOnCheckedChangeListener(mListener);
 	    checkBox.setTag(position);
 	    Contact contact = contactList.get(position);
 	    phoneTextView.setText(Long.toString(contact.phNum));
 	    nameTextView.setText(contact.name);
 	    checkBox.setChecked(contact.selected);
+	    checkBox.setOnCheckedChangeListener(mListener);
 	    return rowView;
 	}
 	
 	OnCheckedChangeListener mListener = new OnCheckedChangeListener() {
 		 @Override
 	     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			 contactList.get((Integer) buttonView.getTag()).selected = isChecked;
+			 Contact changed = contactList.get((Integer) buttonView.getTag());
+			 if (isChecked) {
+			 	SmsManager sms = SmsManager.getDefault();
+			 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
+			 			+ "In an emergency, Bloc will text you my location. "
+			 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
+			 	sms.sendTextMessage(String.valueOf(changed.phNum), null, new_emergency_contact_text, null, null);
+			 	Log.e("HI", "HIHI");
+			 }
+			 changed.selected = isChecked;
 	     }
 	};
 	

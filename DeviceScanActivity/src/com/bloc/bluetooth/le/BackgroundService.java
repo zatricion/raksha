@@ -35,6 +35,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -449,22 +450,48 @@ public class BackgroundService extends Service implements
         
     	Gson gson = new Gson();
         Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
-        ArrayList<Contact> contactList = gson.fromJson(contacts, collectionType);
+        List<Contact> contactList = gson.fromJson(contacts, collectionType);
+        final List<Contact> selectedContactList = new ArrayList<Contact>();
+        for (Contact contact : contactList) {
+        	if (contact.selected) {
+        		selectedContactList.add(contact);
+        	}
+        }
 
+        
     	if (contactList != null) {
-			for (Contact contact : contactList) {
-				if (contact.selected) {
-					CloudEntity ce = mBackend
-							.createCloudMessage("ContactAlert");
-					Log.e("Sending alert to", String.valueOf(contact.phNum));
-					ce.setId(String.valueOf(contact.phNum));
-					ce.put("recipient", String.valueOf(contact.phNum));
-					ce.put("name", mAccount);
-					ce.put("location", gh.encode(mCurrLocation));
-					sentGCMs.add(ce.getId());
-					mBackend.sendCloudMessage(ce);
+	        final SmsManager sms = SmsManager.getDefault();
+			CloudCallbackHandler<List<CloudEntity>> nonBlocSMSHandler =
+					new CloudCallbackHandler<List<CloudEntity>>() {
+				@Override
+				public void onComplete(List<CloudEntity> results) {	
+					for (Person emContact : Person.fromEntities(results)) {
+						for (Contact contact : selectedContactList) {
+							String phoneNum = String.valueOf(contact.phNum);
+							MatchType match = phoneUtil.isNumberMatch(emContact.getPhone(), phoneNum);
+							if (match.equals(MatchType.EXACT_MATCH) 
+									|| match.equals(MatchType.NSN_MATCH) 
+									|| match.equals(MatchType.SHORT_NSN_MATCH)) {
+						        // Send to bloc users
+								CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
+								ce.setId(String.valueOf(contact.phNum));
+								ce.put("recipient", String.valueOf(contact.phNum));
+								ce.put("name", mAccount);
+								ce.put("location", gh.encode(mCurrLocation));
+								sentGCMs.add(ce.getId());
+								mBackend.sendCloudMessage(ce);
+								return;
+							}
+						// Send to non-bloc users
+						String alert_text = "ALERT: " + mSelf.getName() + " is in danger. Current location: " + mCurrLocation.toString();
+				        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
+						}
+					}
 				}
-			}
+			};
+			CloudQuery cq = new CloudQuery("Person");
+			cq.setScope(Scope.PAST);
+			mBackend.list(cq, nonBlocSMSHandler);
 		}
 	}
 	
