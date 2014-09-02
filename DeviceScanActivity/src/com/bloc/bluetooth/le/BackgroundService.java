@@ -445,57 +445,81 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void alertEmergencyContacts() {
-        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+        final SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
         String contacts = prefs.getString(DeviceControlActivity.KEY_CONTACTS, null);
         
-    	Gson gson = new Gson();
+    	final Gson gson = new Gson();
         Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
         List<Contact> contactList = gson.fromJson(contacts, collectionType);
-        final List<Contact> selectedContactList = new ArrayList<Contact>();
-        for (Contact contact : contactList) {
-        	if (contact.selected) {
-        		selectedContactList.add(contact);
-        	}
+        if (contactList == null) {
+        	return;
         }
-
         
-    	if (contactList != null) {
-	        final SmsManager sms = SmsManager.getDefault();
-			CloudCallbackHandler<List<CloudEntity>> nonBlocSMSHandler =
-					new CloudCallbackHandler<List<CloudEntity>>() {
-				@Override
-				public void onComplete(List<CloudEntity> results) {	
-					for (Person emContact : Person.fromEntities(results)) {
-						for (Contact contact : selectedContactList) {
-							String phoneNum = String.valueOf(contact.phNum);
-							MatchType match = phoneUtil.isNumberMatch(emContact.getPhone(), phoneNum);
-							if (match.equals(MatchType.EXACT_MATCH) 
-									|| match.equals(MatchType.NSN_MATCH) 
-									|| match.equals(MatchType.SHORT_NSN_MATCH)) {
-						        // Send to bloc users
-								CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
-								ce.setId(String.valueOf(contact.phNum));
-								ce.put("recipient", String.valueOf(contact.phNum));
-								ce.put("name", mAccount);
-								ce.put("location", gh.encode(mCurrLocation));
-								sentGCMs.add(ce.getId());
-								mBackend.sendCloudMessage(ce);
-								break;
+        final SmsManager sms = SmsManager.getDefault();
+        int index = 0;
+        for (final Contact contact : contactList) {
+        	if (contact.selected) {
+				final String phoneNum = String.valueOf(contact.phNum);
+	        	if (contact.blocMember) {
+			        // Send to bloc users
+	        		Log.e("Contact is bloc member", phoneNum);
+					CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
+					ce.setId(phoneNum);
+					ce.put("recipient", phoneNum);
+					ce.put("name", mAccount);
+					ce.put("location", gh.encode(mCurrLocation));
+					sentGCMs.add(ce.getId());
+					mBackend.sendCloudMessage(ce);
+	        	}
+	        	else {
+	        		Log.e("Contact is NOT bloc member", phoneNum);
+	        		final int ind = index;
+	        		final List<Contact> newContactList = contactList;
+					CloudCallbackHandler<List<CloudEntity>> nonBlocSMSHandler =
+							new CloudCallbackHandler<List<CloudEntity>>() {
+						@Override
+						public void onComplete(List<CloudEntity> results) {	
+							for (Person emContact : Person.fromEntities(results)) {
+								MatchType match = phoneUtil.isNumberMatch(emContact.getPhone(), phoneNum);
+								if (match.equals(MatchType.EXACT_MATCH) 
+											|| match.equals(MatchType.NSN_MATCH) 
+											|| match.equals(MatchType.SHORT_NSN_MATCH)) {
+							        // Send to bloc member
+									CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
+									ce.setId(String.valueOf(contact.phNum));
+									ce.put("recipient", String.valueOf(contact.phNum));
+									ce.put("name", mAccount);
+									ce.put("location", gh.encode(mCurrLocation));
+									sentGCMs.add(ce.getId());
+									mBackend.sendCloudMessage(ce);
+									
+									// Update this contact as a bloc member
+									newContactList.get(ind).blocMember = Boolean.TRUE;
+							    	SharedPreferences.Editor ed = prefs.edit();
+							    	String newContacts = gson.toJson(newContactList);
+							    	ed.putString(DeviceControlActivity.KEY_CONTACTS, newContacts);
+							    	DeviceControlActivity.mContactList = (ArrayList<Contact>) newContactList;
+							        ed.commit();
+									
+									// Don't send SMS
+									return;
+								}
 							}
-						// Send to non-bloc users
-						String alert_text = "ALERT: " + mSelf.getName() + " is in danger. "
-								+ "Current location: " 
-								+ String.valueOf(mCurrLocation.getLatitude()) + ", "
-								+ String.valueOf(mCurrLocation.getLongitude())
-							    + " Phone: " + mSelf.getPhone();
-				        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
+							// Send to non-bloc member
+							String alert_text = "ALERT: " + mSelf.getName() + " is in danger. "
+									+ "Current location: " 
+									+ String.valueOf(mCurrLocation.getLatitude()) + ", "
+									+ String.valueOf(mCurrLocation.getLongitude())
+								    + " Phone: " + mSelf.getPhone();
+					        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
 						}
-					}
-				}
-			};
-			CloudQuery cq = new CloudQuery("Person");
-			cq.setScope(Scope.PAST);
-			mBackend.list(cq, nonBlocSMSHandler);
+					};
+					CloudQuery cq = new CloudQuery("Person");
+					cq.setScope(Scope.PAST);
+					mBackend.list(cq, nonBlocSMSHandler);
+	        	}	
+        	}
+        	index++;
 		}
 	}
 	

@@ -8,11 +8,13 @@ public class Contact implements Parcelable{
 	public String name;
 	public long phNum;
 	public Boolean selected;
+	public Boolean blocMember;
 	
 	public Contact(String name, long phNum){
 		this.name = name;
 		this.phNum = phNum;
 		this.selected = Boolean.FALSE;
+		this.blocMember = Boolean.FALSE;
 	}
 
 	@Override
@@ -23,15 +25,19 @@ public class Contact implements Parcelable{
 
 	@Override
 	public void writeToParcel(Parcel out, int arg1) {
-		out.writeStringArray(new String[] {this.name, Long.toString(this.phNum), Boolean.toString(this.selected)});
+		out.writeStringArray(new String[] {this.name, 
+										   Long.toString(this.phNum), 
+										   Boolean.toString(this.selected),
+										   Boolean.toString(this.blocMember)});
 	}
 
 	public Contact(Parcel in){
-		String[] data = new String[3];
+		String[] data = new String[4];
 		in.readStringArray(data);
 		this.name = data[0];
 		this.phNum = Long.valueOf(data[1]);
 		this.selected = Boolean.valueOf(data[2]);
+		this.blocMember = Boolean.valueOf(data[3]);
 	}
 		
 	public static final Parcelable.Creator<Contact> CREATOR =

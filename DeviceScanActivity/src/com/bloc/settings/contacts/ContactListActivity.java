@@ -54,20 +54,23 @@ public class ContactListActivity extends Activity {
                 	Gson gson = new Gson();
                     Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
                     List<Contact> oldContactList = gson.fromJson(old_contacts, collectionType);
-                    final List<Contact> oldSelectedContactList = new ArrayList<Contact>();
-                    for (Contact contact : oldContactList) {
-                    	if (contact.selected) {
-                    		oldSelectedContactList.add(contact);
-                    	}
+                    final List<String> oldSelectedContactList = new ArrayList<String>();
+                    if (oldContactList != null) {
+	                    for (Contact contact : oldContactList) {
+	                    	if (contact.selected) {
+	                    		oldSelectedContactList.add(String.valueOf(contact.phNum));
+	                    	}
+	                    }
                     }
                     for (Contact contact : selectedContacts) {
-                    	if (!oldSelectedContactList.contains(contact)) {
+                    	String phoneNum = String.valueOf(contact.phNum);
+                    	if (!oldSelectedContactList.contains(phoneNum)) {
                     		// Send text message
             			 	SmsManager sms = SmsManager.getDefault();
             			 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
             			 			+ "In an emergency, Bloc will text you my location. "
             			 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
-            			 	sms.sendTextMessage(String.valueOf(contact.phNum), null, new_emergency_contact_text, null, null);
+            			 	sms.sendTextMessage(phoneNum, null, new_emergency_contact_text, null, null);
                     	}
                     }
                     
