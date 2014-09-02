@@ -480,12 +480,12 @@ public class BackgroundService extends Service implements
 								ce.put("location", gh.encode(mCurrLocation));
 								sentGCMs.add(ce.getId());
 								mBackend.sendCloudMessage(ce);
-								return;
+								break;
 							}
 						// Send to non-bloc users
 						String alert_text = "ALERT: " + mSelf.getName() + " is in danger. "
 								+ "Current location: " 
-								+ String.valueOf(mCurrLocation.getLatitude()) + ","
+								+ String.valueOf(mCurrLocation.getLatitude()) + ", "
 								+ String.valueOf(mCurrLocation.getLongitude())
 							    + " Phone: " + mSelf.getPhone();
 				        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
