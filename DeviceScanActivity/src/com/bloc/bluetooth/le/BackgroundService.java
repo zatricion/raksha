@@ -483,7 +483,11 @@ public class BackgroundService extends Service implements
 								return;
 							}
 						// Send to non-bloc users
-						String alert_text = "ALERT: " + mSelf.getName() + " is in danger. Current location: " + mCurrLocation.toString();
+						String alert_text = "ALERT: " + mSelf.getName() + " is in danger. "
+								+ "Current location: " 
+								+ String.valueOf(mCurrLocation.getLatitude()) + ","
+								+ String.valueOf(mCurrLocation.getLongitude())
+							    + " Phone: " + mSelf.getPhone();
 				        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
 						}
 					}
