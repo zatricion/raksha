@@ -16,9 +16,10 @@ public class ContactPickerDialog extends DialogFragment {
 	private ListView contactListView;
 	private AsyncGetContacts asyncGetContacts;
 	private Button doneButton;
+	private boolean isPopup;
 	
-	public ContactPickerDialog() {
-		// No-arg constructor required for DialogFragment
+	public ContactPickerDialog(boolean isPopup) {
+		this.isPopup = isPopup;
 	}
 
     @Override
@@ -43,6 +44,7 @@ public class ContactPickerDialog extends DialogFragment {
 			public void onClick(View arg0) {
 				if (contactListView.getAdapter() != null) {
 					Intent intent = new Intent(getActivity(), ContactListActivity.class);
+					intent.putExtra("isPopup", isPopup);
 					intent.putParcelableArrayListExtra("contacts", ((ContactListAdapter) contactListView.getAdapter()).getContacts());
 					startActivity(intent);
 				}

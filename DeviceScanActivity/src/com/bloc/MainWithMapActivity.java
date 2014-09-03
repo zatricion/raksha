@@ -158,8 +158,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		}
     });
     
-    // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
-    // progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
     progressBar = (ProgressBar) findViewById(R.id.progress_ring);
     progressBar.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 
@@ -172,23 +170,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
 			progressBar.setRotation(270f);
 		}
     });
-//    ringImageView.setOnTouchListener(new View.OnTouchListener(){
-//
-//		@Override
-//		public boolean onTouch(View v, MotionEvent event) {
-//			if (event.getAction() == MotionEvent.ACTION_DOWN) {
-//			    progressBarUpdateTask = new progressAnimation().execute();
-//			}
-//			else if (event.getAction() == MotionEvent.ACTION_UP) {
-//				progressBar.setVisibility(View.INVISIBLE);
-//				if (progressBarUpdateTask != null) {
-//					progressBarUpdateTask.cancel(true);
-//				}
-//			}
-//			return true;
-//		}
-//    });     
-//	
+
     ringImageView.setOnTouchListener(new View.OnTouchListener(){
 		@Override
 		public boolean onTouch(View v, MotionEvent event) {

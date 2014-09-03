@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.bloc.MainWithMapActivity;
 import com.bloc.R;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.google.gson.Gson;
@@ -11,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 
 import android.os.Bundle;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -24,11 +26,13 @@ public class ContactListActivity extends Activity {
 	private ContactListAdapterNoCheckBox adapter;
 	private ListView contactListView;
 	private Button confirmButton;
+	boolean isPopup;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_few_contacts);
+		isPopup = getIntent().getBooleanExtra("isPopup", true);
 		contactList = getIntent().getExtras().getParcelableArrayList("contacts");
 		contactListView = (ListView) findViewById(R.id.contact_list_view);
 		
@@ -80,6 +84,10 @@ public class ContactListActivity extends Activity {
                 	ed.putString(DeviceControlActivity.KEY_CONTACTS, contacts);
                 	DeviceControlActivity.mContactList = contactList;
                     ed.commit();
+                }
+                if (!isPopup) {
+            		Intent intent = new Intent(getApplicationContext(), MainWithMapActivity.class);
+            		startActivity(intent);
                 }
                 finish();
 			}

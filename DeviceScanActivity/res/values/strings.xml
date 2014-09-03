@@ -51,7 +51,7 @@
     <string name="quit_app">Quit Bloc</string>
     <string name="set_radius">Set Radius</string>
     <string name="title_activity_main_with_map">MainWithMapActivity</string>
-    <string name="hello_world">Hello world!</string>
+    
     
     <!-- Main with Map -->
     <string name="device_connection_status">Pair Device</string>

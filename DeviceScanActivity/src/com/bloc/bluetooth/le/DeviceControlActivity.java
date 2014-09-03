@@ -241,7 +241,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
     }
     
     public void showContactPickerDialog() {
-		ContactPickerDialog dlg = new ContactPickerDialog();
+		ContactPickerDialog dlg = new ContactPickerDialog(true);
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 		dlg.show(getSupportFragmentManager(), "contacts");
 	}
