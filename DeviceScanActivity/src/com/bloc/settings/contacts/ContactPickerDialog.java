@@ -24,7 +24,7 @@ public class ContactPickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.activity_main, container);
+        View view = inflater.inflate(R.layout.activity_main, container, false);
         
 		doneButton = (Button) view.findViewById(R.id.done);
 		contactListView = (ListView) view.findViewById(R.id.contact_list_view);

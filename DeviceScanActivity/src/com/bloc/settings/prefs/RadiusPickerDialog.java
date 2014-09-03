@@ -26,25 +26,28 @@ import android.widget.TextView;
 public class RadiusPickerDialog extends DialogFragment {
 	private Button doneButton;
 	private SeekBar sb;
+	private boolean isPopup = true;
 	
 	
 	private int radius;
 	
-	public RadiusPickerDialog() {
-		// No-arg constructor required for DialogFragment
+	public RadiusPickerDialog(boolean isPopup) {
+		this.isPopup = isPopup;
 	}
 	
 	@Override
 	public void onResume()
 	{
 	    super.onResume();
-	    setWindowSize();
+	    if (isPopup) {
+	    	setWindowSize();
+	    }
 	}  
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.radius, container);
+        final View view = inflater.inflate(R.layout.radius, container, false);
         final TextView text = (TextView) view.findViewById(R.id.radius_progress);
 
         

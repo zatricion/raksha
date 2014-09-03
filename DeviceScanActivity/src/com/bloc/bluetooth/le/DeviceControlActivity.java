@@ -203,13 +203,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
             ArrayList<Contact> contact_list = gson.fromJson(contacts, collectionType);
         	mContactList = contact_list;
         }
-        
-//        // Set up radius
-//        mRadius = prefs.getInt(KEY_RADIUS, -1);
-//        if (mRadius == -1) {
-//        	mRadius = 500;
-//        	showRadiusPickerDialog();
-//        }
     }
     
     private void checkLocationEnabled() {
@@ -254,7 +247,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
 	}
 
     public void showRadiusPickerDialog() {
-    	RadiusPickerDialog dlg = new RadiusPickerDialog();
+    	RadiusPickerDialog dlg = new RadiusPickerDialog(true);
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 		dlg.show(getSupportFragmentManager(), "radius");
 	}
