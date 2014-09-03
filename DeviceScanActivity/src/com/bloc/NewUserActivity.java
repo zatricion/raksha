@@ -39,14 +39,17 @@ public class NewUserActivity extends FragmentActivity {
 
 if (prefs.getBoolean("new_user", true)) {
     // The app is being launched for first time
-    setContentView(R.layout.new_user_setup);
-    newUserPagerAdapter =
-	       new MyAdapter(getSupportFragmentManager());
-	mViewPager = (ViewPager) findViewById(R.id.pager);
-	mViewPager.setAdapter(newUserPagerAdapter);
+//    setContentView(R.layout.new_user_setup);
+//    newUserPagerAdapter =
+//	       new MyAdapter(getSupportFragmentManager());
+//	mViewPager = (ViewPager) findViewById(R.id.pager);
+//	mViewPager.setAdapter(newUserPagerAdapter);
 	
     // record the fact that the app has been started at least once
     //prefs.edit().putBoolean("new_user", false).commit(); 
+	Intent intent = new Intent(this, MainWithMapActivity.class);
+	startActivity(intent);
+
 	}
 	else {
 		Intent intent = new Intent(this, MainWithMapActivity.class);
