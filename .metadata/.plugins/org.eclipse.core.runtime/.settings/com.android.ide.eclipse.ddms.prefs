@@ -8,3 +8,4 @@ logcat.view.colsize.TID=58
 logcat.view.colsize.Tag=212
 logcat.view.colsize.Text=616
 logcat.view.colsize.Time=162
+logcat.view.font=1|Sans|8.0|0|GTK|1|;

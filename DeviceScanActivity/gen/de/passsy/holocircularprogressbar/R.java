@@ -8,41 +8,41 @@ package de.passsy.holocircularprogressbar;
 
 public final class R {
 	public static final class attr {
-		public static final int circularProgressBarStyle = 0x7f010007;
-		public static final int marker_progress = 0x7f010002;
-		public static final int marker_visible = 0x7f010006;
-		public static final int progress = 0x7f010001;
-		public static final int progress_background_color = 0x7f010004;
-		public static final int progress_color = 0x7f010003;
-		public static final int stroke_width = 0x7f010000;
-		public static final int thumb_visible = 0x7f010005;
+		public static final int circularProgressBarStyle = 0x7f010027;
+		public static final int marker_progress = 0x7f010022;
+		public static final int marker_visible = 0x7f010026;
+		public static final int progress = 0x7f010021;
+		public static final int progress_background_color = 0x7f010024;
+		public static final int progress_color = 0x7f010023;
+		public static final int stroke_width = 0x7f010020;
+		public static final int thumb_visible = 0x7f010025;
 	}
 	public static final class dimen {
-		public static final int activity_horizontal_margin = 0x7f040000;
-		public static final int activity_vertical_margin = 0x7f040001;
+		public static final int activity_horizontal_margin = 0x7f090000;
+		public static final int activity_vertical_margin = 0x7f090001;
 	}
 	public static final class drawable {
 		public static final int ic_launcher = 0x7f020019;
-		public static final int scrubber_control_normal_holo = 0x7f020025;
-		public static final int scrubber_control_pressed_holo = 0x7f020026;
+		public static final int scrubber_control_normal_holo = 0x7f020026;
+		public static final int scrubber_control_pressed_holo = 0x7f020027;
 	}
 	public static final class id {
-		public static final int action_settings = 0x7f080030;
+		public static final int action_settings = 0x7f070030;
 	}
 	public static final class menu {
 		public static final int holo_circular_progress_bar = 0x7f0a0002;
 	}
 	public static final class string {
-		public static final int action_settings = 0x7f050001;
-		public static final int app_name = 0x7f050000;
-		public static final int hello_world = 0x7f050002;
+		public static final int action_settings = 0x7f050021;
+		public static final int app_name = 0x7f050020;
+		public static final int hello_world = 0x7f050022;
 	}
 	public static final class style {
-		public static final int CircularProgressBar = 0x7f060000;
-		public static final int CircularProgressBarLight = 0x7f060001;
+		public static final int CircularProgressBar = 0x7f040005;
+		public static final int CircularProgressBarLight = 0x7f040006;
 	}
 	public static final class styleable {
-		public static final int[] HoloCircularProgressBar = { 0x010100af, 0x7f010000, 0x7f010001, 0x7f010002, 0x7f010003, 0x7f010004, 0x7f010005, 0x7f010006 };
+		public static final int[] HoloCircularProgressBar = { 0x010100af, 0x7f010020, 0x7f010021, 0x7f010022, 0x7f010023, 0x7f010024, 0x7f010025, 0x7f010026 };
 		public static final int HoloCircularProgressBar_android_gravity = 0;
 		public static final int HoloCircularProgressBar_marker_progress = 3;
 		public static final int HoloCircularProgressBar_marker_visible = 7;

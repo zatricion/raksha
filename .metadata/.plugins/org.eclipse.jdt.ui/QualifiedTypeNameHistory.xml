@@ -17,4 +17,13 @@
 <fullyQualifiedTypeName name="de.passsy.holocircularprogressbar.HoloCircularProgressBar"/>
 <fullyQualifiedTypeName name="android.graphics.Color"/>
 <fullyQualifiedTypeName name="com.bloc.R.color"/>
+<fullyQualifiedTypeName name="android.animation.ObjectAnimator"/>
+<fullyQualifiedTypeName name="android.view.animation.LinearInterpolator"/>
+<fullyQualifiedTypeName name="android.view.animation.Animation"/>
+<fullyQualifiedTypeName name="android.view.animation.RotateAnimation"/>
+<fullyQualifiedTypeName name="java.util.TimerTask"/>
+<fullyQualifiedTypeName name="java.util.Timer"/>
+<fullyQualifiedTypeName name="java.util.concurrent.Callable"/>
+<fullyQualifiedTypeName name="android.os.SystemClock"/>
+<fullyQualifiedTypeName name="java.util.concurrent.FutureTask"/>
 </qualifiedTypeNameHistroy>

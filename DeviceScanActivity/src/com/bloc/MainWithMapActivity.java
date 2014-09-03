@@ -1,5 +1,11 @@
 package com.bloc;
 
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
@@ -19,6 +25,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -29,6 +36,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
@@ -69,7 +79,8 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private LocationManager locationManager;
   private String provider;
   private LatLng curLatLng;
-  private HoloCircularProgressBar progressBar;
+  private ProgressBar progressBar;
+  //  private HoloCircularProgressBar progressBar;
   private static int M2LAT = 111111;
   private float ringFrameWeightRatio = 3f/5f; //Hardcoded in the GUI
   private float markerDisplayAdj = 3f/3f; //Hardcoded change!!
@@ -80,6 +91,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   private static final Geohasher gh = new Geohasher();
+  private Timer sendAlertTimer;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -144,20 +156,50 @@ public class MainWithMapActivity extends DeviceControlActivity {
     });
     
     // Progress bar Setup. Obtained from https://github.com/passsy/android-HoloCircularProgressBar
-    progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
+    //    progressBar = (HoloCircularProgressBar) findViewById(R.id.progress_ring);
+    progressBar = (ProgressBar) findViewById(R.id.progress_ring);
+    progressBar.getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
 
+		@Override
+		public void onGlobalLayout() {
+			int width = ringImageView.getMeasuredWidth();
+			int height = ringImageView.getMeasuredHeight();
+			progressBar.setPivotX(width/2);
+			progressBar.setPivotY(height/2);
+			progressBar.setRotation(270f);
+		}
+    });
+    
     ringImageView.setOnTouchListener(new View.OnTouchListener(){
-
 		@Override
 		public boolean onTouch(View v, MotionEvent event) {
 			if (event.getAction() == MotionEvent.ACTION_DOWN) {
-			    progressBarUpdateTask = new progressAnimation().execute();
+				progressBar.setVisibility(View.VISIBLE);
+			    ObjectAnimator animation = ObjectAnimator.ofInt(progressBar, "progress", 0, 100);
+			    animation.setDuration(1500);
+			    animation.setInterpolator(new LinearInterpolator());
+			    animation.start();
+			    
+			    Toast.makeText(getApplicationContext(), "Sending Alert", Toast.LENGTH_SHORT).show();
+			    sendAlertTimer = new Timer("alertTimer", true);
+			    
+			    final TimerTask sendAlertTimerTask = new TimerTask(){
+					@Override
+					public void run() {
+						Log.i("karan sendAlertTimerTask","alert sent1");
+				    	Intent bgServiceIntent = new Intent(getApplicationContext(), BackgroundService.class);
+				    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
+				    	startService(bgServiceIntent);
+				    	Log.i("karan sendAlertTimerTask","alert sent2");
+					}
+			    };
+			    sendAlertTimer.schedule(sendAlertTimerTask, (long) 2000f);
+			    Log.i("karan setOnTouchListener","schedule after");
 			}
 			else if (event.getAction() == MotionEvent.ACTION_UP) {
+				sendAlertTimer.cancel();
+				sendAlertTimer = null;
 				progressBar.setVisibility(View.INVISIBLE);
-				if (progressBarUpdateTask != null) {
-					progressBarUpdateTask.cancel(true);
-				}
 			}
 			return true;
 		}
@@ -222,50 +264,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
       });
   }
 
-	class progressAnimation extends AsyncTask<Void, Float, Void> {
-		private long startTime;
-		@Override
-		protected void onPreExecute() {
-			progressBar.setVisibility(View.VISIBLE);
-			DisplayMetrics metrics = new DisplayMetrics();
-			getWindowManager().getDefaultDisplay().getMetrics(metrics);
-			int px = (int) Math.ceil(15 * metrics.density);
-		    progressBar.setWheelSize(px);
-		    progressBar.setProgressBackgroundColor(Color.TRANSPARENT);
-		    progressBar.setProgressColor(Color.RED);
-		    progressBar.setProgress(0f);
-		    progressBar.setThumbEnabled(false);
-		    progressBar.setMarkerEnabled(false);
-		    
-			startTime = System.currentTimeMillis();
-		}
-		@Override
-		protected Void doInBackground(Void... params) {
-			while (System.currentTimeMillis() - startTime <= progressBarTimeMillis){
-				publishProgress((System.currentTimeMillis() - startTime) / progressBarTimeMillis);
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			return null;
-		}
-		@Override
-		protected void onProgressUpdate(Float... elapsed) {
-			progressBar.setProgress(elapsed[0]);
-		}
-		
-		@Override
-		protected void onPostExecute(Void res) {
-			progressBar.setVisibility(View.INVISIBLE);
-			Toast.makeText(getApplicationContext(), "Sending Alert", Toast.LENGTH_SHORT).show();
-	    	Intent bgServiceIntent = new Intent(getApplicationContext(), BackgroundService.class);
-	    	bgServiceIntent.setAction(BackgroundService.ACTION_EMERGENCY_ALERT);
-	    	startService(bgServiceIntent);
-		}
-	};
-	
     // Check for Google Play (location service)	
     private void checkGooglePlayApk() {
         int isAvailable = GooglePlayServicesUtil
