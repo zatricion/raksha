@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import com.google.cloud.backend.android.CloudBackendActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.bloc.MainWithMapActivity;
 import com.bloc.R;
 import com.bloc.settings.contacts.Contact;
 import com.bloc.settings.contacts.ContactPickerDialog;
@@ -81,75 +82,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
     
     private LocationManager manager;
 
-    protected String mDeviceName;
-    private String mDeviceAddress;
-    protected BluetoothLeService mBluetoothLeService;
-    protected boolean mConnected = false;
-
-    // Code to manage Service lifecycle.
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder service) {
-            mBluetoothLeService = ((BluetoothLeService.LocalBinder) service).getService();
-            // This call to initialize sets the Bluetooth Adapter
-            if (!mBluetoothLeService.initialize()) {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-                return;
-            }
-            // Automatically connects to the device upon successful start-up initialization.
-            mBluetoothLeService.connect(mDeviceAddress);
-            isBLeServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            mBluetoothLeService = null;
-            isBLeServiceBound = false;
-        }
-    };
-
-    // Handles various events fired by the BluetoothLeService.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
-    //                        or notification operations.
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-            	if (mBluetoothLeService != null) {
-	                // Enable button notifications
-	                enableNotifications(mBluetoothLeService.getButtonService());
-            	}
-            } 
-            else if (BluetoothLeService.ACTION_BOND_STATE_CHANGED.equals(action)) {
-                // Let the user know that the device is bonded
-                Toast.makeText(context, "Device Paired", Toast.LENGTH_SHORT).show();
-            } 
-            else if (BluetoothLeService.PAIRING_REQUEST.equals(action)) {
-                // TODO: add a pin when we have our own prototype (or find out SensorTag pin)
-            	BluetoothDevice device = intent.getParcelableExtra("android.bluetooth.device.extra.DEVICE");
-            	Log.e("Pairing", "REQ");
-//            	String pin = "";
-//            	device.setPin(pin.getBytes());
-            } 
-        }
-    };
-    
-    protected void setUserDisconnect(boolean bool) {
-    	 final Intent intent = new Intent(ACTION_USER_DISCONNECT);
-    	 intent.putExtra("value", bool);
-    	 sendBroadcast(intent);
-    }
-
     @Override
 	protected void onCreate(Bundle savedInstanceState) {
         final Intent intent = getIntent();
@@ -160,16 +92,6 @@ public class DeviceControlActivity extends CloudBackendActivity {
         	((BlocApplication) this.getApplication()).setAccountName(getAccountName());
         	((BlocApplication) this.getApplication()).setBackend(getCloudBackend());
         	finish();
-        }
-        else {
-    
-	        // Device already connected
-	        if (BluetoothLeService.isRunning) {
-	        	mDeviceAddress = BluetoothLeService.mBluetoothDeviceAddress;
-	        	mConnected = true;
-	        }
-	        
-	        setUserDisconnect(false);
         }
         // Call this last so that onPostCreate is called after device address obtained
         super.onCreate(savedInstanceState);
@@ -194,10 +116,7 @@ public class DeviceControlActivity extends CloudBackendActivity {
         SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
         String contacts = prefs.getString(KEY_CONTACTS, null);
         
-        if (contacts == null) {
-        	showContactPickerDialog();
-        }
-        else {
+        if (contacts != null) {
         	Gson gson = new Gson();
             Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
             ArrayList<Contact> contact_list = gson.fromJson(contacts, collectionType);
@@ -255,94 +174,43 @@ public class DeviceControlActivity extends CloudBackendActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         
         // Make sure location is enabled
     	checkLocationEnabled();
-    
-        // Check for bluetooth
-        if (mBluetoothLeService != null && mDeviceAddress != null) {
-            final boolean result = mBluetoothLeService.connect(mDeviceAddress);
-            Log.d(TAG, "Connect request result=" + result);
-        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (isBLeServiceBound && (mBluetoothLeService != null)) {
-        	unbindService(mServiceConnection);
-        }
-        mBluetoothLeService = null;
     }
     
-    private void enableNotifications(BluetoothGattService gattService) {
-        if (gattService == null) return;
-        
-        // Get button characteristic
-        BluetoothGattCharacteristic button = 
-        		gattService.getCharacteristic(BluetoothLeService.UUID_BUTTON_CHAR);
-        
-        final int charaProp = button.getProperties();   
-        // Enable notifications for button characteristic
-        if ((charaProp & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0) {
-            mBluetoothLeService.setCharacteristicNotification(button, true);
-        }
+    
+    // methods for onClick events set up in device_control.xml  
+    public void quitApplication(View view) {
+		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+		notificationManager.cancelAll();
+		
+    	exitActivities(view);
+    	
+    	new Handler().postDelayed(new Runnable(){
+            @Override
+            public void run() {
+            	Intent stopBackgroundIntent = new Intent(DeviceControlActivity.this, BackgroundService.class);
+            	stopService(stopBackgroundIntent);
+            }
+        }, 1000);
+    	}
+    
+    public void exitActivities(View view) {
+    	Intent exitIntent = new Intent(this, MainWithMapActivity.class);
+    	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    	exitIntent.putExtra("EXIT", true);
+    	startActivity(exitIntent);
     }
     
-//    // methods for onClick events set up in device_control.xml  
-//    public void quitApplication(View view) {
-//		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-//		notificationManager.cancelAll();
-//		
-//    	exitActivities(view);
-//    	
-//    	new Handler().postDelayed(new Runnable(){
-//            @Override
-//            public void run() {
-//            	Intent stopBackgroundIntent = new Intent(DeviceControlActivity.this, BackgroundService.class);
-//            	stopService(stopBackgroundIntent);
-//            	
-//            	Intent stopBluetoothIntent = new Intent(DeviceControlActivity.this, BluetoothLeService.class);
-//            	stopService(stopBluetoothIntent);
-//            	
-//            	isBLeServiceBound = false;
-//            }
-//        }, 1000);
-//    	}
-//    
-//    public void exitActivities(View view) {
-//    	setUserDisconnect(true);
-//    	Intent exitIntent = new Intent(this, BlocActivity.class);
-//    	exitIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//    	exitIntent.putExtra("EXIT", true);
-//    	startActivity(exitIntent);
-//    }
-    
-	protected void bindBleService(String address) {
-    	mDeviceAddress = address;
-		// Start bluetooth service
-		if (mDeviceAddress != null) {
-	        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);	        
-	        bindService(gattServiceIntent, mServiceConnection, BIND_IMPORTANT);
-	        startService(gattServiceIntent);
-		}
-    }
-    
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_BOND_STATE_CHANGED);
-        intentFilter.addAction(BluetoothLeService.PAIRING_REQUEST);
-        return intentFilter;
-    }
 }

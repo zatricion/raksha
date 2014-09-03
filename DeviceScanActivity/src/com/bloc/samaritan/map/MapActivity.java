@@ -21,7 +21,6 @@ import android.widget.Toast;
 
 import com.bloc.R;
 import com.bloc.bluetooth.le.BackgroundService;
-import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.Geohasher;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;

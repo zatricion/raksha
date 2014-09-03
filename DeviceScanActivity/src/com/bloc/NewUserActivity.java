@@ -1,6 +1,5 @@
 package com.bloc;
 
-import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.settings.contacts.ContactListActivity;
 import com.bloc.settings.contacts.ContactListAdapter;
 import com.bloc.settings.contacts.ContactPickerDialog;

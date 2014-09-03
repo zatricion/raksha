@@ -39,7 +39,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bloc.bluetooth.le.BackgroundService;
-import com.bloc.bluetooth.le.BluetoothLeService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.bloc.bluetooth.le.DeviceScanActivity;
 import com.bloc.bluetooth.le.Geohasher;
@@ -98,12 +97,12 @@ public class MainWithMapActivity extends DeviceControlActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+	if (getIntent().getBooleanExtra("EXIT", false)) {
+	    finish();
+	    return;
+	}
     setContentView(R.layout.fragment_main_with_map);
     deviceStatusTV = (TextView) findViewById(R.id.text_view_status);
-    if (BluetoothLeService.isRunning) {
-	      bindBleService(BluetoothLeService.mBluetoothDeviceAddress);
-	      changeConnectionText(true);
-    }
 
     // To create the ring
     LinearLayout ringLinearLayout = (LinearLayout) findViewById(R.id.linear_layout_ring);
@@ -229,30 +228,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
       changeFilter.addAction(ACTION_LOC_CHANGE);
       registerReceiver(mapUpdateReceiver, changeFilter);
   }
-	  
-  // Change Pair Device to Disconnect Device
-  private void changeConnectionText(boolean connected) {
-	if (connected) {
-		deviceStatusTV.setText("Disconnect Device");
-		deviceStatusTV.setOnClickListener(new View.OnClickListener() {
-			
-			@Override
-			public void onClick(View v) {
-				setUserDisconnect(true);
-	  		    mBluetoothLeService.disconnect();
-	  		    deviceStatusTV.setText("Pair Device");
-	  		    deviceStatusTV.setOnClickListener(new View.OnClickListener() {
-					
-					@Override
-					public void onClick(View v) {
-						connectDevice(v);
-					}
-	  		});
-			}
-		});
-	}
-  }
-	
 
   private void setUpMapIfNeeded() {
       // Do a null check to confirm that we have not already instantiated the map.
@@ -292,9 +267,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
                   
                   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
                     mapView.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                  } else {
-                    mapView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                  }
+                  } 
               }
           });
       }
@@ -342,21 +315,10 @@ public class MainWithMapActivity extends DeviceControlActivity {
           else if (resultCode == RESULT_OK) {
         	  return;
           }
-        case SCAN_REQUEST:
-        	if (resultCode == RESULT_OK) {
-        		mDeviceName = data.getStringExtra(EXTRAS_DEVICE_NAME);
-        		bindBleService(data.getStringExtra(EXTRAS_DEVICE_ADDRESS));
-        		changeConnectionText(true);
-        		// TODO: Change text when device disconnects
-        	}
       }
       super.onActivityResult(requestCode, resultCode, data);
     }    
     
-    public void connectDevice(View v) {
-    	startActivityForResult(new Intent(this, DeviceScanActivity.class), SCAN_REQUEST);
-    }
-
     public void settings(View v) {
     	SettingsDialog dlg = new SettingsDialog();
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);

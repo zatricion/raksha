@@ -16,11 +16,11 @@ limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bloc"
-    android:versionCode="2"
-    android:versionName="1.1" >
+    android:versionCode="3"
+    android:versionName="1.2" >
 
     <uses-sdk
-        android:minSdkVersion="18"
+        android:minSdkVersion="13"
         android:targetSdkVersion="19" />
 
     <permission
