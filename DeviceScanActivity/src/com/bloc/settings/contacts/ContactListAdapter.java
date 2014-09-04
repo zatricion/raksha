@@ -2,6 +2,7 @@ package com.bloc.settings.contacts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.bloc.R;
 
@@ -15,30 +16,44 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
-public class ContactListAdapter extends ArrayAdapter<Contact>{
+public class ContactListAdapter extends ArrayAdapter<Contact> implements Filterable {
 	private final Context context;
-	private final List<Contact> contactList;
+	private List<Contact> contactList;
+	private List<Contact> filteredContactList;
+	private EditText searchText;
 
-	public ContactListAdapter(Context context, List<Contact> list) {
+	public ContactListAdapter(Context context, List<Contact> list, EditText searchText) {
 		super(context, R.layout.contact_list_row, list);
 	    this.context = context;
 	    this.contactList = list;
+	    this.filteredContactList = list;
+	    this.searchText = searchText;
+	}
+	
+	@Override
+	public int getCount() {
+	    return filteredContactList.size();
 	}
 
 	@Override
-	public View getView(int position, View convertView, ViewGroup parent){
+	public View getView(int position, View rowView, ViewGroup parent){
 		LayoutInflater inflater = (LayoutInflater) context
 		        .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-	    View rowView = inflater.inflate(R.layout.contact_list_row, parent, false);
-	    
+		// TODO: Implement ViewHolder
+		if (rowView == null) {
+			rowView = inflater.inflate(R.layout.contact_list_row, parent, false);
+		}
 	    TextView nameTextView = (TextView) rowView.findViewById(R.id.name_text_view);
 	    TextView phoneTextView = (TextView) rowView.findViewById(R.id.phone_text_view);
 	    CheckBox checkBox = (CheckBox) rowView.findViewById(R.id.check_box);
 	    
 	    checkBox.setTag(position);
-	    Contact contact = contactList.get(position);
+	    Contact contact = filteredContactList.get(position);
 	    phoneTextView.setText(Long.toString(contact.phNum));
 	    nameTextView.setText(contact.name);
 	    checkBox.setChecked(contact.selected);
@@ -49,8 +64,9 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 	OnCheckedChangeListener mListener = new OnCheckedChangeListener() {
 		 @Override
 	     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			 Contact changed = contactList.get((Integer) buttonView.getTag());
+			 Contact changed = filteredContactList.get((Integer) buttonView.getTag());
 			 changed.selected = isChecked;
+			 searchText.clearFocus();
 	     }
 	};
 	
@@ -62,4 +78,42 @@ public class ContactListAdapter extends ArrayAdapter<Contact>{
 		}
 		return retList;
 	}
+	
+	public Filter getFilter() {
+        return new Filter() {
+        	
+            @SuppressWarnings("unchecked")
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+            	filteredContactList = (List<Contact>) results.values;
+                notifyDataSetChanged();
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+            	List<Contact> filteredResults = getFilteredResults(constraint);
+
+                FilterResults results = new FilterResults();
+                results.values = filteredResults;
+
+                return results;
+            }
+            
+            private List<Contact> getFilteredResults(CharSequence constraint) {
+            	List<Contact> filtered = new ArrayList<Contact>();
+            	if (contactList == null) {
+            		contactList = new ArrayList<Contact>(filteredContactList);
+            	}
+            	for (Contact contact : contactList) {
+            		boolean fullContainsSub = 
+            				contact.name.toUpperCase(Locale.getDefault())
+            					.indexOf(((String) constraint).toUpperCase(Locale.getDefault())) != -1;
+            		if (fullContainsSub) {
+            			filtered.add(contact);
+            		}
+            	}
+            	return filtered;
+            }
+        };
+    }
 }

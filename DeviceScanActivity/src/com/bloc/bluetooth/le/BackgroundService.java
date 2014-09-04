@@ -229,8 +229,8 @@ public class BackgroundService extends Service implements
 			initialize();
 			
 			// TODO: better notification
-	        Notification note = new Notification.Builder(this)
-								        .setContentTitle("SensorTag")
+	        Notification note = new NotificationCompat.Builder(this)
+								        .setContentTitle("Bloc")
 								        .build();
 	        // Keep this service in the foreground
 	        startForeground(42, note);
@@ -506,11 +506,10 @@ public class BackgroundService extends Service implements
 								}
 							}
 							// Send to non-bloc member
-							String alert_text = "ALERT: " + mSelf.getName() + " is in danger. "
+							String alert_text = "EMERGENCY ALERT: I am in danger. "
 									+ "Current location: " 
 									+ String.valueOf(mCurrLocation.getLatitude()) + ", "
-									+ String.valueOf(mCurrLocation.getLongitude())
-								    + " Phone: " + mSelf.getPhone();
+									+ String.valueOf(mCurrLocation.getLongitude());
 					        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
 						}
 					};

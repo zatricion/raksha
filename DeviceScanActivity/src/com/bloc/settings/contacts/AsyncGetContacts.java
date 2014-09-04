@@ -8,17 +8,22 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Phone;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.EditText;
 import android.widget.ListView;
 
 public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
 	private ArrayList<Contact> contactList = new ArrayList<Contact>();
 	private Context context;
 	private ListView contactListView;
+	private EditText searchText;
 	
-	public AsyncGetContacts(Context context, ListView contactListView){
+	public AsyncGetContacts(Context context, ListView contactListView, EditText searchText){
 		this.context = context;
 		this.contactListView = contactListView;
+		this.searchText = searchText;
 	}
 	
 	@Override
@@ -52,6 +57,28 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
         return null;
      }
 	protected void onPostExecute(Void result){
-		contactListView.setAdapter(new ContactListAdapter(context, contactList));
+		final ContactListAdapter contactAdapter = new ContactListAdapter(context, contactList, searchText);
+		contactListView.setAdapter(contactAdapter);
+		searchText.addTextChangedListener(new TextWatcher() {
+
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void afterTextChanged(Editable s) {
+				contactAdapter.getFilter().filter(s.toString());
+			}
+		});
 	}
 }
