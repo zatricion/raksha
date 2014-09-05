@@ -13,6 +13,7 @@
         android:layout_weight="0.04"
         android:ems="10"
         android:hint="Search"
+        android:windowSoftInputMode="adjustResize|stateHidden"
         android:inputType="textPersonName" >
     </EditText>
 

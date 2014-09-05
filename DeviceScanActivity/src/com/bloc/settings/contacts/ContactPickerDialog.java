@@ -3,16 +3,19 @@ package com.bloc.settings.contacts;
 import com.bloc.R;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 
+import android.inputmethodservice.InputMethodService;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -47,14 +50,12 @@ public class ContactPickerDialog extends DialogFragment {
 				@Override
 				public void beforeTextChanged(CharSequence s, int start, int count,
 						int after) {
-					// TODO Auto-generated method stub
 					
 				}
 
 				@Override
 				public void onTextChanged(CharSequence s, int start, int before,
 						int count) {
-					// TODO Auto-generated method stub
 					
 				}
 
@@ -85,10 +86,9 @@ public class ContactPickerDialog extends DialogFragment {
 		
 		searchText.setOnFocusChangeListener(new OnFocusChangeListener() {
 		    public void onFocusChange(View v, boolean hasFocus){
-
-		        if(!hasFocus) {
-		            InputMethodManager imm =  (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-		            imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+	            InputMethodManager imm =  (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+	            if(!hasFocus) {
+		        	imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
 		        }
 		    }
 		});

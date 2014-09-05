@@ -11,6 +11,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
@@ -57,16 +58,20 @@ public class ContactListAdapter extends ArrayAdapter<Contact> implements Filtera
 	    phoneTextView.setText(Long.toString(contact.phNum));
 	    nameTextView.setText(contact.name);
 	    checkBox.setChecked(contact.selected);
-	    checkBox.setOnCheckedChangeListener(mListener);
+	    checkBox.setOnClickListener(mListener);
 	    return rowView;
 	}
 	
-	OnCheckedChangeListener mListener = new OnCheckedChangeListener() {
+	OnClickListener mListener = new OnClickListener() {
 		 @Override
-	     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			 Contact changed = filteredContactList.get((Integer) buttonView.getTag());
-			 changed.selected = isChecked;
-			 searchText.clearFocus();
+	     public void onClick(View v) {
+			 Contact changed = filteredContactList.get((Integer) v.getTag());
+	         boolean checked = ((CheckBox)v).isChecked();
+			 changed.selected = checked;
+
+			 if (checked) {
+				 ((View) searchText.getParent()).requestFocus();
+			 }
 	     }
 	};
 	
