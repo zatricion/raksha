@@ -1,5 +1,6 @@
 package com.bloc;
 
+import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.settings.contacts.ContactListActivity;
 import com.bloc.settings.contacts.ContactListAdapter;
 import com.bloc.settings.contacts.ContactPickerDialog;
@@ -9,6 +10,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;

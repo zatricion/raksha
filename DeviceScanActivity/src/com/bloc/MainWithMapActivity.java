@@ -93,11 +93,19 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private TextView deviceStatusTV;
   private ProgressBar progressBar;
   private Timer sendAlertTimer;
+  private boolean sendAlertRightAway;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-	if (getIntent().getBooleanExtra("EXIT", false)) {
+    Intent intent = getIntent();
+    String action = intent.getAction();
+    sendAlertRightAway = false;
+
+    if (action != null && action.equals(BackgroundService.ACTION_SEND_EMERGENCY_ALERT)) {
+    	sendAlertRightAway = true;
+    }
+	if (intent.getBooleanExtra("EXIT", false)) {
 	    finish();
 	    return;
 	}
@@ -221,6 +229,13 @@ public class MainWithMapActivity extends DeviceControlActivity {
 	      bgServiceIntent.setAction(BackgroundService.ACTION_GET_LOC);
 	      startService(bgServiceIntent);
       }
+      
+	  if (sendAlertRightAway) {
+	    	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+	    	bgServiceIntent.setAction(BackgroundService.ACTION_SEND_EMERGENCY_ALERT);
+	    	startService(bgServiceIntent);
+	    	sendAlertRightAway = false;
+	  }
             
       // Register radius and location change receiver
       IntentFilter changeFilter = new IntentFilter();

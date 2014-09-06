@@ -5,6 +5,8 @@ import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import com.bloc.R;
@@ -26,13 +28,16 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.telephony.SmsManager;
@@ -72,6 +77,7 @@ public class BackgroundService extends Service implements
     private static PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
     private Location mCurrLocation;
     private boolean isHelping;
+    private BroadcastReceiver mScreenReceiver;
     private ArrayList<String> sentGCMs = new ArrayList<String>();
     
     public static int mRadius; // meters
@@ -190,6 +196,36 @@ public class BackgroundService extends Service implements
         mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, 2000); // default (meters)
     }
 	
+	public class ScreenReceiver extends BroadcastReceiver {	 
+		private Handler mHandler = new Handler();
+		private Runnable mRunnable = new Runnable() {
+            @Override
+            public void run() {
+            	Log.e(TAG, "nevermind");
+            	PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().putBoolean("sendAlertOnBoot", false).commit();
+            }
+        };
+		
+		@Override
+	    public void onReceive(final Context context, Intent intent) {
+			
+	        if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+            	Log.e(TAG, "alrt");
+	        	PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean("sendAlertOnBoot", true).commit();
+	            mHandler.removeCallbacks(mRunnable);
+	            mHandler.postDelayed(mRunnable, 15000);
+	        }
+	    }
+	}
+	
+	@Override
+	public void onCreate() {
+		super.onCreate();         
+        IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        mScreenReceiver = new ScreenReceiver();
+        registerReceiver(mScreenReceiver, filter);		
+	}
+	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		super.onStartCommand(intent, flags, startId);
@@ -242,34 +278,7 @@ public class BackgroundService extends Service implements
 			receiveAlert(from_name, geohash, radius);
 		}
 		else if (ACTION_SEND_EMERGENCY_ALERT.equals(action)) {
-			// Notify the user about the alert
-			createAlertNotification();
-			
-			// Get radius
-	        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
-	        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, mRadius); // default (meters)
-			
-			// Send out the alert!
-			mAlert = Boolean.TRUE;
-			if (mCurrLocation != null) {
-		        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
-				sendMyLocation(mCurrLocation);
-			}
-			else if (mSelf != null) {
-		        Toast.makeText(this, "Sending Alert without updated Location", Toast.LENGTH_SHORT).show();
-				mSelf.setAlert(mAlert);
-                mBackend.update(mSelf.asEntity(),
-                        updateHandler);
-			}
-			
-			// Alert emergency contacts
-			alertEmergencyContacts();
-	
-			// Start getting fast updates
-	        if (mLocationClient.isConnected()) {
-	        	mLocationClient.removeLocationUpdates(this);
-	        	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
-	        }
+			sendAlert();
 		}
 		else if (ACTION_GET_LOC.equals(action)) {
 	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
@@ -315,6 +324,7 @@ public class BackgroundService extends Service implements
 		isRunning = false;
 		mLocationClient.disconnect();	
 		//mBackend.clearAllSubscription();
+        unregisterReceiver(mScreenReceiver);		
 	}
 	
 	@Override
@@ -505,12 +515,23 @@ public class BackgroundService extends Service implements
 									return;
 								}
 							}
+							
 							// Send to non-bloc member
-							String alert_text = "EMERGENCY ALERT: I am in danger. "
-									+ "Current location: " 
-									+ String.valueOf(mCurrLocation.getLatitude()) + ", "
-									+ String.valueOf(mCurrLocation.getLongitude());
-					        sms.sendTextMessage(phoneNum, null, alert_text, null, null);
+					        String alert_text;
+							if (mCurrLocation != null) {
+								alert_text = "EMERGENCY ALERT: I am in danger. "
+										+ "Current location: " 
+										+ String.valueOf(mCurrLocation.getLatitude()) + ", "
+										+ String.valueOf(mCurrLocation.getLongitude());
+							}
+							else {
+								LatLng loc = gh.decode(mSelf.getGeohash());
+								alert_text = "EMERGENCY ALERT: I am in danger. "
+										+ "Current location: " 
+										+ String.valueOf(loc.latitude) + ", "
+										+ String.valueOf(loc.longitude);
+							}
+							sms.sendTextMessage(phoneNum, null, alert_text, null, null);
 						}
 					};
 					CloudQuery cq = new CloudQuery("Person");
@@ -570,6 +591,37 @@ public class BackgroundService extends Service implements
     	mBackend.unsubscribeFromQuery("VictimUpdater");
     	
 		Log.e(TAG, "END ALERT");
+	}
+	
+	private void sendAlert() {
+		// Notify the user about the alert
+		createAlertNotification();
+		
+		// Get radius
+        SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+        mRadius = prefs.getInt(DeviceControlActivity.KEY_RADIUS, mRadius); // default (meters)
+		
+		// Send out the alert!
+		mAlert = Boolean.TRUE;
+		if (mCurrLocation != null) {
+	        Toast.makeText(this, "Sending Alert", Toast.LENGTH_SHORT).show();
+			sendMyLocation(mCurrLocation);
+		}
+		else if (mSelf != null) {
+	        Toast.makeText(this, "Sending Alert without updated Location", Toast.LENGTH_SHORT).show();
+			mSelf.setAlert(mAlert);
+            mBackend.update(mSelf.asEntity(),
+                    updateHandler);
+		}
+		
+		// Alert emergency contacts
+		alertEmergencyContacts();
+
+		// Start getting fast updates
+        if (mLocationClient.isConnected()) {
+        	mLocationClient.removeLocationUpdates(this);
+        	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
+        }
 	}
 	
 	private void receiveAlert(String name, String geohash, double radius) {
