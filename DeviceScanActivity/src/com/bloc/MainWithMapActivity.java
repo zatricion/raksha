@@ -42,6 +42,7 @@ import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.bloc.bluetooth.le.DeviceScanActivity;
 import com.bloc.bluetooth.le.Geohasher;
+import com.bloc.settings.prefs.AboutDialog;
 import com.bloc.settings.prefs.RadiusPickerDialog;
 import com.bloc.settings.prefs.SettingsDialog;
 import com.google.android.gms.R.color;
@@ -64,11 +65,11 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.cloud.backend.android.CloudBackendActivity;
 
-
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
+
 import android.animation.ObjectAnimator;
 import android.view.animation.Animation;
 import android.view.animation.LinearInterpolator;
@@ -338,6 +339,12 @@ public class MainWithMapActivity extends DeviceControlActivity {
     	SettingsDialog dlg = new SettingsDialog();
     	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
 		dlg.show(getSupportFragmentManager(), "settings");
+    }
+    
+    public void showAbout(View v) {
+    	AboutDialog dlg = new AboutDialog();
+    	dlg.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+		dlg.show(getSupportFragmentManager(), "about");
     }
 	
 	private void updateMap() {

@@ -95,8 +95,8 @@
         <TextView
             android:id="@+id/text_view_status"            
             style="@style/mainWithMapTextView"
-            android:text="Quit"
-            android:onClick="quitApplication"
+            android:text="About"
+            android:onClick="showAbout"
             android:clickable="true"
             android:paddingBottom="50dp"/>
 	</LinearLayout>
