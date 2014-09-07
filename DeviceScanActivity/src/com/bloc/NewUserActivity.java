@@ -33,13 +33,15 @@ public class NewUserActivity extends FragmentActivity {
   MyAdapter newUserPagerAdapter;
   ViewPager mViewPager;
 	
-  static final int NUM_ITEMS = 5;
+  private static final int NUM_ITEMS = 5;
+  private static boolean contactSelection;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+    contactSelection = getIntent().getBooleanExtra("contactSelection", true);
 
   if (prefs.getBoolean("new_user", true)) {
     // The app is being launched for first time
@@ -67,6 +69,9 @@ public class NewUserActivity extends FragmentActivity {
 
       @Override
       public int getCount() {
+    	  if (!contactSelection) {
+    		  return NUM_ITEMS - 1;
+    	  }
           return NUM_ITEMS;
       }
       
@@ -115,13 +120,17 @@ public class NewUserActivity extends FragmentActivity {
 		  	  			+ "<br><br>"
 		  	  			+ "2. With your phone in your pocket or purse, hold the power button down until it vibrates once.");
 	  	  	case 3:
-		  	  	return new WelcomeFragment("<br>"
+	  	  		String text = "<br>"
 		  	  			+ "Bad things happen, and sometimes only a few minutes separate life from death."
 		  	  			+ "<br><br>"
 		  	  			+ "Bloc gives you a way to protect yourself, your loved ones, and your community."
-		  	  			+ "<br><br>"
+		  	  			+ "<br><br>";
+	  	  		if (contactSelection) {
+	  	  			text = text
 		  	  			+ "On the next page you will select your emergency contacts. Once they are confirmed, your emergency "
-		  	  			+ "contacts will receive a text letting them know that they have been chosen.");
+		  	  			+ "contacts will receive a text letting them know that they have been chosen.";
+	  	  		}
+		  	  	return new WelcomeFragment(text);
 		  	case 4:
     	  		return new ContactPickerDialog(false);
     	  }
@@ -149,12 +158,3 @@ public class NewUserActivity extends FragmentActivity {
 	    }
 	}
 }
-//
-//"<h1> &nbsp;&nbsp;Let's get started:</h1>"
-//+ "<h5> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1. Swipe right to select your emergency contacts</h5>"
-//+ "<h5> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2. Hit done, then confirm your chosen contacts</h5>"
-//+ "<h2> &nbsp;&nbsp;Next you will see a map with a circle &nbsp;&nbsp;around your location.</h2>"
-//+ "<h2>&nbsp;&nbsp;This is your Neighborhood. You control &nbsp;&nbsp;the radius of your Neighborhood in &nbsp;&nbsp;your Settings.</h2>"
-//+ "<h2>&nbsp;&nbsp;If you long press on your Neighborhood &nbsp;&nbsp;and let the red circle go all the way &nbsp;&nbsp;around, an emergency alert "
-//+ "will be sent &nbsp;&nbsp;to all Bloc members inside the &nbsp;&nbsp;Neighborhood, as well as to your &nbsp;&nbsp;emergency contacts, "
-//+ "no matter where &nbsp;&nbsp;they are.</h2>"

@@ -56,6 +56,7 @@ public class AboutDialog extends DialogFragment {
 					    SharedPreferences prefs = getActivity().getSharedPreferences("myPrefs", getActivity().MODE_PRIVATE);
 						prefs.edit().putBoolean("new_user", true).commit(); 
 						Intent intent = new Intent(getActivity(), NewUserActivity.class);
+						intent.putExtra("contactSelection", false);
 						startActivity(intent);
 						dismiss();
 						break;
