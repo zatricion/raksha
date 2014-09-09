@@ -87,7 +87,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private Bitmap icon;
   private Marker you;
   private static float progressBarTimeMillis = 2000;
-  private final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+  final static int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
   private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   private static final Geohasher gh = new Geohasher();
@@ -98,7 +98,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+	super.onCreate(savedInstanceState);
     Intent intent = getIntent();
     String action = intent.getAction();
     sendAlertRightAway = false;
@@ -118,9 +118,6 @@ public class MainWithMapActivity extends DeviceControlActivity {
     final ImageView ringImageView = (ImageView) findViewById(R.id.image_view_ring);
     
     ringLinearLayout.setGravity(Gravity.CENTER_HORIZONTAL);
-    
-    // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
-    checkGooglePlayApk();
     
     if (curLatLng == null) {
         // Get the location manager
@@ -221,6 +218,8 @@ public class MainWithMapActivity extends DeviceControlActivity {
   @Override
   protected void onResume() {
       super.onResume();
+      // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
+      checkGooglePlayApk();
       
       // Set up the map
       setUpMapIfNeeded();

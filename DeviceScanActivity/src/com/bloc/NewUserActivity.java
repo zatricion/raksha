@@ -5,8 +5,11 @@ import com.bloc.settings.contacts.ContactListActivity;
 import com.bloc.settings.contacts.ContactListAdapter;
 import com.bloc.settings.contacts.ContactPickerDialog;
 import com.bloc.settings.prefs.RadiusPickerDialog;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -28,6 +31,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class NewUserActivity extends FragmentActivity {
   MyAdapter newUserPagerAdapter;
@@ -39,6 +43,8 @@ public class NewUserActivity extends FragmentActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+    // Check for availability of GooglePlay Services needs to be added. explained in google Location API v2 doc    
+    checkGooglePlayApk();
 
     SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
     contactSelection = getIntent().getBooleanExtra("contactSelection", true);
@@ -157,4 +163,22 @@ public class NewUserActivity extends FragmentActivity {
 		    return v;
 	    }
 	}
+  
+  // Check for Google Play (location service)	
+  private void checkGooglePlayApk() {
+      int isAvailable = GooglePlayServicesUtil
+              .isGooglePlayServicesAvailable(this);
+      if (isAvailable == ConnectionResult.SUCCESS) {
+          return;
+      } else if (GooglePlayServicesUtil.isUserRecoverableError(isAvailable)) {
+          Dialog dialog = GooglePlayServicesUtil.getErrorDialog(isAvailable,
+                  this, MainWithMapActivity.PLAY_SERVICES_RESOLUTION_REQUEST);
+          dialog.show();
+      } else {
+          Toast.makeText(this, "Google Play Services unavailable", Toast.LENGTH_SHORT)
+                  .show();
+          finish();
+      }
+      return;
+  }
 }
