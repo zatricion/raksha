@@ -45,7 +45,6 @@ import com.bloc.bluetooth.le.Geohasher;
 import com.bloc.settings.prefs.AboutDialog;
 import com.bloc.settings.prefs.RadiusPickerDialog;
 import com.bloc.settings.prefs.SettingsDialog;
-import com.google.android.gms.R.color;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -363,6 +362,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
 		      curLatLng = new LatLng(location.getLatitude(), location.getLongitude());
 		    } else {
 		      Log.e("MainWithMapActivity", "location not obtained");
+		      return;
 		    }
 	    }
 	    
