@@ -14,10 +14,17 @@ import com.bloc.samaritan.map.MapActivity;
 import com.bloc.settings.contacts.Contact;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
+import com.google.android.gms.common.Scopes;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.LocationClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.PlusClient;
+import com.google.android.gms.plus.PlusClient.Builder;
 import com.google.cloud.backend.android.CloudCallbackHandler;
 import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery.Scope;
@@ -33,11 +40,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.provider.Contacts.People;
+import android.provider.ContactsContract.Profile;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.telephony.SmsManager;
@@ -85,6 +95,8 @@ public class BackgroundService extends Service implements
     private boolean mAlert;
     private String mRegId;
     
+	public static String mPhotoUri;
+
     // If we are using fastLocationRequest without having received an alert
     private boolean fastWithoutAlert = false; 
     
@@ -126,6 +138,7 @@ public class BackgroundService extends Service implements
 			mSelf = new Person(result);
 		}
 	};
+	protected boolean mIntentInProgress;
 	
 	private static final int WEEK_IN_SECONDS = 604800;
 	private static final int HOUR_IN_SECONDS = 3600;
@@ -141,8 +154,7 @@ public class BackgroundService extends Service implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 30;
     // A fast frequency ceiling in milliseconds
     private static final long FASTEST_INTERVAL =
-            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
-    
+            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;    
    
 	private void initialize() {
         // Set up slowLocationRequest
@@ -223,7 +235,7 @@ public class BackgroundService extends Service implements
 		super.onCreate();         
         IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         mScreenReceiver = new ScreenReceiver();
-        registerReceiver(mScreenReceiver, filter);		
+        registerReceiver(mScreenReceiver, filter);
 	}
 	
 	@Override
@@ -683,6 +695,7 @@ public class BackgroundService extends Service implements
 				mSelf.setAlert(mAlert);
 				mSelf.setRadius(mRadius);
 				mSelf.setRegId(mRegId);
+				mSelf.setPhotoUri(mPhotoUri);
 				mBackend.update(mSelf.asEntity(), updateHandler);
 			}
             Intent locIntent = new Intent(DeviceControlActivity.ACTION_LOC_CHANGE);
@@ -691,6 +704,21 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void addPersonIfNecessary() {
+		// Sets the columns to retrieve for the user profile
+		String[] columns = new String[]
+		    {
+		        Profile.DISPLAY_NAME_PRIMARY,
+		    };
+		// Retrieves the profile from the Contacts Provider
+		Cursor profileCursor = getContentResolver().query(
+		        Profile.CONTENT_URI,
+		        columns ,
+		        null,
+		        null,
+		        null);
+		profileCursor.moveToFirst();
+		final String moniker = profileCursor.getString(0);
+		
 		mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
 		if (mSelf == null || mSelf.asEntity().getId() == null) {
 			// Query backend
@@ -704,12 +732,13 @@ public class BackgroundService extends Service implements
 	                                        mSelf.setAlert(mAlert);
 	                                        mSelf.setRadius(mRadius);
 	                                        mSelf.setRegId(mRegId);
+	                                        mSelf.setMoniker(moniker);
+	                                        mSelf.setPhotoUri(mPhotoUri);
 	                                        mBackend.update(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                } else {
-	                                	// TODO: get radius from preferences
-	                                        mSelf = new Person(mAccount, mPhone, 
-	                                        				   "none", mAlert, mRadius, mRegId);
+	                                        mSelf = new Person(moniker, mAccount, mPhone, 
+	                                        				   "none", mAlert, mRadius, mRegId, mPhotoUri);
 	                                        mBackend.insert(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                }

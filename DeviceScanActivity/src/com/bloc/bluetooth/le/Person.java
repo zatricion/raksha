@@ -17,22 +17,25 @@ public class Person {
 
 	private CloudEntity cloudEntity;
 
+	public static final String KEY_MONIKER = "moniker";
 	public static final String KEY_NAME = "name";
 	public static final String KEY_PHONE = "telephone";
 	public static final String KEY_GEOHASH = "location";
 	public static final String KEY_ALERT = "alert";
 	public static final String KEY_RADIUS = "radius";
 	public static final String KEY_REGISTRATION_ID = "regId";
+	public static final String KEY_PHOTO_URI = "photo";
 
-
-	public Person(String name, String number, String geohash, Boolean alert, float radius, String regId) {
+	public Person(String moniker, String name, String number, String geohash, Boolean alert, float radius, String regId, String photo_uri) {
 		this.cloudEntity = new CloudEntity("Person");
+		this.setMoniker(moniker);
 		this.setName(name);
 		this.setPhone(number);
 		this.setGeohash(geohash);
 		this.setAlert(alert);
 		this.setRadius(radius);
 		this.setRegId(regId);
+		this.setPhotoUri(photo_uri);
 	}
 
 	public Person(CloudEntity e) {
@@ -50,7 +53,15 @@ public class Person {
 		}
 		return geeks;
 	}
+	
+	public String getMoniker() {
+		return (String) cloudEntity.get(KEY_MONIKER);
+	}
 
+	public void setMoniker(String moniker) {
+		cloudEntity.put(KEY_MONIKER, moniker);
+	}
+	
 	public String getName() {
 		return (String) cloudEntity.get(KEY_NAME);
 	}
@@ -86,17 +97,25 @@ public class Person {
 	public BigDecimal getRadius() {
 		return (BigDecimal) cloudEntity.get(KEY_RADIUS);
 	}
-	
-	public String getRegId() {
-		return (String) cloudEntity.get(KEY_REGISTRATION_ID);
-	}
 
 	public void setRadius(float radius) {
 		cloudEntity.put(KEY_RADIUS, radius);
 	}
 	
+	public String getRegId() {
+		return (String) cloudEntity.get(KEY_REGISTRATION_ID);
+	}
+	
 	public void setRegId(String regId) {
 		cloudEntity.put(KEY_REGISTRATION_ID, regId);
+	}
+	
+	public String getPhotoUri() {
+		return (String) cloudEntity.get(KEY_PHOTO_URI);
+	}
+
+	public void setPhotoUri(String photo_uri) {
+		cloudEntity.put(KEY_PHOTO_URI, photo_uri);
 	}
 
 	public Date getUpdatedAt() {

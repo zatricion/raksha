@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender.SendIntentException;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -47,6 +48,9 @@ import com.bloc.settings.prefs.RadiusPickerDialog;
 import com.bloc.settings.prefs.SettingsDialog;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener;
@@ -62,6 +66,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.LatLngBounds.Builder;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.plus.Plus;
 import com.google.cloud.backend.android.CloudBackendActivity;
 
 import java.util.Timer;
@@ -90,10 +95,12 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   private static final Geohasher gh = new Geohasher();
+protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
   private TextView deviceStatusTV;
   private ProgressBar progressBar;
   private Timer sendAlertTimer;
   private boolean sendAlertRightAway;
+  private GoogleApiClient mPlusClient;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -235,6 +242,44 @@ public class MainWithMapActivity extends DeviceControlActivity {
 	    	startService(bgServiceIntent);
 	    	sendAlertRightAway = false;
 	  }
+	  
+      
+		mPlusClient = new GoogleApiClient.Builder(this)
+								.addApi(Plus.API)
+								.addScope(Plus.SCOPE_PLUS_PROFILE)
+								.build();
+		mPlusClient.registerConnectionCallbacks(new ConnectionCallbacks() {
+			@Override
+			public void onConnected(Bundle arg0) {
+				// Get photo uri from G+
+				BackgroundService.mPhotoUri = Plus.PeopleApi
+												.getCurrentPerson(mPlusClient)
+												.getImage()
+												.getUrl();
+				mPlusClient.disconnect();
+			}
+
+			@Override
+			public void onConnectionSuspended(int arg0) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		mPlusClient.registerConnectionFailedListener(new OnConnectionFailedListener() {
+
+			@Override
+			public void onConnectionFailed(ConnectionResult result) {
+			    if (result.hasResolution()) {
+			        try {
+			            result.startResolutionForResult(MainWithMapActivity.this, REQUEST_CODE_RESOLVE_ERR);
+			        } catch (SendIntentException e) {
+			            mPlusClient.connect();
+			        }
+			    }
+			}
+		});
+
+		mPlusClient.connect();
             
       // Register radius and location change receiver
       IntentFilter changeFilter = new IntentFilter();
