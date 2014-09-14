@@ -122,8 +122,16 @@ public class GCMIntentService extends GCMBaseIntentService {
    */
   @Override
   public void onMessage(Context context, Intent intent) {
+	if (intent.hasExtra("contactNotification")) {
+		Log.e("OnMessage", "notify");
+		String blocID = intent.getStringExtra("blocID");
+    	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
+    	bgServiceIntent.putExtra("blocID", blocID);
+    	bgServiceIntent.setAction(BackgroundService.ACTION_RECEIVE_NOTIFICATION);
+    	context.startService(bgServiceIntent);
+	}
 	// Get alert
-	if (intent.hasExtra("blocID")) {
+	else if (intent.hasExtra("blocID")) {
 		String blocID = intent.getStringExtra("blocID");
     	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
     	bgServiceIntent.putExtra("blocID", blocID);
@@ -132,7 +140,8 @@ public class GCMIntentService extends GCMBaseIntentService {
     	}
     	bgServiceIntent.setAction(BackgroundService.ACTION_RECEIVE_EMERGENCY_ALERT);
     	context.startService(bgServiceIntent);
-	} else if (intent.hasExtra(GCM_KEY_SUBID)) {
+	}
+	else if (intent.hasExtra(GCM_KEY_SUBID)) {
 	    // decode subId in the message
 	    String subId = intent.getStringExtra(GCM_KEY_SUBID);
 	    Log.i(Consts.TAG, "onMessage: subId: " + subId);

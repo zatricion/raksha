@@ -113,7 +113,25 @@ public class EndpointV1 {
 					e.printStackTrace();
 				  }
 				}
-            break;
+				break;
+	        } else if ((propName.equals("topicId")) && (val.toString().equals("ContactNotification"))) {
+		        Log.warning("notification sent to contacts");
+				// Only attempt to send GCM if GcmKey is available
+				if (isGcmKeySet) {
+				  Sender sender = new Sender(gcmKey);
+				  Log.warning((String) values.get("blocID"));
+				  Message message = new Message.Builder().addData("blocID", (String) values.get("blocID"))
+						                                 .addData("contactNotification", "true")
+						  								 .build();
+				  try {
+					sender.send(message, (String) values.get("regID"), 3);
+				  } 
+				  catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				  }
+				}
+				break;
 	        }
 	    }
     }

@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.bloc.MainWithMapActivity;
 import com.bloc.R;
+import com.bloc.bluetooth.le.BackgroundService;
 import com.bloc.bluetooth.le.DeviceControlActivity;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -66,18 +67,22 @@ public class ContactListActivity extends Activity {
 	                    	}
 	                    }
                     }
+                    ArrayList<Contact> notifyContactList = new ArrayList<Contact>();
                     for (Contact contact : selectedContacts) {
                     	String phoneNum = String.valueOf(contact.phNum);
                     	if (!oldSelectedContactList.contains(phoneNum)) {
-                    		// Send text message
-            			 	SmsManager sms = SmsManager.getDefault();
-            			 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
-            			 			+ "In an emergency, Bloc will text you my location. "
-            			 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
-            			 	sms.sendTextMessage(phoneNum, null, new_emergency_contact_text, null, null);
+                    		notifyContactList.add(contact);
                     	}
                     }
                     
+                    // Let BackgroundService handle the notifications
+        			BackgroundService.mNotifyContacts = notifyContactList;
+            		if (isPopup) {
+				    	Intent bgServiceIntent = new Intent(getApplicationContext(), BackgroundService.class);
+				    	bgServiceIntent.setAction(BackgroundService.ACTION_NOTIFY_CONTACTS);
+				    	startService(bgServiceIntent);
+            		}
+
                     // Save contacts to myPrefs
                 	SharedPreferences.Editor ed = prefs.edit();
                 	String contacts = gson.toJson(contactList);

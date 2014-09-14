@@ -1,8 +1,11 @@
 package com.bloc.bluetooth.le;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -41,11 +44,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.provider.Contacts.People;
 import android.provider.ContactsContract.Profile;
@@ -102,9 +109,17 @@ public class BackgroundService extends Service implements
     private boolean fastWithoutAlert = false; 
     
     public final static int ALERT_NOTIFY_ID = 100;
+    public final static int CONTACT_NOTIFY_ID = 200;
+
     
     public final static String ACTION_INIT =
             "com.bloc.bluetooth.le.ACTION_INIT";
+    
+    public final static String ACTION_NOTIFY_CONTACTS =
+    		 "com.bloc.bluetooth.le.ACTION_NOTIFY_CONTACTS";
+    
+	public static final String ACTION_RECEIVE_NOTIFICATION =
+			"com.bloc.bluetooth.le.ACTION_RECEIVE_NOTIFICATION";
     
     public final static String ACTION_STOP_ALERT =
             "com.bloc.bluetooth.le.ACTION_STOP_ALERT";
@@ -155,9 +170,10 @@ public class BackgroundService extends Service implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 30;
     // A fast frequency ceiling in milliseconds
     private static final long FASTEST_INTERVAL =
-            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;  
+            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
     
     private Handler backgroundServiceHandler = new Handler();
+	public static ArrayList<Contact> mNotifyContacts;
    
 	private void initialize() {
         // Set up slowLocationRequest
@@ -286,6 +302,26 @@ public class BackgroundService extends Service implements
 	        // Keep this service in the foreground
 	        startForeground(42, note);
 		}
+		else if (ACTION_NOTIFY_CONTACTS.equals(action)) {
+			if (mBackend != null) {
+				notifyNewContacts();
+			}
+		}
+		else if (ACTION_RECEIVE_NOTIFICATION.equals(action)) {
+			final String blocID = intent.getStringExtra("blocID");
+			AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+	            @Override
+	            protected Void doInBackground(Void... params) {
+	                try {
+	        			showNewContactNotification(blocID);
+	                } catch (IOException e) {
+	                    Log.e(TAG, e.toString());
+	                } 
+	                return null;
+	            }
+	        };
+	        task.execute();
+		}
 		else if (ACTION_RECEIVE_EMERGENCY_ALERT.equals(action)) {
 			final String blocID = intent.getStringExtra("blocID");
 			final boolean contactAlert = intent.getBooleanExtra("contactAlert", false);
@@ -311,6 +347,41 @@ public class BackgroundService extends Service implements
 		}
         
 		return START_NOT_STICKY;
+	}
+	
+	// http://stackoverflow.com/questions/16007401/android-use-external-profile-image-in-notification-bar-like-facebook
+	public Bitmap getBitmapFromURL(String strURL) {
+	    try {
+	        URL url = new URL(strURL);
+	        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+	        connection.setDoInput(true);
+	        connection.connect();
+	        InputStream input = connection.getInputStream();
+	        Bitmap myBitmap = BitmapFactory.decodeStream(input);
+	        float scale = getApplication().getResources().getDisplayMetrics().density;
+	        int square = (int) (60 * scale + 0.5f);
+	        return Bitmap.createScaledBitmap(myBitmap, square, square, false);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return null;
+	    }
+	}
+	private void showNewContactNotification(String blocID) throws IOException {
+		Person noteSender = new Person(mBackend.get("Person", blocID));
+		final String moniker = noteSender.getMoniker();
+		final String photo_uri = noteSender.getPhotoUri();
+		Bitmap bitmap = getBitmapFromURL(photo_uri + "0"); // make size 500 instead of 50
+		NotificationCompat.Builder mBuilder =
+		        new NotificationCompat.Builder(this)
+		        .setSmallIcon(R.drawable.ic_launcher)
+		        .setLargeIcon(bitmap)
+		        .setContentTitle(moniker)
+		        .setContentText("picked you as an Emergency Contact!");
+
+		NotificationManager mNotificationManager =
+		    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		// mId allows you to update the notification later on.
+		mNotificationManager.notify(CONTACT_NOTIFY_ID, mBuilder.build());
 	}
 	
 	private void createAlertNotification() {
@@ -416,6 +487,9 @@ public class BackgroundService extends Service implements
 		if (mCurrLocation != null) {
 			sendMyLocation(mCurrLocation);
 		}
+		
+		// Notify new emergency contacts
+		notifyNewContacts();
 	}
 
 	@Override
@@ -429,6 +503,99 @@ public class BackgroundService extends Service implements
     	getBackendIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     	getBackendIntent.setAction(ACTION_BACKEND);
     	startActivity(getBackendIntent);
+	}
+	
+	private void notifyNewContacts() {
+		if (mNotifyContacts != null) {
+	        final SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
+	        String contacts = prefs.getString(DeviceControlActivity.KEY_CONTACTS, null);
+	        
+	    	final Gson gson = new Gson();
+	        Type collectionType = new TypeToken<ArrayList<Contact>>(){}.getType();
+	        List<Contact> contactList = gson.fromJson(contacts, collectionType);
+	    	
+	        int index = 0;
+			for (final Contact contact : mNotifyContacts) {
+				final String phoneNum = String.valueOf(contact.phNum);
+				if (contact.blocMember) {
+					AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+	    	            @Override
+	    	            protected Void doInBackground(Void... params) {
+	    	                try {
+	    	                	CloudEntity contactEntity = mBackend.get("Person", contact.blocID);
+	    		        		String regID = (String) contactEntity.get(Person.KEY_REGISTRATION_ID);
+	    		        		// Send notification
+	    		        		final CloudEntity ce = mBackend.createCloudMessage("ContactNotification");
+	    						ce.setId(mSelf.getPhone() + "notify");
+	    						ce.put("blocID", contact.blocID);
+	    						ce.put("regID", regID);
+	    						sentGCMs.add(ce.getId());
+	    						backgroundServiceHandler.post(new Runnable() {
+									@Override
+									public void run() {
+			    						mBackend.sendCloudMessage(ce);
+									}
+	    						});
+	    	                } catch (IOException e) {
+	    	                    Log.e(TAG, e.toString());
+	    	                } 
+	    	                return null;
+	    	            }
+	    	        };
+	    	        task.execute();
+				}
+				else {
+	        		final int ind = index;
+	        		final List<Contact> newContactList = contactList;
+					CloudCallbackHandler<List<CloudEntity>> notifySMSHandler =
+							new CloudCallbackHandler<List<CloudEntity>>() {
+						@Override
+						public void onComplete(List<CloudEntity> results) {	
+							for (Person emContact : Person.fromEntities(results)) {
+								MatchType match = phoneUtil.isNumberMatch(emContact.getPhone(), phoneNum);
+								if (match.equals(MatchType.EXACT_MATCH) 
+											|| match.equals(MatchType.NSN_MATCH) 
+											|| match.equals(MatchType.SHORT_NSN_MATCH)) {
+									String entityId = emContact.asEntity().getId();
+					        		String regID = (String) emContact.asEntity().get(Person.KEY_REGISTRATION_ID);
+							        // Send to bloc member
+									CloudEntity ce = mBackend.createCloudMessage("ContactNotification");
+									ce.setId(mSelf.getPhone());
+									ce.put("blocID", entityId);
+									ce.put("regID", regID);
+									sentGCMs.add(ce.getId());
+									mBackend.sendCloudMessage(ce);
+									
+									// Update this contact as a bloc member
+									newContactList.get(ind).blocMember = Boolean.TRUE;
+									newContactList.get(ind).blocID = entityId;
+							    	SharedPreferences.Editor ed = prefs.edit();
+							    	String newContacts = gson.toJson(newContactList);
+							    	ed.putString(DeviceControlActivity.KEY_CONTACTS, newContacts);
+							    	DeviceControlActivity.mContactList = (ArrayList<Contact>) newContactList;
+							        ed.commit();
+									
+									// Don't send SMS
+									return;
+								}
+							}
+							
+							// Send to non-bloc member
+						 	SmsManager sms = SmsManager.getDefault();
+						 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
+						 			+ "In an emergency, Bloc will text you my location. "
+						 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
+						 	sms.sendTextMessage(phoneNum, null, new_emergency_contact_text, null, null);
+						}
+					};
+					CloudQuery cq = new CloudQuery("Person");
+					cq.setScope(Scope.PAST);
+					mBackend.list(cq, notifySMSHandler);
+	        	}	
+        	}
+        	index++;
+		}
+		mNotifyContacts = null;
 	}
 		
 	private void alertEmergencyContacts() {
@@ -495,7 +662,7 @@ public class BackgroundService extends Service implements
 							        // Send to bloc member
 									CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
 									ce.setId(mSelf.getPhone());
-									ce.put("blocID", contact.blocID);
+									ce.put("blocID", entityId);
 									ce.put("regID", regID);
 									sentGCMs.add(ce.getId());
 									mBackend.sendCloudMessage(ce);
