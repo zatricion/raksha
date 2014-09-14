@@ -42,6 +42,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -154,7 +155,9 @@ public class BackgroundService extends Service implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 30;
     // A fast frequency ceiling in milliseconds
     private static final long FASTEST_INTERVAL =
-            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;    
+            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;  
+    
+    private Handler backgroundServiceHandler = new Handler();
    
 	private void initialize() {
         // Set up slowLocationRequest
@@ -284,10 +287,20 @@ public class BackgroundService extends Service implements
 	        startForeground(42, note);
 		}
 		else if (ACTION_RECEIVE_EMERGENCY_ALERT.equals(action)) {
-			String from_name = intent.getStringExtra("from_name");
-			String geohash = intent.getStringExtra("geohash");
-			double radius = intent.getDoubleExtra("radius", 2000);
-			receiveAlert(from_name, geohash, radius);
+			final String blocID = intent.getStringExtra("blocID");
+			final boolean contactAlert = intent.getBooleanExtra("contactAlert", false);
+	        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+	            @Override
+	            protected Void doInBackground(Void... params) {
+	                try {
+	    				receiveAlert(blocID, contactAlert);
+	                } catch (IOException e) {
+	                    Log.e(TAG, e.toString());
+	                } 
+	                return null;
+	            }
+	        };
+	        task.execute();
 		}
 		else if (ACTION_SEND_EMERGENCY_ALERT.equals(action)) {
 			sendAlert();
@@ -348,10 +361,7 @@ public class BackgroundService extends Service implements
         	fastWithoutAlert = false;
         }
         mCurrLocation = location;
-        sendMyLocation(mCurrLocation);	
-        
-		// Listen for alerts from people who have you as an emergency contact
-		listenForContactAlerts();
+        sendMyLocation(mCurrLocation);
 	}
 
 	@Override
@@ -406,9 +416,6 @@ public class BackgroundService extends Service implements
 		if (mCurrLocation != null) {
 			sendMyLocation(mCurrLocation);
 		}
-        
-		// Listen for alerts from people who have you as an emergency contact
-		listenForContactAlerts();
 	}
 
 	@Override
@@ -423,49 +430,7 @@ public class BackgroundService extends Service implements
     	getBackendIntent.setAction(ACTION_BACKEND);
     	startActivity(getBackendIntent);
 	}
-	
-	private void listenForContactAlerts() {
-		CloudCallbackHandler<List<CloudEntity>> contactAlertHandler =
-				new CloudCallbackHandler<List<CloudEntity>>() {
-			@Override
-			public void onComplete(List<CloudEntity> messages) {
-				Log.e(TAG, "message");
-				for (CloudEntity gcm : messages) {
-					MatchType match = phoneUtil.isNumberMatch((String) gcm.get("recipient"), mPhone);
-					Log.e(TAG, match.name());
-					if (match.equals(MatchType.EXACT_MATCH) 
-							|| match.equals(MatchType.NSN_MATCH) 
-							|| match.equals(MatchType.SHORT_NSN_MATCH)) {
-					 	if (!(isHelping || mAlert)) {
-					 		Log.e(TAG, "Got contact alert");
-					 		isHelping = true;
-							// Get info from message
-							String name = (String) gcm.get("name");
-							String geohash = (String) gcm.get("location");
-							
-							// Start MapActivity
-							Intent intent = new Intent(BackgroundService.this,
-									MapActivity.class);
-							intent.putExtra(MapActivity.VICTIM_LOC, geohash);
-							intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-							startActivity(intent);
-							
-							updateVictimLocation(name);
-							break;
-						}
-					}
-				}
-			}
-			
-			@Override
-			public void onError(IOException exception) {
-				Log.e(TAG, exception.toString());
-			}
-		};
-				  
-		mBackend.subscribeToCloudMessage("ContactAlert", contactAlertHandler);	
-	}
-	
+		
 	private void alertEmergencyContacts() {
         final SharedPreferences prefs = getSharedPreferences("myPrefs", MODE_PRIVATE);
         String contacts = prefs.getString(DeviceControlActivity.KEY_CONTACTS, null);
@@ -485,13 +450,31 @@ public class BackgroundService extends Service implements
 	        	if (contact.blocMember) {
 			        // Send to bloc users
 	        		Log.e("Contact is bloc member", phoneNum);
-					CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
-					ce.setId(phoneNum);
-					ce.put("recipient", phoneNum);
-					ce.put("name", mAccount);
-					ce.put("location", gh.encode(mCurrLocation));
-					sentGCMs.add(ce.getId());
-					mBackend.sendCloudMessage(ce);
+	    	        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+	    	            @Override
+	    	            protected Void doInBackground(Void... params) {
+	    	                try {
+	    	                	CloudEntity contactEntity = mBackend.get("Person", contact.blocID);
+	    		        		String regID = (String) contactEntity.get(Person.KEY_REGISTRATION_ID);
+	    		        		// Send alert directly
+	    		        		final CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
+	    						ce.setId(mSelf.getPhone());
+	    						ce.put("blocID", contact.blocID);
+	    						ce.put("regID", regID);
+	    						sentGCMs.add(ce.getId());
+	    						backgroundServiceHandler.post(new Runnable() {
+									@Override
+									public void run() {
+			    						mBackend.sendCloudMessage(ce);
+									}
+	    						});
+	    	                } catch (IOException e) {
+	    	                    Log.e(TAG, e.toString());
+	    	                } 
+	    	                return null;
+	    	            }
+	    	        };
+	    	        task.execute();
 	        	}
 	        	else {
 	        		Log.e("Contact is NOT bloc member", phoneNum);
@@ -506,17 +489,20 @@ public class BackgroundService extends Service implements
 								if (match.equals(MatchType.EXACT_MATCH) 
 											|| match.equals(MatchType.NSN_MATCH) 
 											|| match.equals(MatchType.SHORT_NSN_MATCH)) {
+									String entityId = emContact.asEntity().getId();
+									Log.e("Contact is bloc member", entityId);
+					        		String regID = (String) emContact.asEntity().get(Person.KEY_REGISTRATION_ID);
 							        // Send to bloc member
 									CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
-									ce.setId(String.valueOf(contact.phNum));
-									ce.put("recipient", String.valueOf(contact.phNum));
-									ce.put("name", mAccount);
-									ce.put("location", gh.encode(mCurrLocation));
+									ce.setId(mSelf.getPhone());
+									ce.put("blocID", contact.blocID);
+									ce.put("regID", regID);
 									sentGCMs.add(ce.getId());
 									mBackend.sendCloudMessage(ce);
 									
 									// Update this contact as a bloc member
 									newContactList.get(ind).blocMember = Boolean.TRUE;
+									newContactList.get(ind).blocID = entityId;
 							    	SharedPreferences.Editor ed = prefs.edit();
 							    	String newContacts = gson.toJson(newContactList);
 							    	ed.putString(DeviceControlActivity.KEY_CONTACTS, newContacts);
@@ -636,7 +622,11 @@ public class BackgroundService extends Service implements
         }
 	}
 	
-	private void receiveAlert(String name, String geohash, double radius) {
+	private void receiveAlert(String blocID, boolean contactAlert) throws IOException {
+		Person alertSender = new Person(mBackend.get("Person", blocID));
+		final String name = alertSender.getName();
+		String geohash = alertSender.getGeohash();
+		double radius = alertSender.getRadius().doubleValue();
 		if (!(name.equals(mAccount) || isHelping || mAlert)) {
 			LatLng where = gh.decode(geohash);
             if (mCurrLocation == null) {
@@ -645,14 +635,19 @@ public class BackgroundService extends Service implements
             Location help = new Location("Help");
             help.setLatitude(where.latitude);
             help.setLongitude(where.longitude);
-            if (mCurrLocation.distanceTo(help) < radius) {
+            if (contactAlert || mCurrLocation.distanceTo(help) < radius) {
             	// Stop listening for alerts
             	isHelping = true;
             	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
             	intent.putExtra(MapActivity.VICTIM_LOC, geohash);
             	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             	startActivity(intent);
-            	updateVictimLocation(name);
+            	backgroundServiceHandler.post(new Runnable() {
+					@Override
+					public void run() {
+		            	updateVictimLocation(name);						
+					}
+            	});
             }
 		}
 	}

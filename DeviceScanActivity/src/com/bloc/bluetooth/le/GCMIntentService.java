@@ -123,18 +123,16 @@ public class GCMIntentService extends GCMBaseIntentService {
   @Override
   public void onMessage(Context context, Intent intent) {
 	// Get alert
-	if (intent.hasExtra("from_name")) {
-		String from_name = intent.getStringExtra("from_name");
-		String geohash = intent.getStringExtra("geohash");
-		double radius = Double.parseDouble((String) intent.getStringExtra("radius"));
-
+	if (intent.hasExtra("blocID")) {
+		String blocID = intent.getStringExtra("blocID");
     	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
-    	bgServiceIntent.putExtra("from_name", from_name);
-    	bgServiceIntent.putExtra("geohash", geohash);
-    	bgServiceIntent.putExtra("radius", radius);
+    	bgServiceIntent.putExtra("blocID", blocID);
+    	if (intent.hasExtra("contactAlert")) {
+    		bgServiceIntent.putExtra("contactAlert", true);
+    	}
     	bgServiceIntent.setAction(BackgroundService.ACTION_RECEIVE_EMERGENCY_ALERT);
-    	context.startService(bgServiceIntent);	
-	} else {
+    	context.startService(bgServiceIntent);
+	} else if (intent.hasExtra(GCM_KEY_SUBID)) {
 	    // decode subId in the message
 	    String subId = intent.getStringExtra(GCM_KEY_SUBID);
 	    Log.i(Consts.TAG, "onMessage: subId: " + subId);

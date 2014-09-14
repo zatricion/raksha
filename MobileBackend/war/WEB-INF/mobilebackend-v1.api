@@ -368,11 +368,11 @@
           "subscriptionDurationSec" : {
             "type" : "integer"
           },
-          "filterDto" : {
-            "$ref" : "FilterDto"
-          },
           "sortAscending" : {
             "type" : "boolean"
+          },
+          "filterDto" : {
+            "$ref" : "FilterDto"
           }
         }
       },

@@ -83,13 +83,48 @@ public class EndpointV1 {
       throws UnauthorizedException {
 
     SecurityChecker.getInstance().checkIfUserIsAvailable(user);
+    
+    if (cd.getKindName().equals("_CloudMessages")) {   	
+    	BackendConfigManager backendConfigManager = new BackendConfigManager();
+
+    	String gcmKey = backendConfigManager.getGcmKey();
+        boolean isGcmKeySet = !(gcmKey == null || gcmKey.trim().length() == 0);
+	    // get properties
+	    @SuppressWarnings("rawtypes")
+		Map values = (Map) cd.getProperties();
+	    for (Object key : values.keySet()) {
+		    // get property name and value
+		    String propName = (String) key;
+		    Object val = values.get(key);
+
+		    if ((propName.equals("topicId")) && (val.toString().equals("ContactAlert"))) {
+		        Log.warning("alert sent to contacts");
+				// Only attempt to send GCM if GcmKey is available
+				if (isGcmKeySet) {
+				  Sender sender = new Sender(gcmKey);
+				  Message message = new Message.Builder().addData("blocID", (String) values.get("blocID"))
+						                                 .addData("contactAlert", "true")
+						  								 .build();
+				  try {
+					sender.send(message, (String) values.get("regID"), 3);
+				  } 
+				  catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				  }
+				}
+            break;
+	        }
+	    }
+    }
+    
     EntityListDto cdl = new EntityListDto();
     cdl.add(cd);
     CrudOperations.getInstance().saveAll(cdl, user);
     return cd;
   }
   
-  private void sendAlerts(String geohash, String from_name, double radius) throws IOException {
+  private void sendAlerts(String blocID, String geohash, double radius) throws IOException {
     int GCM_SEND_RETRIES = 3;
     // Get the Datastore Service
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -149,9 +184,7 @@ public class EndpointV1 {
     // Only attempt to send GCM if GcmKey is available
     if (isGcmKeySet && !regIdList.isEmpty()) {
       Sender sender = new Sender(gcmKey);
-      Message message = new Message.Builder().addData("from_name", from_name)
-    		  								 .addData("geohash", geohash)
-    		  								 .addData("radius", String.valueOf(radius))
+      Message message = new Message.Builder().addData("blocID", blocID)
     		  								 .build();
       sender.send(message, regIdList, GCM_SEND_RETRIES);
     }
@@ -185,8 +218,8 @@ public class EndpointV1 {
       // get property name and value
       String propName = (String) key;
       Object val = values.get(key);
-      if ((propName == "alert") && (val == Boolean.TRUE)) {
-    	  sendAlerts((String) values.get("location"), (String) values.get("name"), ((Double) values.get("radius")).doubleValue());
+      if ((propName.equals("alert")) && val.equals(Boolean.TRUE)) {
+    	  sendAlerts(cd.getId(), (String) values.get("location"), ((Double) values.get("radius")).doubleValue());
     	  break;
       }
     }
