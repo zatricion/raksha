@@ -9,6 +9,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +20,8 @@ import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bloc.R;
@@ -39,12 +44,17 @@ public class MapActivity extends FragmentActivity implements
 	private GoogleMap mMap;
     private Vibrator v;
 	private LatLng victim_loc;
+	private String victim_moniker;
+
 	private boolean mWaitingForLoc;
 	private boolean isFinishing = false;
     private static final String KEY_CURRENT_LOC = "mCurrentLocation";
     private static final String KEY_ZOOM = "zoom";
     
 	public static final String VICTIM_LOC = "victim_location";
+	public static final String VICTIM_MONIKER = "victim_moniker";
+	public static final String VICTIM_IMAGE = "victim_image";
+
 
     private Location mCurrentLocation;
 
@@ -90,6 +100,17 @@ public class MapActivity extends FragmentActivity implements
             
             Intent intent = getIntent();
             victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
+            
+            // Set moniker
+        	victim_moniker = intent.getStringExtra(VICTIM_MONIKER);
+        	TextView tv = (TextView) findViewById(R.id.alertSenderMoniker);
+        	tv.setText(victim_moniker + " needs your help!");
+        	
+        	// Set image
+        	Bitmap victim_image = (Bitmap) intent.getParcelableExtra(VICTIM_IMAGE);
+        	Drawable victim_image_drawable = new BitmapDrawable(getResources(), victim_image);      	
+        	ImageView iv = (ImageView) findViewById(R.id.alertSenderImage);
+        	iv.setImageDrawable(victim_image_drawable);
     }
     
     @Override

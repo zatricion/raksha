@@ -2,22 +2,44 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/bloc_color"
     android:orientation="vertical"
     tools:context="com.bloc.samaritan.map.MapActivity" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:background="@color/bloc_color" >
+
+        <ImageView
+            android:id="@+id/alertSenderImage"
+            android:layout_width="60dp"
+            android:layout_height="match_parent"/>
+
+        <TextView
+            android:id="@+id/alertSenderMoniker"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </LinearLayout>
     
     <fragment
         android:id="@+id/map"
         android:layout_width="fill_parent"
         android:layout_height="0dp"
-        android:layout_weight="6"
+        android:layout_weight="4"
         class="com.google.android.gms.maps.SupportMapFragment" />
 
     <Button
         android:id="@+id/navigate"
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:text="@string/navigate"
-        android:onClick="getDirections" />
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:textColor="@color/white"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:onClick="getDirections"
+        android:text="@string/navigate" />
 
 </LinearLayout>

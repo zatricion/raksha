@@ -792,9 +792,12 @@ public class BackgroundService extends Service implements
 	private void receiveAlert(String blocID, boolean contactAlert) throws IOException {
 		Person alertSender = new Person(mBackend.get("Person", blocID));
 		final String name = alertSender.getName();
+		final String photo_uri = alertSender.getPhotoUri();
+		String moniker = alertSender.getMoniker();
 		String geohash = alertSender.getGeohash();
 		double radius = alertSender.getRadius().doubleValue();
-		if (!(name.equals(mAccount) || isHelping || mAlert)) {
+		//if (!(name.equals(mAccount) || isHelping || mAlert)) {
+		if (!(isHelping)) {
 			LatLng where = gh.decode(geohash);
             if (mCurrLocation == null) {
             	return;
@@ -806,6 +809,14 @@ public class BackgroundService extends Service implements
             	// Stop listening for alerts
             	isHelping = true;
             	Intent intent = new Intent(BackgroundService.this, MapActivity.class);
+            	// Don't give full name
+            	int moniker_space_ind = moniker.indexOf(' ');
+            	if (moniker_space_ind != -1) {
+            		moniker = moniker.substring(0, moniker_space_ind);
+            	}
+            	intent.putExtra(MapActivity.VICTIM_MONIKER, moniker);
+            	intent.putExtra(MapActivity.VICTIM_IMAGE, getBitmapFromURL(photo_uri + "0"));
+
             	intent.putExtra(MapActivity.VICTIM_LOC, geohash);
             	intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             	startActivity(intent);

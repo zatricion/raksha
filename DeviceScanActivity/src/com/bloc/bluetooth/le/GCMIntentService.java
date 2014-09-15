@@ -123,7 +123,7 @@ public class GCMIntentService extends GCMBaseIntentService {
   @Override
   public void onMessage(Context context, Intent intent) {
 	if (intent.hasExtra("contactNotification")) {
-		Log.e("OnMessage", "notify");
+		Log.e("onMessage", "notify");
 		String blocID = intent.getStringExtra("blocID");
     	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
     	bgServiceIntent.putExtra("blocID", blocID);
@@ -132,6 +132,7 @@ public class GCMIntentService extends GCMBaseIntentService {
 	}
 	// Get alert
 	else if (intent.hasExtra("blocID")) {
+		Log.e("onMessage", "alert received");
 		String blocID = intent.getStringExtra("blocID");
     	Intent bgServiceIntent = new Intent(context, BackgroundService.class);
     	bgServiceIntent.putExtra("blocID", blocID);
