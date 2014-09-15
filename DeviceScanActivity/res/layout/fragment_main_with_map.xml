@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	    xmlns:tools="http://schemas.android.com/tools"
+	    android:id="@+id/frame1"
 	    android:layout_width="fill_parent"
    		android:layout_height="fill_parent"
    		android:gravity="top">
@@ -10,29 +11,7 @@
         android:layout_width="match_parent"
         class="com.google.android.gms.maps.SupportMapFragment" />
     
-<!-- 	<LinearLayout 
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"
-	    android:orientation="vertical"
-	    android:background="@color/red"
-	    tools:context=".MainWithMapActivity">
-	    <LinearLayout
-	        android:layout_weight = "2"
-	        android:layout_width="match_parent"
-	        android:layout_height="0dp"
-	        android:orientation="vertical">    
-		    <TextView
-		        android:id="@+id/textview_connected_status"
-		        android:text="@string/connected_status"
-		        style="@style/mainWithMapTextView"/>
-		    
-		    <TextView 
-		        android:id="@+id/textview_alert_status"
-		        android:text="@string/alert_status"
-		        style="@style/mainWithMapTextView"/>
-		</LinearLayout>
-	</LinearLayout>
--->	<LinearLayout 
+    <LinearLayout 
 	    android:id="@+id/linear_layout_ring"
 	    android:layout_width="fill_parent"
 	    android:layout_height="fill_parent"

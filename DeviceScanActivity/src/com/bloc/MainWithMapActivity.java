@@ -24,11 +24,13 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.widget.FrameLayout;
@@ -101,6 +103,7 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
   private Timer sendAlertTimer;
   private boolean sendAlertRightAway;
   private GoogleApiClient mPlusClient;
+  private TextView zeroRadiusTV;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -280,12 +283,43 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
 		});
 
 		mPlusClient.connect();
+		
+	  // If radius is 0, explain to the user that only EC's get notified
+      mRadius = getSharedPreferences("myPrefs", Context.MODE_PRIVATE)
+	  								.getInt(KEY_RADIUS, 2000);
+      if (mRadius == 0) {
+    	  showZeroRadiusView();
+      }
             
       // Register radius and location change receiver
       IntentFilter changeFilter = new IntentFilter();
       changeFilter.addAction(ACTION_RADIUS_CHANGE);
       changeFilter.addAction(ACTION_LOC_CHANGE);
       registerReceiver(mapUpdateReceiver, changeFilter);
+  }
+  
+  private void showZeroRadiusView() {
+	  if (zeroRadiusTV == null) {
+		  DisplayMetrics displaymetrics = new DisplayMetrics();
+		  getWindowManager().getDefaultDisplay().getMetrics(displaymetrics);
+		  int height = displaymetrics.heightPixels;
+		  View topLayout = findViewById(R.id.frame1);
+		  zeroRadiusTV = new TextView(this);
+		  zeroRadiusTV.setText("Your radius is set to zero, so only your emergency contacts will receive alerts");
+		  zeroRadiusTV.setGravity(Gravity.CENTER);
+		  zeroRadiusTV.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+		  zeroRadiusTV.setTextColor(getResources().getColor(R.color.bloc_color));
+		  zeroRadiusTV.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, (int) (height/1.7)));
+	      ((ViewGroup) topLayout).addView(zeroRadiusTV);
+	  }
+  }
+  
+  private void removeZeroRadiusView() {
+	  if (zeroRadiusTV != null) {
+    	  View topLayout = findViewById(R.id.frame1);
+          ((ViewGroup) topLayout).removeView(zeroRadiusTV);    
+          zeroRadiusTV = null;
+	  }
   }
 
   private void setUpMapIfNeeded() {
@@ -422,10 +456,12 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
 		
 		// Add marker to the map.
 		map.clear();
-		you = map.addMarker(new MarkerOptions()
-				  						.position(curLatLng)
-				  						.title("You"));
-		you.setPosition(curLatLng);
+		if (mRadius != 0) {
+			you = map.addMarker(new MarkerOptions()
+					  						.position(curLatLng)
+					  						.title("You"));
+			you.setPosition(curLatLng);
+		}
 		
 		map.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 0));
 	}
@@ -435,6 +471,11 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
             if (ACTION_RADIUS_CHANGE.equals(action)) {
+            	if (mRadius == 0) {
+            		showZeroRadiusView();
+            	} else {
+            		removeZeroRadiusView();
+            	}
             	if (curLatLng != null) {
 	            	setUpMapIfNeeded();
 	                updateMap();

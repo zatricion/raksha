@@ -53,6 +53,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Parcelable;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.provider.Contacts.People;
 import android.provider.ContactsContract.Profile;
@@ -787,6 +788,12 @@ public class BackgroundService extends Service implements
         	mLocationClient.removeLocationUpdates(this);
         	mLocationClient.requestLocationUpdates(fastLocationRequest, this);	
         }
+        
+        Vibrator v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
+        
+        // Vibrate a little bit
+        long[] pattern = {0, 500, 0, 500};
+        v.vibrate(pattern, -1);
 	}
 	
 	private void receiveAlert(String blocID, boolean contactAlert) throws IOException {
@@ -796,8 +803,7 @@ public class BackgroundService extends Service implements
 		String moniker = alertSender.getMoniker();
 		String geohash = alertSender.getGeohash();
 		double radius = alertSender.getRadius().doubleValue();
-		//if (!(name.equals(mAccount) || isHelping || mAlert)) {
-		if (!(isHelping)) {
+		if (!(name.equals(mAccount) || isHelping || mAlert)) {
 			LatLng where = gh.decode(geohash);
             if (mCurrLocation == null) {
             	return;

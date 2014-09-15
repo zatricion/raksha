@@ -94,7 +94,7 @@ public class MapActivity extends FragmentActivity implements
             
             v = (Vibrator) this.getSystemService(Context.VIBRATOR_SERVICE);
             
-            // Vibrate for 500 milliseconds
+            // Vibrate a lot
             long[] pattern = {0, 500, 1000, 500, 1000, 500, 1000, 500, 1000};
             v.vibrate(pattern, -1);
             
