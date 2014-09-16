@@ -42,6 +42,7 @@
     <string name="done">Done</string>
     <string name="confirm">Confirm</string>
     <string name="title_activity_few_contacts">FewContactsActivity</string>
+    <string name="contacts_confirm">Emergency Contacts</string>
 
     <!-- Misc items -->
     <string name="yes">Yes</string>

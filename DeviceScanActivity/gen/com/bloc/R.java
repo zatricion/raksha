@@ -573,65 +573,66 @@ containing a value of this type.
         public static final int shape_circle_rect=0x7f020027;
     }
     public static final class id {
-        public static final int action_contacts=0x7f070034;
-        public static final int action_radius=0x7f070037;
-        public static final int action_settings=0x7f07003b;
-        public static final int alertSenderImage=0x7f070018;
-        public static final int alertSenderMoniker=0x7f070019;
+        public static final int action_contacts=0x7f070035;
+        public static final int action_radius=0x7f070038;
+        public static final int action_settings=0x7f07003c;
+        public static final int alertSenderImage=0x7f070019;
+        public static final int alertSenderMoniker=0x7f07001a;
         public static final int book_now=0x7f070010;
         public static final int buyButton=0x7f07000a;
         public static final int buy_now=0x7f07000f;
         public static final int buy_with_google=0x7f07000e;
-        public static final int check_box=0x7f07001e;
+        public static final int check_box=0x7f07001f;
         public static final int classic=0x7f070011;
-        public static final int confirm=0x7f070015;
-        public static final int connection_state=0x7f070021;
-        public static final int contact_list_view=0x7f070014;
-        public static final int container=0x7f070017;
-        public static final int device_address=0x7f070020;
-        public static final int device_name=0x7f07002e;
-        public static final int done=0x7f070016;
-        public static final int frame1=0x7f070025;
-        public static final int go_on=0x7f07003a;
+        public static final int confirm=0x7f070016;
+        public static final int connection_state=0x7f070022;
+        public static final int contact_confirm_text=0x7f070014;
+        public static final int contact_list_view=0x7f070015;
+        public static final int container=0x7f070018;
+        public static final int device_address=0x7f070021;
+        public static final int device_name=0x7f07002f;
+        public static final int done=0x7f070017;
+        public static final int frame1=0x7f070026;
+        public static final int go_on=0x7f07003b;
         public static final int grayscale=0x7f070012;
         public static final int holo_dark=0x7f070005;
         public static final int holo_light=0x7f070006;
         public static final int hybrid=0x7f070004;
-        public static final int image_view_ring=0x7f070028;
-        public static final int linear_layout_ring=0x7f070027;
-        public static final int linear_layout_top=0x7f07002a;
-        public static final int map=0x7f07001a;
-        public static final int map1=0x7f070026;
+        public static final int image_view_ring=0x7f070029;
+        public static final int linear_layout_ring=0x7f070028;
+        public static final int linear_layout_top=0x7f07002b;
+        public static final int map=0x7f07001b;
+        public static final int map1=0x7f070027;
         public static final int match_parent=0x7f07000c;
-        public static final int menu_connect=0x7f070035;
-        public static final int menu_disconnect=0x7f070036;
-        public static final int menu_scan=0x7f070038;
-        public static final int menu_stop=0x7f070039;
+        public static final int menu_connect=0x7f070036;
+        public static final int menu_disconnect=0x7f070037;
+        public static final int menu_scan=0x7f070039;
+        public static final int menu_stop=0x7f07003a;
         public static final int monochrome=0x7f070013;
-        public static final int name_text_view=0x7f07001c;
-        public static final int navigate=0x7f07001b;
+        public static final int name_text_view=0x7f07001d;
+        public static final int navigate=0x7f07001c;
         public static final int none=0x7f070000;
         public static final int normal=0x7f070001;
-        public static final int pager=0x7f07002f;
-        public static final int pager_title_strip=0x7f070030;
-        public static final int phone_text_view=0x7f07001d;
-        public static final int pick_radius=0x7f070032;
+        public static final int pager=0x7f070030;
+        public static final int pager_title_strip=0x7f070031;
+        public static final int phone_text_view=0x7f07001e;
+        public static final int pick_radius=0x7f070033;
         public static final int production=0x7f070007;
-        public static final int progress_ring=0x7f07002b;
-        public static final int quit_app=0x7f070023;
-        public static final int radius_progress=0x7f070031;
-        public static final int run_background=0x7f070022;
+        public static final int progress_ring=0x7f07002c;
+        public static final int quit_app=0x7f070024;
+        public static final int radius_progress=0x7f070032;
+        public static final int run_background=0x7f070023;
         public static final int sandbox=0x7f070008;
         public static final int satellite=0x7f070002;
-        public static final int search=0x7f07001f;
+        public static final int search=0x7f070020;
         public static final int selectionDetails=0x7f07000b;
-        public static final int settings_list_view=0x7f070024;
+        public static final int settings_list_view=0x7f070025;
         public static final int strict_sandbox=0x7f070009;
         public static final int terrain=0x7f070003;
-        public static final int text_view_settings=0x7f07002c;
-        public static final int text_view_status=0x7f07002d;
-        public static final int view_below_ring=0x7f070029;
-        public static final int welcome_text=0x7f070033;
+        public static final int text_view_settings=0x7f07002d;
+        public static final int text_view_status=0x7f07002e;
+        public static final int view_below_ring=0x7f07002a;
+        public static final int welcome_text=0x7f070034;
         public static final int wrap_content=0x7f07000d;
     }
     public static final class integer {
@@ -765,9 +766,10 @@ containing a value of this type.
         public static final int common_signin_button_text_long=0x7f05001e;
         public static final int confirm=0x7f050034;
         public static final int connected=0x7f050026;
+        public static final int contacts_confirm=0x7f050036;
         /**  Main with Map 
          */
-        public static final int device_connection_status=0x7f05003d;
+        public static final int device_connection_status=0x7f05003e;
         public static final int disconnected=0x7f050027;
         public static final int done=0x7f050033;
         public static final int error_bluetooth_not_supported=0x7f050028;
@@ -781,15 +783,15 @@ containing a value of this type.
         public static final int menu_disconnect=0x7f05002d;
         public static final int menu_scan=0x7f05002e;
         public static final int menu_stop=0x7f05002f;
-        public static final int navigate=0x7f050038;
-        public static final int no=0x7f050037;
+        public static final int navigate=0x7f050039;
+        public static final int no=0x7f050038;
         public static final int no_data=0x7f050025;
-        public static final int quit_app=0x7f05003a;
-        public static final int run_background=0x7f050039;
-        public static final int set_radius=0x7f05003b;
-        public static final int settings=0x7f05003e;
+        public static final int quit_app=0x7f05003b;
+        public static final int run_background=0x7f05003a;
+        public static final int set_radius=0x7f05003c;
+        public static final int settings=0x7f05003f;
         public static final int title_activity_few_contacts=0x7f050035;
-        public static final int title_activity_main_with_map=0x7f05003c;
+        public static final int title_activity_main_with_map=0x7f05003d;
         public static final int unknown_characteristic=0x7f05002a;
         public static final int unknown_device=0x7f050029;
         public static final int unknown_service=0x7f05002b;
@@ -799,7 +801,7 @@ containing a value of this type.
         public static final int wallet_buy_button_place_holder=0x7f05001f;
         /**  Misc items 
          */
-        public static final int yes=0x7f050036;
+        public static final int yes=0x7f050037;
     }
     public static final class style {
         /** 
