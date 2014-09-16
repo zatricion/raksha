@@ -11,6 +11,7 @@ import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
@@ -19,11 +20,13 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
 	private Context context;
 	private ListView contactListView;
 	private EditText searchText;
+	private Button doneButton;
 	
-	public AsyncGetContacts(Context context, ListView contactListView, EditText searchText){
+	public AsyncGetContacts(Context context, ListView contactListView, EditText searchText, Button doneButton){
 		this.context = context;
 		this.contactListView = contactListView;
 		this.searchText = searchText;
+		this.doneButton = doneButton;
 	}
 	
 	@Override
@@ -78,5 +81,6 @@ public class AsyncGetContacts extends AsyncTask<Void, Void, Void>{
 				contactAdapter.getFilter().filter(s.toString());
 			}
 		});
+		doneButton.setEnabled(true);
 	}
 }

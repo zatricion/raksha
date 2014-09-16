@@ -39,6 +39,7 @@ public class ContactPickerDialog extends DialogFragment {
         View view = inflater.inflate(R.layout.contact_selection, container, false);
         
 		doneButton = (Button) view.findViewById(R.id.done);
+		doneButton.setEnabled(false);
 		searchText = (EditText) view.findViewById(R.id.search);
 		contactListView = (ListView) view.findViewById(R.id.contact_list_view);
 		
@@ -64,9 +65,10 @@ public class ContactPickerDialog extends DialogFragment {
 					contactAdapter.getFilter().filter(s.toString());
 				}
 			});
+			doneButton.setEnabled(true);
 		}
 		else {
-			asyncGetContacts = new AsyncGetContacts(getActivity(), contactListView, searchText);
+			asyncGetContacts = new AsyncGetContacts(getActivity(), contactListView, searchText, doneButton);
 			asyncGetContacts.execute();
 		}
 		
