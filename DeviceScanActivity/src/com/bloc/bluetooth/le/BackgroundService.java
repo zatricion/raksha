@@ -28,6 +28,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.PlusClient;
 import com.google.android.gms.plus.PlusClient.Builder;
+import com.google.android.gms.plus.model.people.Person.Name;
 import com.google.cloud.backend.android.CloudCallbackHandler;
 import com.google.cloud.backend.android.CloudEntity;
 import com.google.cloud.backend.android.CloudQuery.Scope;
@@ -105,6 +106,7 @@ public class BackgroundService extends Service implements
     private String mRegId;
     
 	public static String mPhotoUri;
+	public static String userMoniker;
 
     // If we are using fastLocationRequest without having received an alert
     private boolean fastWithoutAlert = false; 
@@ -883,20 +885,27 @@ public class BackgroundService extends Service implements
 	}
 	
 	private void addPersonIfNecessary() {
-		// Sets the columns to retrieve for the user profile
-		String[] columns = new String[]
-		    {
-		        Profile.DISPLAY_NAME_PRIMARY,
-		    };
-		// Retrieves the profile from the Contacts Provider
-		Cursor profileCursor = getContentResolver().query(
-		        Profile.CONTENT_URI,
-		        columns ,
-		        null,
-		        null,
-		        null);
-		profileCursor.moveToFirst();
-		final String moniker = profileCursor.getString(0);
+		if (userMoniker == null) {
+			// Sets the columns to retrieve for the user profile
+			String[] columns = new String[]
+			    {
+			        Profile.DISPLAY_NAME_PRIMARY,
+			    };
+			// Retrieves the profile from the Contacts Provider
+			Cursor profileCursor = getContentResolver().query(
+			        Profile.CONTENT_URI,
+			        columns ,
+			        null,
+			        null,
+			        null);
+			profileCursor.moveToFirst();
+			int moniker_ind = profileCursor.getColumnIndex(Profile.DISPLAY_NAME_PRIMARY);
+			if ((profileCursor.getCount() > 0) && moniker_ind != -1) {
+				userMoniker = profileCursor.getString(0);
+			} else {
+				userMoniker = "Anonymous";
+			}
+		}
 		
 		mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
 		if (mSelf == null || mSelf.asEntity().getId() == null) {
@@ -911,12 +920,12 @@ public class BackgroundService extends Service implements
 	                                        mSelf.setAlert(mAlert);
 	                                        mSelf.setRadius(mRadius);
 	                                        mSelf.setRegId(mRegId);
-	                                        mSelf.setMoniker(moniker);
+	                                        mSelf.setMoniker(userMoniker);
 	                                        mSelf.setPhotoUri(mPhotoUri);
 	                                        mBackend.update(mSelf.asEntity(),
 	                                                        updateHandler);
 	                                } else {
-	                                        mSelf = new Person(moniker, mAccount, mPhone, 
+	                                        mSelf = new Person(userMoniker, mAccount, mPhone, 
 	                                        				   "none", mAlert, mRadius, mRegId, mPhotoUri);
 	                                        mBackend.insert(mSelf.asEntity(),
 	                                                        updateHandler);

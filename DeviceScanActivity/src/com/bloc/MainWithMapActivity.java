@@ -69,6 +69,7 @@ import com.google.android.gms.maps.model.LatLngBounds.Builder;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
 import com.google.cloud.backend.android.CloudBackendActivity;
 
 import java.util.Timer;
@@ -255,10 +256,9 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
 			@Override
 			public void onConnected(Bundle arg0) {
 				// Get photo uri from G+
-				BackgroundService.mPhotoUri = Plus.PeopleApi
-												.getCurrentPerson(mPlusClient)
-												.getImage()
-												.getUrl();
+				Person user = Plus.PeopleApi.getCurrentPerson(mPlusClient);
+				BackgroundService.mPhotoUri = user.getImage().getUrl();
+				BackgroundService.userMoniker = user.getName().getGivenName() + " " + user.getName().getFamilyName();
 				mPlusClient.disconnect();
 			}
 
