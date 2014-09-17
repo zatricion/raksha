@@ -530,7 +530,9 @@ public class BackgroundService extends Service implements
 	    		        		// Send notification
 	    		        		final CloudEntity ce = mBackend.createCloudMessage("ContactNotification");
 	    						ce.setId(mSelf.getPhone() + "notify");
-	    						ce.put("blocID", contact.blocID);
+								// Send my blocID
+	    						ce.put("blocID", mSelf.asEntity().getId());
+								// But send to their regID
 	    						ce.put("regID", regID);
 	    						sentGCMs.add(ce.getId());
 	    						backgroundServiceHandler.post(new Runnable() {
@@ -564,8 +566,10 @@ public class BackgroundService extends Service implements
 							        // Send to bloc member
 									CloudEntity ce = mBackend.createCloudMessage("ContactNotification");
 									ce.setId(mSelf.getPhone());
-									ce.put("blocID", entityId);
-									ce.put("regID", regID);
+									// Send my blocID
+		    						ce.put("blocID", mSelf.asEntity().getId());
+									// But send to their regID
+		    						ce.put("regID", regID);
 									sentGCMs.add(ce.getId());
 									mBackend.sendCloudMessage(ce);
 									
@@ -629,7 +633,9 @@ public class BackgroundService extends Service implements
 	    		        		// Send alert directly
 	    		        		final CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
 	    						ce.setId(mSelf.getPhone());
-	    						ce.put("blocID", contact.blocID);
+	    						// Send my blocID
+	    						ce.put("blocID", mSelf.asEntity().getId());
+								// But send to their regID
 	    						ce.put("regID", regID);
 	    						sentGCMs.add(ce.getId());
 	    						backgroundServiceHandler.post(new Runnable() {
@@ -665,7 +671,9 @@ public class BackgroundService extends Service implements
 							        // Send to bloc member
 									CloudEntity ce = mBackend.createCloudMessage("ContactAlert");
 									ce.setId(mSelf.getPhone());
-									ce.put("blocID", entityId);
+									// Send my blocID
+									ce.put("blocID", mSelf.asEntity().getId());
+									// But send to their regID
 									ce.put("regID", regID);
 									sentGCMs.add(ce.getId());
 									mBackend.sendCloudMessage(ce);
