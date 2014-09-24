@@ -116,10 +116,7 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
     if (action != null && action.equals(BackgroundService.ACTION_SEND_EMERGENCY_ALERT)) {
     	sendAlertRightAway = true;
     }
-	if (intent.getBooleanExtra("EXIT", false)) {
-	    finish();
-	    return;
-	}
+
     setContentView(R.layout.fragment_main_with_map);
     deviceStatusTV = (TextView) findViewById(R.id.text_view_status);
 
@@ -217,6 +214,14 @@ protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
 			return true;
 		}
     });     
+  }
+  
+  @Override
+  protected void onNewIntent(Intent intent) {
+	if (intent.getBooleanExtra("EXIT", false)) {
+	    finish();
+	    return;
+	}
   }
   
   @Override

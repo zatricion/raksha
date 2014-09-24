@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import com.bloc.MainWithMapActivity;
 import com.bloc.R;
 import com.bloc.samaritan.map.MapActivity;
 import com.bloc.settings.contacts.Contact;
@@ -144,6 +145,9 @@ public class BackgroundService extends Service implements
     
     public final static String ACTION_END_ALERT =
             "com.bloc.bluetooth.le.ACTION_END_ALERT";
+    
+    public final static String ACTION_CLOSE_ALERT_MAP =
+            "com.bloc.bluetooth.le.ACTION_CLOSE_ALERT_MAP";
     
     // Location request for slow, battery saving updates
     LocationRequest slowLocationRequest;
@@ -298,12 +302,22 @@ public class BackgroundService extends Service implements
 			// Set up the service
 			initialize();
 			
-			// TODO: better notification
-	        Notification note = new NotificationCompat.Builder(this)
-								        .setContentTitle("Bloc")
-								        .build();
+	        NotificationCompat.Builder noteBuilder = new NotificationCompat.Builder(this)
+	        							.setSmallIcon(R.drawable.ic_launcher)
+								        .setContentTitle("Bloc is running")
+								        .setContentText("Touch to launch the application.")
+								        .setOngoing(true);
+			// Creates an explicit intent for an Activity in your app
+			Intent resultIntent = new Intent(this, MainWithMapActivity.class);
+			resultIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+			PendingIntent resultPendingIntent = 
+					PendingIntent.getActivity(getApplicationContext(), 
+							0, 
+							resultIntent, 
+							0);
+			noteBuilder.setContentIntent(resultPendingIntent);
 	        // Keep this service in the foreground
-	        startForeground(42, note);
+	        startForeground(42, noteBuilder.build());
 		}
 		else if (ACTION_NOTIFY_CONTACTS.equals(action)) {
 			if (mBackend != null) {
@@ -347,6 +361,9 @@ public class BackgroundService extends Service implements
 		else if (ACTION_GET_LOC.equals(action)) {
 	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
 	        fastWithoutAlert = true;
+		}
+		else if (ACTION_END_ALERT.equals(action)) {
+			endAlert();
 		}
         
 		return START_NOT_STICKY;
@@ -591,7 +608,7 @@ public class BackgroundService extends Service implements
 						 	SmsManager sms = SmsManager.getDefault();
 						 	String new_emergency_contact_text = "I've chosen you as an emergency contact on Bloc. "
 						 			+ "In an emergency, Bloc will text you my location. "
-						 			+ "Bloc is in beta, so ask me to invite you if you want a map.";
+						 			+ "Want a map? Click here to download Bloc: http://goo.gl/8uZG4t";
 						 	sms.sendTextMessage(phoneNum, null, new_emergency_contact_text, null, null);
 						}
 					};
@@ -753,7 +770,7 @@ public class BackgroundService extends Service implements
 	
 	private void endAlert() {
     	// End the alert
-    	Intent intent = new Intent(ACTION_END_ALERT);
+    	Intent intent = new Intent(ACTION_CLOSE_ALERT_MAP);
     	sendBroadcast(intent);
     	
     	// Wait a little before allowing more alerts

@@ -15,6 +15,7 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
@@ -67,7 +68,7 @@ public class MapActivity extends FragmentActivity implements
             if (!isFinishing && BackgroundService.ACTION_UPDATE_MAP.equals(action)) {
             	victim_loc = gh.decode(intent.getStringExtra(VICTIM_LOC));
             } 
-            else if (BackgroundService.ACTION_END_ALERT.equals(action)) {
+            else if (BackgroundService.ACTION_CLOSE_ALERT_MAP.equals(action)) {
             	v.vibrate(1000);
 		        Toast.makeText(MapActivity.this, "Bloc Member no longer in danger!", Toast.LENGTH_LONG).show();
 		        finish();
@@ -126,6 +127,16 @@ public class MapActivity extends FragmentActivity implements
                     ed.putFloat(KEY_ZOOM, camPos.zoom);
             }
             ed.commit();
+            
+            // Wait 20 minutes before ending alert
+            new Handler().postDelayed(new Runnable() {
+              @Override
+              public void run() {
+            	  Intent intent = new Intent(getApplicationContext(), BackgroundService.class);
+  				  intent.setAction(BackgroundService.ACTION_END_ALERT);
+            	  startService(intent);
+              }
+            }, (20 * 60 * 1000));
     }
 
 	@Override
@@ -233,7 +244,7 @@ public class MapActivity extends FragmentActivity implements
     private static IntentFilter makeMapIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(BackgroundService.ACTION_UPDATE_MAP);
-        intentFilter.addAction(BackgroundService.ACTION_END_ALERT);
+        intentFilter.addAction(BackgroundService.ACTION_CLOSE_ALERT_MAP);
         return intentFilter;
     }
 }
