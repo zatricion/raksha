@@ -98,7 +98,7 @@ public class MainWithMapActivity extends DeviceControlActivity {
   private final static int SCAN_REQUEST = 8000;
   private AsyncTask<Void, Float, Void> progressBarUpdateTask;
   private static final Geohasher gh = new Geohasher();
-protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
+  protected static final int REQUEST_CODE_RESOLVE_ERR = 1992;
   private TextView deviceStatusTV;
   private ProgressBar progressBar;
   private Timer sendAlertTimer;

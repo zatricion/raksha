@@ -32,7 +32,7 @@
         android:layout_weight="4"
         class="com.google.android.gms.maps.SupportMapFragment" />
 
-    <Button
+    <TextView
         android:id="@+id/navigate"
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -40,6 +40,7 @@
         android:textSize="20sp"
         android:gravity="center"
         android:onClick="getDirections"
+        android:clickable="true"
         android:text="@string/navigate" />
 
 </LinearLayout>
