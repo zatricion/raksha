@@ -20,6 +20,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.DisplayMetrics;
@@ -261,10 +262,26 @@ public class MainWithMapActivity extends DeviceControlActivity {
 			@Override
 			public void onConnected(Bundle arg0) {
 				// Get photo uri from G+
-				Person user = Plus.PeopleApi.getCurrentPerson(mPlusClient);
-				BackgroundService.mPhotoUri = user.getImage().getUrl();
-				BackgroundService.userMoniker = user.getName().getGivenName() + " " + user.getName().getFamilyName();
-				mPlusClient.disconnect();
+				if (mPlusClient.isConnected()) {
+					Person user = Plus.PeopleApi.getCurrentPerson(mPlusClient);
+					BackgroundService.mPhotoUri = user.getImage().getUrl();
+					BackgroundService.userMoniker = user.getName().getGivenName() + " " + user.getName().getFamilyName();
+					mPlusClient.disconnect();
+				}
+				else if (mPlusClient.isConnecting()) {
+					// Wait a second, then get photo uri
+					new Handler().postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							if (mPlusClient.isConnected()) {
+								Person user = Plus.PeopleApi.getCurrentPerson(mPlusClient);
+								BackgroundService.mPhotoUri = user.getImage().getUrl();
+								BackgroundService.userMoniker = user.getName().getGivenName() + " " + user.getName().getFamilyName();
+								mPlusClient.disconnect();
+							}
+						}
+					}, 1000);
+				}
 			}
 
 			@Override

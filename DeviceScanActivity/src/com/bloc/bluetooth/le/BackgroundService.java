@@ -359,6 +359,9 @@ public class BackgroundService extends Service implements
 			sendAlert();
 		}
 		else if (ACTION_GET_LOC.equals(action)) {
+            Intent locIntent = new Intent(DeviceControlActivity.ACTION_LOC_CHANGE);
+            locIntent.putExtra("loc", gh.encode(mCurrLocation));
+            sendBroadcast(locIntent);
 	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
 	        fastWithoutAlert = true;
 		}
@@ -932,8 +935,8 @@ public class BackgroundService extends Service implements
 			}
 		}
 		
-		mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
 		if (mSelf == null || mSelf.asEntity().getId() == null) {
+			mRegId = GCMIntentService.getRegistrationId((Application) getApplicationContext());
 			// Query backend
 	        mBackend.listByProperty("Person", "name", Op.EQ,
 	                mAccount, Order.ASC, 1, Scope.PAST,
