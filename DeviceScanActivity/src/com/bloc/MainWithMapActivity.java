@@ -223,6 +223,14 @@ public class MainWithMapActivity extends DeviceControlActivity {
 	    finish();
 	    return;
 	}
+	
+	String action = intent.getAction();
+    if (action != null && action.equals(BackgroundService.ACTION_SEND_EMERGENCY_ALERT)) {
+    	Intent bgServiceIntent = new Intent(this, BackgroundService.class);
+    	bgServiceIntent.setAction(BackgroundService.ACTION_SEND_EMERGENCY_ALERT);
+    	startService(bgServiceIntent);
+    	sendAlertRightAway = false;
+    }
   }
   
   @Override
