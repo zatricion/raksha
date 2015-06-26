@@ -362,8 +362,9 @@ public class BackgroundService extends Service implements
             Intent locIntent = new Intent(DeviceControlActivity.ACTION_LOC_CHANGE);
             locIntent.putExtra("loc", gh.encode(mCurrLocation));
             sendBroadcast(locIntent);
-	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
-	        fastWithoutAlert = true;
+            // Try just updating map with most recent location
+//	        mLocationClient.requestLocationUpdates(fastLocationRequest, this);
+//	        fastWithoutAlert = true;
 		}
 		else if (ACTION_END_ALERT.equals(action)) {
 			endAlert();
@@ -482,9 +483,8 @@ public class BackgroundService extends Service implements
 	        	mPhone = mSelf.getPhone();
 	        }
 	        else {
-//	        	mPhone =  UUID.randomUUID().toString();
-//	        	Log.e(TAG, "Using fake phone number");
-	        	mPhone = "18646508209";
+	        	mPhone =  UUID.randomUUID().toString();
+	        	Log.e(TAG, "Using fake phone number");
 	        }
 		}
 		

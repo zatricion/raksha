@@ -16,8 +16,8 @@ limitations under the License.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bloc"
-    android:versionCode="19"
-    android:versionName="1.45"
+    android:versionCode="20"
+    android:versionName="1.47"
     android:installLocation="internalOnly">
 
     <uses-sdk
@@ -113,6 +113,13 @@ limitations under the License.
                 <action android:name="android.intent.action.QUICKBOOT_POWERON" />  
             </intent-filter>  
         </receiver>
+        
+		<receiver android:name="com.bloc.bluetooth.le.PebbleReceiver" 
+		          android:process=":receive">
+		    <intent-filter>
+		        <action android:name="com.getpebble.action.app.RECEIVE" />
+		    </intent-filter>
+		</receiver>
 
         <activity
             android:name="com.bloc.settings.contacts.ContactListActivity"
